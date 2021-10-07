@@ -1,0 +1,45 @@
+variables:
+  - group: COMPANY-rg-PRODUCT-staging
+  - template: common.yml
+  - name: rgEnvironment
+    value: 'Staging'
+  - name: rgName
+    value: 'rg-PRODUCT-staging-001'
+  - name: locationName
+    value: 'West US 2'
+  - name: 'appInsightsName'
+    value: 'appi-PRODUCT-staging-001'
+  - name: 'cogName'
+    value: 'cog-PRODUCT-staging-001'
+  - name: cogsku
+    value: 'S0'
+  - name: 'cogtextName'
+    value: 'cogtext-PRODUCT-staging-001'
+  - name: cogtextSku
+    value: 'F0'
+  - name: 'funcName'
+    value: 'func-PRODUCT-staging-001'
+  - name: 'kvName'
+    value: 'kv-PRODUCT-staging-001'
+  - name: 'logicName'
+    value: 'logic-PRODUCT-NAME-staging-001'
+  - name: 'nugetServiceConnection'
+    value: 'COMPANY-nuget-prod-001'
+  - name: 'nugetFeeds'
+    value: 'select'
+  - name: 'nugetType'
+    value: 'internal'
+  - name: 'nugetId'
+    value: '00000000-0000-0000-0000-000000000000'
+  - name: storageName
+    value: 'stPRODUCTstaging001'
+  - name: 'stblobcnName'
+    value: 'stblobcn-PRODUCT-staging-001'
+  - name: 'stblobcnNameLower'
+    value: "$[lower(replace(variables['stblobcnName'], '-', ''))]"
+  - name: 'teamscnName'
+    value: 'teamscn-PRODUCT-staging-001'
+  - name: 'teamscnNameLower'
+    value: "$[lower(replace(variables['teamscnName'], '-', ''))]"
+  - name: workspaceName
+    value: 'work-PRODUCT-staging-001'
