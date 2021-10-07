@@ -58,6 +58,13 @@ stages:
             parameters:
               armPath: 'infrastructure'
 
+      - job: deploy_api
+        dependsOn: test_src
+        steps:
+          - template: steps/api-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
       - job: build_func
         dependsOn: deploy_infrastructure
         steps:
@@ -131,6 +138,13 @@ stages:
             parameters:
               armPath: 'infrastructure'
 
+      - job: deploy_api
+        dependsOn: test_src
+        steps:
+          - template: steps/api-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
       - job: build_func
         dependsOn: deploy_infrastructure
         steps:
@@ -188,6 +202,13 @@ stages:
         dependsOn: build_src
         steps:
           - template: steps/src-test-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: deploy_api
+        dependsOn: test_src
+        steps:
+          - template: steps/api-deploy-steps.yml
             parameters:
               armPath: 'infrastructure'
 
@@ -249,6 +270,13 @@ stages:
         dependsOn: build_src
         steps:
           - template: steps/src-test-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: deploy_api
+        dependsOn: test_src
+        steps:
+          - template: steps/api-deploy-steps.yml
             parameters:
               armPath: 'infrastructure'
 
