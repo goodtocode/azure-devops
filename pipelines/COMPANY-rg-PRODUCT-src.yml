@@ -101,7 +101,7 @@ stages:
     dependsOn: pull_request
     condition: or(and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/pull')), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
     variables:
-      - template: variables/production.yml    
+      - template: variables/qa.yml    
 
     jobs:
       - job: deploy_landing_zone
@@ -168,7 +168,7 @@ stages:
   - stage: staging
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/Production')
     variables:
-      - template: variables/qa.yml
+      - template: variables/staging.yml
       
     jobs:
       - job: deploy_landing_zone                
