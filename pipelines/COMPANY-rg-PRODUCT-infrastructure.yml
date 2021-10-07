@@ -1,0 +1,38 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - '*'
+  paths:
+    include:
+    - infrastructure/*
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - template: variables/development.yml
+  - name: buildPlatform
+    value: 'Any CPU'
+  - name: buildConfiguration
+    value: 'Release'
+
+stages:
+  - stage: development
+    condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull')))
+    variables:
+      - template: variables/development.yml
+      
+    jobs:
+      - job: deploy_landing_zone
+        steps:
+          - template: steps/lz-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: deploy_infrastructure
+        dependsOn: deploy_landing_zone
+        steps:
+          - template: steps/infrastructure-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'

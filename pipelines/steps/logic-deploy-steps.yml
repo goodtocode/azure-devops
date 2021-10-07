@@ -1,0 +1,99 @@
+parameters:
+- name: armPath
+  type: string 
+  default: "."
+
+steps:
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Validate $(logicExcelToTableNameFree)"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "$(subscriptionName)"
+        subscriptionId: "$(subscriptionId)"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "$(rgName)"
+        location: "$(locationName)"
+        templateLocation: "Linked artifact"
+        csmFile: "$(logicPathFree)/LogicApp.json"
+        csmParametersFile: "$(logicPathFree)/LogicApp.parameters.json"        
+        deploymentMode: "Validation"
+        overrideParameters: -logicAppName "$(logicExcelToTableNameFree)" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_Connection_Name "$(teamscnNameLower)"
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Deploy $(logicExcelToTableNameFree)"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "$(subscriptionName)"
+        subscriptionId: "$(subscriptionId)"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "$(rgName)"
+        location: "$(locationName)"
+        templateLocation: "Linked artifact"
+        csmFile: "$(logicPathFree)/LogicApp.json"
+        csmParametersFile: "$(logicPathFree)/LogicApp.parameters.json"
+        deploymentMode: "Incremental"
+        overrideParameters: -logicAppName "$(logicExcelToTableNameFree)" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_token:TenantId "$(tenantId)"
+
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Validate $(logicExcelToTableNamePaid)"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "$(subscriptionName)"
+        subscriptionId: "$(subscriptionId)"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "$(rgName)"
+        location: "$(locationName)"
+        templateLocation: "Linked artifact"
+        csmFile: "$(logicPathPaid)/LogicApp.json"
+        csmParametersFile: "$(logicPathPaid)/LogicApp.parameters.json"        
+        deploymentMode: "Validation"
+        overrideParameters: -logicAppName "$(logicExcelToTableNamePaid)" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_Connection_Name "$(teamscnNameLower)"
+
+    
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Deploy $(logicExcelToTableNamePaid)"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "$(subscriptionName)"
+        subscriptionId: "$(subscriptionId)"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "$(rgName)"
+        location: "$(locationName)"
+        templateLocation: "Linked artifact"
+        csmFile: "$(logicPathPaid)/LogicApp.json"
+        csmParametersFile: "$(logicPathPaid)/LogicApp.parameters.json"
+        deploymentMode: "Incremental"
+        overrideParameters: -logicAppName "$(logicExcelToTableNamePaid)" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_Connection_Name "$(teamscnNameLower)"
+
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Validate $(logicExcelToTableNamePremium)"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "$(subscriptionName)"
+        subscriptionId: "$(subscriptionId)"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "$(rgName)"
+        location: "$(locationName)"
+        templateLocation: "Linked artifact"
+        csmFile: "$(logicPathPremium)/LogicApp.json"
+        csmParametersFile: "$(logicPathPremium)/LogicApp.parameters.json"        
+        deploymentMode: "Validation"
+        overrideParameters: -logicAppName "$(logicExcelToTableNamePremium)" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_Connection_Name "$(teamscnNameLower)"
+
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Deploy $(logicExcelToTableNamePremium)"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "$(subscriptionName)"
+        subscriptionId: "$(subscriptionId)"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "$(rgName)"
+        location: "$(locationName)"
+        templateLocation: "Linked artifact"
+        csmFile: "$(logicPathPremium)/LogicApp.json"
+        csmParametersFile: "$(logicPathPremium)/LogicApp.parameters.json"
+        deploymentMode: "Incremental"
+        overrideParameters: -logicAppName "$(logicExcelToTableNamePremium)" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_Connection_Name "$(teamscnNameLower)"

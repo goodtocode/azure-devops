@@ -1,0 +1,26 @@
+parameters:
+- name: armPath
+  type: string 
+  default: "."
+
+steps:
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'drop'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - task: NuGetToolInstaller@1
+      inputs:
+        versionSpec: '*'
+        checkLatest: true
+
+    - task: NuGetCommand@2
+      inputs:
+        command: 'push'
+        feedsToUse: 'select'
+        nuGetFeedType: 'external'
+        includeNuGetOrg: true
+        publishFeedCredentials: '$(nugetServiceConnection)'
+        packagesToPush: $(artifactsPath)/**/*.nupkg    

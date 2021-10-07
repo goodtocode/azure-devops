@@ -1,0 +1,89 @@
+parameters:
+- name: armPath 
+  type: string 
+  default: "."
+
+steps:
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet restore'
+    inputs:
+      command: 'restore'
+      projects: |
+        $(funcPath)/**/*.csproj
+      feedsToUse: config
+      nugetConfigPath: .nuget/NuGet.config
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet build free'
+    inputs:
+      command: 'build'
+      projects: |
+        $(funcPathFree)/**/*.csproj
+      arguments: --output $(tempPath) --configuration $(buildConfiguration)
+
+  - task: ArchiveFiles@2
+    displayName: 'Archive $(archiveFileFree)'
+    inputs:
+      rootFolderOrFile: '$(tempPath)'
+      includeRootFolder: false
+      archiveType: zip
+      archiveFile: $(artifactsPath)/$(archiveFileFree)
+      replaceExistingArchive: true
+
+  - task: DeleteFiles@1
+    inputs:
+      SourceFolder: '$(tempPath)'
+      Contents: '**/*'
+      RemoveDotFiles: true
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet build Paid'
+    inputs:
+      command: 'build'
+      projects: |
+        $(funcPathPaid)/**/*.csproj
+      arguments: --output $(tempPath) --configuration $(buildConfiguration)
+
+  - task: ArchiveFiles@2
+    displayName: 'Archive $(archiveFilePaid)'
+    inputs:
+      rootFolderOrFile: '$(tempPath)'
+      includeRootFolder: false
+      archiveType: zip
+      archiveFile: $(artifactsPath)/$(archiveFilePaid)
+      replaceExistingArchive: true
+
+  - task: DeleteFiles@1
+    inputs:
+      SourceFolder: '$(tempPath)'
+      Contents: '**/*'
+      RemoveDotFiles: true
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet build Premium'
+    inputs:
+      command: 'build'
+      projects: |
+        $(funcPathPremium)/**/*.csproj
+      arguments: --output $(tempPath) --configuration $(buildConfiguration)
+
+  - task: ArchiveFiles@2
+    displayName: 'Archive $(archiveFilePremium)'
+    inputs:
+      rootFolderOrFile: '$(tempPath)'
+      includeRootFolder: false
+      archiveType: zip
+      archiveFile: $(artifactsPath)/$(archiveFilePremium)
+      replaceExistingArchive: true
+
+  - task: DeleteFiles@1
+    inputs:
+      SourceFolder: '$(tempPath)'
+      Contents: '**/*'
+      RemoveDotFiles: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: drop'
+    inputs:
+      pathToPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: drop
