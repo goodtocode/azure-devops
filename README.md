@@ -1,5 +1,5 @@
-# GoodToCode Azure DevOps Template
-<sup>GoodToCode Azure DevOps Template is a starting point for using Azure DevOps pipeline YML files to automate cloud infrastructure, building source, unit-testing source, deploying source and running external integration tests.</sup> <br>
+# azure-devops - Starter Azure DevOps Template
+<sup>azure-devops Starter Azure DevOps Template is a starting point for using Azure DevOps pipeline YML files to automate cloud infrastructure, building source, unit-testing source, deploying source and running external integration tests.</sup> <br>
 
 This is a simple Azure DevOps YML template for [Azure DevOps Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/get-started/what-is-azure-pipelines?view=azure-devops)
 
@@ -52,7 +52,7 @@ pipelines/variables | common.yml | Common variables to all pipelines
 pipelines/variables | development.yml | Development environment-specific variables
 pipelines/variables | production.yml | Production environment-specific variables
 
-#### Azure Services used in GoodToCode repositories
+#### Azure Services used in these repositories
 Azure Service | Purpose
 :---------------------:| --- 
 [Azure Cosmos DB](https://azure.microsoft.com/en-us/services/cosmos-db/)| NoSQL database where original content as well as processing results are stored.
