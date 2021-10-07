@@ -1,0 +1,15 @@
+parameters:
+- name: armPath 
+  type: string 
+  default: "."
+
+steps:
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet test'
+    inputs:
+      command: test
+      projects: |
+        $(srcPath)/**/*.csproj
+    env:
+      AppSettingsConnection: $(AppSettingsConnection)
+      ASPNETCORE_ENVIRONMENT: $(ASPNETCORE_ENVIRONMENT)

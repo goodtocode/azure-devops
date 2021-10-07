@@ -1,0 +1,22 @@
+parameters:
+- name: armPath
+  type: string 
+  default: "."
+
+steps:
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'drop'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - task: NuGetCommand@2
+      displayName: 'Deploying nuget'
+      inputs:
+        command: 'push'
+        packagesToPush: '$(artifactsPath)/**/*.nupkg;'
+        feedsToUse: '$(nugetFeeds)'
+        nuGetFeedType: '$(nugetType)'
+        publishVstsFeed: '$(nugetId)'
+        allowPackageConflicts: true      

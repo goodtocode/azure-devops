@@ -1,0 +1,152 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - '*'
+  paths:
+    include:
+    - src/*
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - template: variables/development.yml
+  - name: buildPlatform
+    value: 'Any CPU'
+  - name: buildConfiguration
+    value: 'Release'
+
+stages:
+  - stage: development
+    condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull')))
+    variables:
+      - template: variables/development.yml
+      
+    jobs:
+      - job: deploy_landing_zone                
+        steps:
+          - template: steps/lz-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: deploy_infrastructure
+        dependsOn: deploy_landing_zone
+        steps:
+          - template: steps/infrastructure-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: deploy_logic_apps
+        dependsOn: deploy_infrastructure
+        steps:
+          - template: steps/logic-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: build_src
+        dependsOn: deploy_infrastructure
+        steps:
+          - template: steps/src-build-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: test_src
+        dependsOn: build_src
+        steps:
+          - template: steps/src-test-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: build_func
+        dependsOn: deploy_infrastructure
+        steps:
+          - template: steps/func-build-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: deploy_func
+        dependsOn: test_src
+        steps:
+          - template: steps/func-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+  - stage: pull_request
+    condition: startsWith(variables['Build.SourceBranch'], 'refs/pull')
+    variables:
+      - template: variables/development.yml
+      
+    jobs:
+      - job: test_src
+        steps:
+          - template: steps/src-test-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: test_integration
+        steps:
+          - template: steps/integration-test-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+  - stage: production
+    dependsOn: pull_request
+    condition: or(and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/pull')), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    variables:
+      - template: variables/production.yml    
+
+    jobs:
+      - job: deploy_landing_zone
+        steps:
+          - template: steps/lz-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: deploy_infrastructure
+        dependsOn: deploy_landing_zone
+        steps:
+          - template: steps/infrastructure-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: deploy_logic_apps
+        dependsOn: deploy_infrastructure
+        steps:
+          - template: steps/logic-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: build_src
+        dependsOn: deploy_infrastructure
+        steps:
+          - template: steps/src-build-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: test_src
+        dependsOn: build_src
+        steps:
+          - template: steps/src-test-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: build_func
+        dependsOn: deploy_infrastructure
+        steps:
+          - template: steps/func-build-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: deploy_func
+        dependsOn: test_src
+        steps:
+          - template: steps/func-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+
+      - job: test_integration
+        steps:
+          - template: steps/integration-test-steps.yml
+            parameters:
+              armPath: 'infrastructure'

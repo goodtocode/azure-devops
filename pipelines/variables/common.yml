@@ -1,0 +1,35 @@
+variables:
+  - name: tenantId
+    value: "00000000-0000-0000-0000-000000000000"
+  - name: subscriptionId
+    value: "00000000-0000-0000-0000-000000000000"
+  - name: subscriptionName
+    value: "COMPANY-PRODUCT-001"
+  - name: artifactsPath
+    value: '$(Build.ArtifactStagingDirectory)'
+  - name: tempPath
+    value: '$(Agent.TempDirectory)/ymltemp'
+  - name: archiveFileFree
+    value: 'archivefree.zip'
+  - name: archiveFilePaid
+    value: 'archivepaid.zip'
+  - name: archiveFilePremium
+    value: 'archivepremium.zip'
+  - name: pipelinesPath
+    value: '$(System.DefaultWorkingDirectory)/pipelines'
+  - name: infrastructurePath
+    value: '$(System.DefaultWorkingDirectory)/infrastructure'
+  - name: testsPath
+    value: '$(System.DefaultWorkingDirectory)/tests'
+  - name: srcPath
+    value: '$(System.DefaultWorkingDirectory)/src'
+  - name: funcPath
+    value: '$(System.DefaultWorkingDirectory)/src'
+  - name: funcPath
+    value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.Functions'
+  - name: logicPath
+    value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.LogicApps.NAME'
+  - name: buildConfiguration
+    value: 'Release'
+  - name: MSBUILDSINGLELOADCONTEXT
+    value: 1

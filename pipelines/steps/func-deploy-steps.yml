@@ -1,0 +1,45 @@
+parameters:
+- name: armPath
+  type: string 
+  default: '.'
+
+steps:
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'drop'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - task: AzureRmWebAppDeployment@4
+      displayName: 'Deploying $(funcNameFree)'
+      inputs:
+        ConnectionType: 'AzureRM'
+        ConnectedServiceName: $(subscriptionName)
+        subscriptionName: $(subscriptionId)
+        appType: 'webApp'
+        WebAppName: '$(funcNameFree)'
+        packageForLinux: '$(Pipeline.Workspace)/**/$(archiveFileFree)'
+        AppSettings: '-ASPNETCORE_ENVIRONMENT $(Environment) -COMPANY_PRODUCT_CONNECTION $(COMPANY_PRODUCT_CONNECTION)'
+
+    - task: AzureRmWebAppDeployment@4
+      displayName: 'Deploying $(funcNamePaid)'
+      inputs:
+        ConnectionType: 'AzureRM'
+        ConnectedServiceName: $(subscriptionName)
+        subscriptionName: $(subscriptionId)
+        appType: 'webApp'
+        WebAppName: '$(funcNamePaid)'
+        packageForLinux: '$(Pipeline.Workspace)/**/$(archiveFilePaid)'
+        AppSettings: '-ASPNETCORE_ENVIRONMENT $(Environment) -COMPANY_PRODUCT_CONNECTION $(COMPANY_PRODUCT_CONNECTION)'
+
+    - task: AzureRmWebAppDeployment@4
+      displayName: 'Deploying $(funcNamePremium)'
+      inputs:
+        ConnectionType: 'AzureRM'
+        ConnectedServiceName: $(subscriptionName)
+        subscriptionName: $(subscriptionId)
+        appType: 'webApp'
+        WebAppName: '$(funcNamePremium)'
+        packageForLinux: '$(Pipeline.Workspace)/**/$(archiveFilePremium)'
+        AppSettings: '-ASPNETCORE_ENVIRONMENT $(Environment) -COMPANY_PRODUCT_CONNECTION $(COMPANY_PRODUCT_CONNECTION)'
