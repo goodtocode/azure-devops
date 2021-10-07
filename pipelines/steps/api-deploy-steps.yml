@@ -1,0 +1,23 @@
+parameters:
+- name: armPath 
+  type: string 
+  default: "."
+
+steps:
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'drop'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - task: AzureRmWebAppDeployment@4
+      displayName: 'deploy $(apiName)'
+      inputs:
+        ConnectionType: 'AzureRM'
+        ConnectedServiceName: $(subscriptionName)
+        subscriptionName: $(subscriptionId)
+        appType: 'webApp'
+        WebAppName: '$(apiName)'
+        packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
+        AppSettings: '-ASPNETCORE_ENVIRONMENT $(Environment) -AacnConfigurationConnection Endpoint=https://aacnconfiguration.azconfig.io;Id=Yn5x-l1-s0:8dwcP2hB3kix/uP76L/z;Secret=APWAdE73S0iT7wsG2PA6jrnKXn56bJOEJssTDArVe4o='
