@@ -11,5 +11,6 @@ steps:
       projects: |
         $(integrationPath)/**/*.csproj
     env:
-      AppSettingsConnection: $(AppSettingsConnection)
-      ASPNETCORE_ENVIRONMENT: $(ASPNETCORE_ENVIRONMENT)
+      CIAC_HAAS_CONNECTION: $(appcsConnection)
+      ASPNETCORE_ENVIRONMENT: $(rgEnvironment)
+      AZURE_FUNCTIONS_ENVIRONMENT: $(rgEnvironment)

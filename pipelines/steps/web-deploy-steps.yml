@@ -12,12 +12,12 @@ steps:
         downloadPath: '$(System.ArtifactsDirectory)'
 
     - task: AzureRmWebAppDeployment@4
-      displayName: 'deploy $(apiName)'
+      displayName: 'deploy $(webName)'
       inputs:
         ConnectionType: 'AzureRM'
         ConnectedServiceName: $(subscriptionName)
         subscriptionName: $(subscriptionId)
         appType: 'webApp'
-        WebAppName: '$(apiName)'
+        WebAppName: '$(webName)'
         packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
         AppSettings: '-ASPNETCORE_ENVIRONMENT $(rgEnvironment) -GTC_WWW_CONFIGURATION $(appcsConfiguration)'

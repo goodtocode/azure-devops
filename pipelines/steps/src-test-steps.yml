@@ -2,6 +2,12 @@ parameters:
 - name: armPath 
   type: string 
   default: "."
+- name: unitPath 
+  type: string 
+  default: "."
+- name: unitProject
+  type: string 
+  default: "*.Unit.Tests.csproj"
 
 steps:
   - task: DotNetCoreCLI@2
@@ -9,7 +15,8 @@ steps:
     inputs:
       command: test
       projects: |
-        $(srcPath)/**/*.csproj
+        ${{ parameters.unitPath }}/**/${{ parameters.unitProject }}
     env:
-      AppSettingsConnection: $(AppSettingsConnection)
-      ASPNETCORE_ENVIRONMENT: $(ASPNETCORE_ENVIRONMENT)
+      COMPANY_PRODUCT_CONFIGURATION: $(appcsConnection)
+      ASPNETCORE_ENVIRONMENT: $(rgEnvironment)
+      AZURE_FUNCTIONS_ENVIRONMENT: $(rgEnvironment)

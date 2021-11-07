@@ -9,7 +9,7 @@ variables:
     value: '$(Build.ArtifactStagingDirectory)'
   - name: tempPath
     value: '$(Agent.TempDirectory)/ymltemp'
-  - name: archiveFileFree
+  - name: archiveFile
     value: 'archivefree.zip'
   - name: archiveFilePaid
     value: 'archivepaid.zip'

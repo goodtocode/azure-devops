@@ -19,33 +19,12 @@ variables:
 
 stages:
   - stage: development
-    condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull')))
+    condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull')), ne(variables['Build.Reason'], 'PullRequest'))
     variables:
       - template: variables/development.yml
       
     jobs:
-      - job: deploy_landing_zone                
-        steps:
-          - template: steps/lz-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: deploy_infrastructure
-        dependsOn: deploy_landing_zone
-        steps:
-          - template: steps/infrastructure-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: deploy_logic_apps
-        dependsOn: deploy_infrastructure
-        steps:
-          - template: steps/logic-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
       - job: build_src
-        dependsOn: deploy_infrastructure
         steps:
           - template: steps/src-build-steps.yml
             parameters:
@@ -57,30 +36,32 @@ stages:
           - template: steps/src-test-steps.yml
             parameters:
               armPath: 'infrastructure'
+              unitPath: '$(System.DefaultWorkingDirectory)/src/filter'
 
-      - job: deploy_api
+      - job: build_func_filter
         dependsOn: test_src
         steps:
-          - template: steps/api-deploy-steps.yml
+          - template: steps/func-filter-build-steps.yml
             parameters:
               armPath: 'infrastructure'
 
-      - job: build_func
-        dependsOn: deploy_infrastructure
+      - job: deploy_func_filter
+        dependsOn: build_func_filter
         steps:
-          - template: steps/func-build-steps.yml
+          - template: steps/func-filter-deploy-steps.yml
             parameters:
               armPath: 'infrastructure'
 
-      - job: deploy_func
+      - job: deploy_logic_apps
         dependsOn: test_src
         steps:
-          - template: steps/func-deploy-steps.yml
+          - template: steps/logic-filter-deploy-steps.yml
             parameters:
               armPath: 'infrastructure'
+
 
   - stage: pull_request
-    condition: startsWith(variables['Build.SourceBranch'], 'refs/pull')
+    condition: or(eq(variables['Build.Reason'], 'PullRequest'),  startsWith(variables['Build.SourceBranch'], 'refs/pull'))
     variables:
       - template: variables/development.yml
       
@@ -90,141 +71,7 @@ stages:
           - template: steps/src-test-steps.yml
             parameters:
               armPath: 'infrastructure'
-
-      - job: test_integration
-        steps:
-          - template: steps/integration-test-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-  - stage: qa
-    dependsOn: pull_request
-    condition: or(and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/pull')), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-    variables:
-      - template: variables/qa.yml    
-
-    jobs:
-      - job: deploy_landing_zone
-        steps:
-          - template: steps/lz-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: deploy_infrastructure
-        dependsOn: deploy_landing_zone
-        steps:
-          - template: steps/infrastructure-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: deploy_logic_apps
-        dependsOn: deploy_infrastructure
-        steps:
-          - template: steps/logic-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: build_src
-        dependsOn: deploy_infrastructure
-        steps:
-          - template: steps/src-build-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: test_src
-        dependsOn: build_src
-        steps:
-          - template: steps/src-test-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: deploy_api
-        dependsOn: test_src
-        steps:
-          - template: steps/api-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: build_func
-        dependsOn: deploy_infrastructure
-        steps:
-          - template: steps/func-build-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: deploy_func
-        dependsOn: test_src
-        steps:
-          - template: steps/func-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: test_integration
-        steps:
-          - template: steps/integration-test-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-  - stage: staging
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/Production')
-    variables:
-      - template: variables/staging.yml
-      
-    jobs:
-      - job: deploy_landing_zone                
-        steps:
-          - template: steps/lz-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: deploy_infrastructure
-        dependsOn: deploy_landing_zone
-        steps:
-          - template: steps/infrastructure-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: deploy_logic_apps
-        dependsOn: deploy_infrastructure
-        steps:
-          - template: steps/logic-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: build_src
-        dependsOn: deploy_infrastructure
-        steps:
-          - template: steps/src-build-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: test_src
-        dependsOn: build_src
-        steps:
-          - template: steps/src-test-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: deploy_api
-        dependsOn: test_src
-        steps:
-          - template: steps/api-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: build_func
-        dependsOn: deploy_infrastructure
-        steps:
-          - template: steps/func-build-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: deploy_func
-        dependsOn: test_src
-        steps:
-          - template: steps/func-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
+              unitPath: '$(System.DefaultWorkingDirectory)/src/filter'
 
       - job: test_integration
         steps:
@@ -233,34 +80,12 @@ stages:
               armPath: 'infrastructure'
 
   - stage: production
-    dependsOn: staging
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/Production'))
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
     variables:
       - template: variables/production.yml    
 
     jobs:
-      - job: deploy_landing_zone
-        steps:
-          - template: steps/lz-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: deploy_infrastructure
-        dependsOn: deploy_landing_zone
-        steps:
-          - template: steps/infrastructure-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
-      - job: deploy_logic_apps
-        dependsOn: deploy_infrastructure
-        steps:
-          - template: steps/logic-deploy-steps.yml
-            parameters:
-              armPath: 'infrastructure'
-
       - job: build_src
-        dependsOn: deploy_infrastructure
         steps:
           - template: steps/src-build-steps.yml
             parameters:
@@ -272,29 +97,31 @@ stages:
           - template: steps/src-test-steps.yml
             parameters:
               armPath: 'infrastructure'
+              unitPath: '$(System.DefaultWorkingDirectory)/src/filter'              
 
-      - job: deploy_api
+      - job: build_func_filter
         dependsOn: test_src
         steps:
-          - template: steps/api-deploy-steps.yml
+          - template: steps/func-filter-build-steps.yml
             parameters:
               armPath: 'infrastructure'
 
-      - job: build_func
-        dependsOn: deploy_infrastructure
+      - job: deploy_func_filter
+        dependsOn: build_func_filter
         steps:
-          - template: steps/func-build-steps.yml
+          - template: steps/func-filter-deploy-steps.yml
             parameters:
               armPath: 'infrastructure'
 
-      - job: deploy_func
+      - job: deploy_logic_apps
         dependsOn: test_src
         steps:
-          - template: steps/func-deploy-steps.yml
+          - template: steps/logic-filter-deploy-steps.yml
             parameters:
               armPath: 'infrastructure'
 
       - job: test_integration
+        dependsOn: deploy_func_filter
         steps:
           - template: steps/integration-test-steps.yml
             parameters:
