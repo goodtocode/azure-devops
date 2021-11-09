@@ -1,35 +1,58 @@
 parameters:
-- name: armPath 
+- name: artifactsPath
   type: string 
   default: "."
+- name: srcPath 
+  type: string 
+  default: "."
+- name: srcProject
+  type: string 
+  default: "*.csproj"
+- name: scriptsPath 
+  type: string 
+  default: "./pipelines/scripts"
+- name: nugetPathFile
+  type: string 
+  default: ".nuget/NuGet.config"
+- name: buildConfiguration
+  type: string 
+  default: "Release"
 
 steps:
   - task: PowerShell@2
     displayName: 'Set-Version.ps1'
     inputs:
-      filePath: '$(pipelinesPath)/scripts/Set-Version.ps1'
-      arguments: '-Path $(srcPath) -VersionToReplace 5.20.1 -Major 5'
-      workingDirectory: '$(pipelinesPath)/scripts'
+      filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
+      arguments: '-Path ${{ parameters.srcPath }} -VersionToReplace 5.20.1 -Major 5'
+      workingDirectory: '${{ parameters.scriptsPath }}'
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet restore'
     inputs:
       command: 'restore'
       projects: |
-        $(srcPath)/**/*.csproj
+        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
       feedsToUse: config
-      nugetConfigPath: .nuget/NuGet.config
+      nugetConfigPath: ${{ parameters.nugetPathFile }}
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet build'
     inputs:
       command: 'build'
       projects: |
-        $(srcPath)/**/*.csproj
-      arguments: '--configuration $(buildConfiguration)'
+        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
+      arguments: '--configuration ${{ parameters.buildConfiguration }}'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet publish'
+    inputs:
+      command: publish
+      projects: |
+        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
+      arguments: '--output ${{ parameters.artifactsPath }}'
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: drop'
     inputs:
-      pathToPublish: '$(Build.ArtifactStagingDirectory)'
+      pathToPublish: '${{ parameters.artifactsPath }}'
       artifactName: drop

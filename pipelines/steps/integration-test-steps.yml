@@ -1,7 +1,16 @@
 parameters:
-- name: armPath 
+- name: rgEnvironment
+  type: string 
+  default: "COMPANY-rg-PRODUCT-001"
+- name: integrationPath 
   type: string 
   default: "."
+- name: integrationProject
+  type: string 
+  default: "*.csproj"
+- name: appcsConnection
+  type: string 
+  default: ""
 
 steps:
   - task: DotNetCoreCLI@2
@@ -9,8 +18,8 @@ steps:
     inputs:
       command: test
       projects: |
-        $(integrationPath)/**/*.csproj
+        ${{ parameters.integrationPath }}/**/${{ parameters.integrationProject }}
     env:
-      CIAC_HAAS_CONNECTION: $(appcsConnection)
-      ASPNETCORE_ENVIRONMENT: $(rgEnvironment)
-      AZURE_FUNCTIONS_ENVIRONMENT: $(rgEnvironment)
+      GTC_WWW_CONNECTION: ${{ parameters.appcsConnection }}
+      ASPNETCORE_ENVIRONMENT: ${{ parameters.rgEnvironment }}
+      AZURE_FUNCTIONS_ENVIRONMENT: ${{ parameters.rgEnvironment }}

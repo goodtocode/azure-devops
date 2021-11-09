@@ -1,13 +1,19 @@
 parameters:
-- name: armPath 
+- name: rgEnvironment
   type: string 
-  default: "."
+  default: "COMPANY-rg-PRODUCT-001"
 - name: unitPath 
   type: string 
   default: "."
 - name: unitProject
   type: string 
   default: "*.Unit.Tests.csproj"
+- name: appcsConnection
+  type: string 
+  default: ""
+- name: appcsKey
+  type: string 
+  default: "APP_CONFIGURATION_CONNECTION"
 
 steps:
   - task: DotNetCoreCLI@2
@@ -17,6 +23,6 @@ steps:
       projects: |
         ${{ parameters.unitPath }}/**/${{ parameters.unitProject }}
     env:
-      COMPANY_PRODUCT_CONFIGURATION: $(appcsConnection)
-      ASPNETCORE_ENVIRONMENT: $(rgEnvironment)
-      AZURE_FUNCTIONS_ENVIRONMENT: $(rgEnvironment)
+      ${{ parameters.appcsKey }}: ${{ parameters.appcsConnection }}
+      ASPNETCORE_ENVIRONMENT: ${{ parameters.rgEnvironment }}
+      AZURE_FUNCTIONS_ENVIRONMENT: ${{ parameters.rgEnvironment }}

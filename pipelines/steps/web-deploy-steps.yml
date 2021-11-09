@@ -1,7 +1,19 @@
 parameters:
-- name: armPath 
+- name: appSettings
+  type: string 
+  default: '-ASPNETCORE_ENVIRONMENT Development'
+- name: artifactsPath
   type: string 
   default: "."
+- name: subscriptionId
+  type: string 
+  default: "00000000-0000-0000-0000-000000000000"
+- name: subscriptionName
+  type: string 
+  default: 'COMPANY-PRODUCT-001'
+- name: webName
+  type: string 
+  default: "web-PRODUCT-ENVIRONMENT-001"
 
 steps:
     - task: DownloadBuildArtifacts@0
@@ -9,15 +21,15 @@ steps:
         buildType: 'current'
         downloadType: 'single'
         artifactName: 'drop'
-        downloadPath: '$(System.ArtifactsDirectory)'
+        downloadPath: '${{ parameters.artifactsPath }}'
 
     - task: AzureRmWebAppDeployment@4
-      displayName: 'deploy $(webName)'
+      displayName: 'deploy ${{ parameters.webName }}'
       inputs:
         ConnectionType: 'AzureRM'
-        ConnectedServiceName: $(subscriptionName)
-        subscriptionName: $(subscriptionId)
+        ConnectedServiceName: ${{ parameters.subscriptionName }}
+        subscriptionName: ${{ parameters.subscriptionId }}
         appType: 'webApp'
-        WebAppName: '$(webName)'
-        packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
-        AppSettings: '-ASPNETCORE_ENVIRONMENT $(rgEnvironment) -GTC_WWW_CONFIGURATION $(appcsConfiguration)'
+        WebAppName: '${{ parameters.webName }}'
+        packageForLinux: '${{ parameters.artifactsPath }}/**/${{ parameters.archiveFile }}'
+        AppSettings: '${{ parameters.appSettings }}'

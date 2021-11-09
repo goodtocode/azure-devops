@@ -1,0 +1,25 @@
+parameters:
+- name: appName
+  type: string 
+  default: "any-PRODUCT-ENVIRONMENT-001"
+- name: subscriptionName
+  type: string 
+  default: 'COMPANY-PRODUCT-001'
+- name: appSetting
+  type: object
+  default:
+    name: 'ASPNETCORE_ENVIRONMENT'
+    value: 'Development'
+    slotSetting: false
+
+steps:
+    - task: AzureAppServiceSettings@1
+          displayName: 'App Settings ${{ parameters.appName }}'
+          inputs:
+            azureSubscription: ${{ parameters.subscriptionName }}
+            appName: ${{ parameters.appName }}
+          # slotName: staging
+            appSettings: |
+              [
+                  ${{ parameters.appSetting }}
+              ]
