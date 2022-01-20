@@ -14,31 +14,46 @@ parameters:
 - name: rgLocation 
   type: string 
   default: "West US 2"
-- name: planName
+- name: rgEnvironment
   type: string 
-  default: "plan-PRODUCT-ENVIRONMENT-001"
-- name: planSku
+  default: 'Development'
+- name: sbName
   type: string 
-  default: "F1"
-- name: sqlName
+  default: "sb-PRODUCT-ENVIRONMENT-001"
+- name: sbSku
   type: string 
-  default: "sql-PRODUCT-ENVIRONMENT-001"
-- name: sqlDatabase
+  default: "Basic"
+- name: spocnName
+  type: string 
+  default: "spocn-PRODUCT-ENVIRONMENT-001"
+- name: stblobcnName
+  type: string 
+  default: "stblobcn-PRODUCT-ENVIRONMENT-001"
+- name: stName
+  type: string 
+  default: "stPRODUCTENVIRONMENT001"
+- name: stKey
   type: string 
   default: ""
-- name: sqlAdminUser
+- name: teamscnName
   type: string 
-  default: "LocalAdmin"
-- name: sqlAdminPassword
+  default: "teamscn-PRODUCT-ENVIRONMENT-001"
+- name: funcNameFilter
+  type: string 
+  default: "func-PRODUCT-ENVIRONMENT-001"
+- name: workName
+  type: string 
+  default: "work-PRODUCT-ENVIRONMENT-001"
+- name: appiKey
   type: string 
   default: ""
-- name: webName
+- name: appiConnection
   type: string 
-  default: "web-PRODUCT-ENVIRONMENT-001"
+  default: ""
 
 steps:
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Validate ${{ parameters.planName }}"
+    displayName: "Validate ${{ parameters.sbName }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
@@ -47,13 +62,13 @@ steps:
         resourceGroupName: "${{ parameters.rgName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "${{ parameters.armPath }}/plan-appplan.json"        
-        csmParametersFile: "${{ parameters.armPath }}/plan-appplan.parameters.json"        
+        csmFile: "${{ parameters.armPath }}/sb-servicebus.json"
+        csmParametersFile: "${{ parameters.armPath }}/sb-servicebus.parameters.json"
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.planName }}" -sku "${{ parameters.planSku }}"
+        overrideParameters: -name "${{ parameters.sbName }}" -sku "${{ parameters.sbSku }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Deploy ${{ parameters.planName }}"
+    displayName: "Deploy ${{ parameters.sbName }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
@@ -62,13 +77,13 @@ steps:
         resourceGroupName: "${{ parameters.rgName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "${{ parameters.armPath }}/plan-appplan.json"
-        csmParametersFile: "${{ parameters.armPath }}/plan-appplan.parameters.json"
+        csmFile: "${{ parameters.armPath }}/sb-servicebus.json"
+        csmParametersFile: "${{ parameters.armPath }}/sb-servicebus.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.planName }}" -sku "${{ parameters.planSku }}"
+        overrideParameters: -name "${{ parameters.sbName }}" -sku "${{ parameters.sbSku }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Validate $(sqlName)"
+    displayName: "Validate ${{ parameters.spocnName }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
@@ -77,13 +92,13 @@ steps:
         resourceGroupName: "${{ parameters.rgName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "${{ parameters.armPath }}/sql-sqldatabase.json"        
-        csmParametersFile: "${{ parameters.armPath }}/sql-sqldatabase.parameters.json"        
+        csmFile: "${{ parameters.armPath }}/spocn-sharepointonlineapiconnection.json"
+        csmParametersFile: "${{ parameters.armPath }}/spocn-sharepointonlineapiconnection.parameters.json"
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.sqlName }}" -databaseName "${{ parameters.sqlDatabase }}" -adminLogin "${{ parameters.sqlAdminUser }}" -adminPassword "${{ parameters.sqlAdminPassword }}"
+        overrideParameters: -name "${{ parameters.spocnName }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Deploy $(sqlName)"
+    displayName: "Deploy ${{ parameters.spocnName }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
@@ -92,13 +107,13 @@ steps:
         resourceGroupName: "${{ parameters.rgName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "${{ parameters.armPath }}/sql-sqldatabase.json"
-        csmParametersFile: "${{ parameters.armPath }}/sql-sqldatabase.parameters.json"
+        csmFile: "${{ parameters.armPath }}/spocn-sharepointonlineapiconnection.json"
+        csmParametersFile: "${{ parameters.armPath }}/spocn-sharepointonlineapiconnection.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.sqlName }}" -databaseName "${{ parameters.sqlDatabase }}" -adminLogin "${{ parameters.sqlAdminUser }}" -adminPassword "${{ parameters.sqlAdminPassword }}"
+        overrideParameters: -name "${{ parameters.spocnName }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Validate ${{ parameters.webName }}"
+    displayName: "Validate ${{ parameters.stblobcnName }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
@@ -107,13 +122,13 @@ steps:
         resourceGroupName: "${{ parameters.rgName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "${{ parameters.armPath }}/web-webapp.json"        
-        csmParametersFile: "${{ parameters.armPath }}/web-webapp.parameters.json"        
+        csmFile: "${{ parameters.armPath }}/stblobcn-storageblobapiconnection.json"
+        csmParametersFile: "${{ parameters.armPath }}/stblobcn-storageblobapiconnection.parameters.json"
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.webName }}" -planName "${{ parameters.planName }}"
+        overrideParameters: -name "${{ parameters.stblobcnName }}" -storageName "${{ parameters.stName }}" -storageKey "${{ parameters.stKey }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Deploy ${{ parameters.webName }}"
+    displayName: "Deploy ${{ parameters.stblobcnName }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
@@ -122,7 +137,68 @@ steps:
         resourceGroupName: "${{ parameters.rgName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "${{ parameters.armPath }}/web-webapp.json"
-        csmParametersFile: "${{ parameters.armPath }}/web-webapp.parameters.json"
+        csmFile: "${{ parameters.armPath }}/stblobcn-storageblobapiconnection.json"
+        csmParametersFile: "${{ parameters.armPath }}/stblobcn-storageblobapiconnection.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.webName }}" -planName "${{ parameters.planName }}"
+        overrideParameters: -name "${{ parameters.stblobcnName }}" -storageName "${{ parameters.stName }}" -storageKey "${{ parameters.stKey }}"
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Validate ${{ parameters.teamscnName }}"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        subscriptionId: "${{ parameters.subscriptionId }}"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "${{ parameters.rgName }}"
+        location: "${{ parameters.rgLocation }}"
+        templateLocation: "Linked artifact"
+        csmFile: "${{ parameters.armPath }}/teamscn-teamsapiconnection.json"
+        csmParametersFile: "${{ parameters.armPath }}/teamscn-teamsapiconnection.parameters.json"
+        deploymentMode: "Validation"
+        overrideParameters: -name "${{ parameters.teamscnName }}"
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Deploy ${{ parameters.teamscnName }}"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        subscriptionId: "${{ parameters.subscriptionId }}"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "${{ parameters.rgName }}"
+        location: "${{ parameters.rgLocation }}"
+        templateLocation: "Linked artifact"
+        csmFile: "${{ parameters.armPath }}/teamscn-teamsapiconnection.json"
+        csmParametersFile: "${{ parameters.armPath }}/teamscn-teamsapiconnection.parameters.json"
+        deploymentMode: "Incremental"
+        overrideParameters: -name "${{ parameters.teamscnName }}"
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Validate ${{ parameters.funcNameFilter }}"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        subscriptionId: "${{ parameters.subscriptionId }}"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "${{ parameters.rgName }}"
+        location: "${{ parameters.rgLocation }}"
+        templateLocation: "Linked artifact"
+        csmFile: "${{ parameters.armPath }}/func-functionsapp.json"        
+        csmParametersFile: "${{ parameters.armPath }}/func-functionsapp.parameters.json"        
+        deploymentMode: "Validation"
+        overrideParameters: -name "${{ parameters.funcNameFilter }}" -workspaceName "${{ parameters.workName }}" -storageName "${{ parameters.stName }}" -appInsightsKey "${{ parameters.appiKey }}" -appInsightsConnection "${{ parameters.appiConnection }}" -workerRuntime "dotnet-isolated" -environment "${{ parameters.rgEnvironment }}"
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Deploy ${{ parameters.funcNameFilter }}"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        subscriptionId: "${{ parameters.subscriptionId }}"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "${{ parameters.rgName }}"
+        location: "${{ parameters.rgLocation }}"
+        templateLocation: "Linked artifact"
+        csmFile: "${{ parameters.armPath }}/func-functionsapp.json"
+        csmParametersFile: "${{ parameters.armPath }}/func-functionsapp.parameters.json"
+        deploymentMode: "Incremental"
+        overrideParameters: -name "${{ parameters.funcNameFilter }}" -workspaceName "${{ parameters.workName }}" -storageName "${{ parameters.stName }}" -appInsightsKey "${{ parameters.appiKey }}" -appInsightsConnection "${{ parameters.appiConnection }}" -workerRuntime "dotnet-isolated" -environment "${{ parameters.rgEnvironment }}"
+

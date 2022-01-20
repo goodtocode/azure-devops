@@ -19,7 +19,7 @@ parameters:
   default: "Release"
 - name: tempPath
   type: string 
-  default: '/ymltemp'
+  default: './ymltemp'
 
 steps:
   - task: DotNetCoreCLI@2

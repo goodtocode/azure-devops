@@ -17,6 +17,9 @@ parameters:
 - name: logicName
   type: string 
   default: "logic-PRODUCT-ENVIRONMENT-001"
+- name: logicParameters
+  type: string 
+  default: "logic-PRODUCT-ENVIRONMENT-001"
 
 steps:
   - task: AzureResourceManagerTemplateDeployment@3
@@ -32,7 +35,7 @@ steps:
         csmFile: "${{ parameters.logicPath }}/LogicApp.json"
         csmParametersFile: "${{ parameters.logicPath }}/LogicApp.parameters.json"        
         deploymentMode: "Validation"
-        overrideParameters: -logicAppName "${{ parameters.logicName }}" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_Connection_Name "$(teamscnNameLower)"
+        overrideParameters: "${{ parameters.logicParameters }}"          
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Deploy ${{ parameters.logicName }}"
@@ -47,4 +50,4 @@ steps:
         csmFile: "${{ parameters.logicPath }}/LogicApp.json"
         csmParametersFile: "${{ parameters.logicPath }}/LogicApp.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -logicAppName "${{ parameters.logicName }}" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_token:TenantId "$(tenantId)"
+        overrideParameters: "${{ parameters.logicParameters }}"

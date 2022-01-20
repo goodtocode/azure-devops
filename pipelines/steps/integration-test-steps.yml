@@ -11,6 +11,9 @@ parameters:
 - name: appcsConnection
   type: string 
   default: ""
+- name: appcsKey
+  type: string 
+  default: "APP_CONFIGURATION_CONNECTION"
 
 steps:
   - task: DotNetCoreCLI@2
@@ -20,6 +23,6 @@ steps:
       projects: |
         ${{ parameters.integrationPath }}/**/${{ parameters.integrationProject }}
     env:
-      GTC_WWW_CONNECTION: ${{ parameters.appcsConnection }}
+      ${{ parameters.appcsKey }}: ${{ parameters.appcsConnection }}
       ASPNETCORE_ENVIRONMENT: ${{ parameters.rgEnvironment }}
       AZURE_FUNCTIONS_ENVIRONMENT: ${{ parameters.rgEnvironment }}
