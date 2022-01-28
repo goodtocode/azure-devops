@@ -4,16 +4,19 @@ parameters:
   default: '-ASPNETCORE_ENVIRONMENT Development'
 - name: artifactsPath
   type: string 
-  default: "."
+  default: '.'
+- name: archiveFile
+  type: string 
+  default: '*.zip'
+- name: webName
+  type: string 
+  default: 'web-PRODUCT-ENVIRONMENT-001'
 - name: subscriptionId
   type: string 
   default: "00000000-0000-0000-0000-000000000000"
 - name: subscriptionName
   type: string 
   default: 'COMPANY-PRODUCT-001'
-- name: webName
-  type: string 
-  default: "web-PRODUCT-ENVIRONMENT-001"
 
 steps:
     - task: DownloadBuildArtifacts@0
@@ -24,7 +27,7 @@ steps:
         downloadPath: '${{ parameters.artifactsPath }}'
 
     - task: AzureRmWebAppDeployment@4
-      displayName: 'deploy ${{ parameters.webName }}'
+      displayName: 'Deploying ${{ parameters.webName }}'
       inputs:
         ConnectionType: 'AzureRM'
         ConnectedServiceName: ${{ parameters.subscriptionName }}

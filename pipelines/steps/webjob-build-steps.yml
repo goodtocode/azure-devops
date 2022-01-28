@@ -5,12 +5,14 @@ parameters:
 - name: archiveFile
   type: string 
   default: '*.zip'
-- name: funcPath
+- name: srcPath
   type: string 
   default: '.'
-- name: funcProject
+- name: webjobProject
   type: string 
   default: '*.csproj'
+- name: webjobName
+  type: string 
 - name: nugetPathFile
   type: string 
   default: ".nuget/NuGet.config"
@@ -20,6 +22,15 @@ parameters:
 - name: tempPath
   type: string 
   default: './ymltemp'
+- name: webjobType
+  type: string
+  default: 'Triggered' #'Continuous'  
+- name: webjobPath
+  type: string
+  value: '/site/wwwroot/app_data/Jobs'
+- name: cronSchedule
+  type: string
+  value: '0 */5 * * * *'
 
 steps:
   - task: DotNetCoreCLI@2
@@ -27,7 +38,7 @@ steps:
     inputs:
       command: 'restore'
       projects: |
-        ${{ parameters.funcPath }}/**/${{ parameters.funcProject }}
+        ${{ parameters.srcPath }}/**/${{ parameters.webjobProject }}
       feedsToUse: config
       nugetConfigPath: ${{ parameters.nugetPathFile }}
 
@@ -36,8 +47,16 @@ steps:
     inputs:
       command: 'build'
       projects: |
-        ${{ parameters.funcPath }}/**/${{ parameters.funcProject }}
-      arguments: --output ${{ parameters.tempPath }} --configuration ${{ parameters.buildConfiguration }}
+        ${{ parameters.srcPath }}/**/${{ parameters.webjobProject }}
+      arguments: '--output ${{ parameters.tempPath }}${{ parameters.webjobPath }}/${{ parameters.webjobType }}/${{ parameters.jobName }} --configuration ${{ parameters.buildConfiguration }}'
+
+  - task: PowerShell@2
+    displayName: 'create settings.job'
+    inputs:
+      targetType: 'inline'
+      script: |
+        New-Item '${{ parameters.tempPath }}${{ parameters.webjobPath }}/${{ parameters.webjobType }}/${{ parameters.jobName }}/settings.job'
+        Set-Content '${{ parameters.tempPath }}${{ parameters.webjobPath }}/${{ parameters.webjobType }}/${{ parameters.jobName }}/settings.job' '{"schedule":"${{ parameters.cronSchedule }}"}'    
 
   - task: ArchiveFiles@2
     displayName: 'Archive ${{ parameters.archiveFile }}'
