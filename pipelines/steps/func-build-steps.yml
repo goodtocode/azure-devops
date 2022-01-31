@@ -22,6 +22,19 @@ parameters:
   default: './ymltemp'
 
 steps:
+  - task: DeleteFiles@1
+    inputs:
+      SourceFolder: '${{ parameters.tempPath }}'
+      Contents: '**/*'
+      RemoveDotFiles: true
+
+  - task: UseDotNet@2
+    displayName: 'use .net 6.x'
+    inputs:
+      packageType: 'sdk'
+      version: '6.x'
+      includePreviewVersions: true
+
   - task: DotNetCoreCLI@2
     displayName: 'dotnet restore'
     inputs:
@@ -32,7 +45,7 @@ steps:
       nugetConfigPath: ${{ parameters.nugetPathFile }}
 
   - task: DotNetCoreCLI@2
-    displayName: 'dotnet build'
+    displayName: 'dotnet build free'
     inputs:
       command: 'build'
       projects: |

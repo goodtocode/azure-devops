@@ -24,15 +24,28 @@ parameters:
   default: './ymltemp'
 - name: webjobType
   type: string
-  default: 'Triggered' #'Continuous'  
+  default: 'triggered' #'continuous'  
 - name: webjobPath
   type: string
-  value: '/site/wwwroot/app_data/Jobs'
+  default: '/App_Data/jobs'
 - name: cronSchedule
   type: string
-  value: '0 */5 * * * *'
+  default: '0 */5 * * * *'
 
 steps:
+  - task: DeleteFiles@1
+    inputs:
+      SourceFolder: '${{ parameters.tempPath }}'
+      Contents: '**/*'
+      RemoveDotFiles: true
+
+  - task: UseDotNet@2
+    displayName: 'use .net 6.x'
+    inputs:
+      packageType: 'sdk'
+      version: '6.x'
+      includePreviewVersions: true
+
   - task: DotNetCoreCLI@2
     displayName: 'dotnet restore'
     inputs:
@@ -48,15 +61,15 @@ steps:
       command: 'build'
       projects: |
         ${{ parameters.srcPath }}/**/${{ parameters.webjobProject }}
-      arguments: '--output ${{ parameters.tempPath }}${{ parameters.webjobPath }}/${{ parameters.webjobType }}/${{ parameters.jobName }} --configuration ${{ parameters.buildConfiguration }}'
+      arguments: '--output ${{ parameters.tempPath }}${{ parameters.webjobPath }}/${{ parameters.webjobType }}/${{ parameters.webjobName }} --configuration ${{ parameters.buildConfiguration }}'
 
   - task: PowerShell@2
     displayName: 'create settings.job'
     inputs:
       targetType: 'inline'
       script: |
-        New-Item '${{ parameters.tempPath }}${{ parameters.webjobPath }}/${{ parameters.webjobType }}/${{ parameters.jobName }}/settings.job'
-        Set-Content '${{ parameters.tempPath }}${{ parameters.webjobPath }}/${{ parameters.webjobType }}/${{ parameters.jobName }}/settings.job' '{"schedule":"${{ parameters.cronSchedule }}"}'    
+        New-Item '${{ parameters.tempPath }}${{ parameters.webjobPath }}/${{ parameters.webjobType }}/${{ parameters.webjobName }}/settings.job'
+        Set-Content '${{ parameters.tempPath }}${{ parameters.webjobPath }}/${{ parameters.webjobType }}/${{ parameters.webjobName }}/settings.job' '{"schedule":"${{ parameters.cronSchedule }}"}'    
 
   - task: ArchiveFiles@2
     displayName: 'Archive ${{ parameters.archiveFile }}'
