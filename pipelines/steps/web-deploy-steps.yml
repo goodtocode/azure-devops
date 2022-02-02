@@ -1,7 +1,7 @@
 parameters:
 - name: appSettings
   type: string 
-  default: '-ASPNETCORE_ENVIRONMENT Development'
+  default: '-ASPNETCORE_ENVIRONMENT Development -NODE_ENV Development'
 - name: artifactsPath
   type: string 
   default: '.'
