@@ -19,22 +19,9 @@ parameters:
   default: "Release"
 - name: tempPath
   type: string 
-  default: './ymltemp'
+  default: '/functemp'
 
 steps:
-  - task: DeleteFiles@1
-    inputs:
-      SourceFolder: '${{ parameters.tempPath }}'
-      Contents: '**/*'
-      RemoveDotFiles: true
-
-  - task: UseDotNet@2
-    displayName: 'use .net 6.x'
-    inputs:
-      packageType: 'sdk'
-      version: '6.x'
-      includePreviewVersions: true
-
   - task: DotNetCoreCLI@2
     displayName: 'dotnet restore'
     inputs:
@@ -45,7 +32,7 @@ steps:
       nugetConfigPath: ${{ parameters.nugetPathFile }}
 
   - task: DotNetCoreCLI@2
-    displayName: 'dotnet build free'
+    displayName: 'dotnet build'
     inputs:
       command: 'build'
       projects: |

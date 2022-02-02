@@ -5,15 +5,12 @@ parameters:
 - name: srcPath 
   type: string 
   default: "."
-- name: srcProject
-  type: string 
-  default: "*.csproj"
 - name: scriptsPath 
   type: string 
   default: "./pipelines/scripts"
-- name: buildConfiguration
+- name: tempPath
   type: string 
-  default: "Release"
+  default: '/sitetemp'
 
 steps:
   - task: PowerShell@2
@@ -40,6 +37,38 @@ steps:
       command: 'custom'
       customCommand: 'run build'
       workingDir: '${{ parameters.srcPath }}'
+
+  - task: DeleteFiles@1
+    displayName: 'delete tempPath'
+    inputs:
+      SourceFolder: '${{ parameters.tempPath }}'
+      Contents: '**/*'
+      RemoveDotFiles: true
+
+  - task: CopyFiles@2
+    displayName: 'copy wwwroot'
+    inputs:
+      SourceFolder: '${{ parameters.srcPath }}/wwwroot'
+      Contents: '**'
+      TargetFolder: '${{ parameters.tempPath }}'
+      CleanTargetFolder: true
+      OverWrite: true
+
+  - task: ArchiveFiles@2
+    displayName: 'Archive ${{ parameters.archiveFile }}'
+    inputs:
+      rootFolderOrFile: '${{ parameters.tempPath }}'
+      includeRootFolder: false
+      archiveType: zip
+      archiveFile: '${{ parameters.artifactsPath }}/${{ parameters.archiveFile }}'
+      replaceExistingArchive: true
+
+  - task: DeleteFiles@1
+    displayName: 'delete tempPath'
+    inputs:
+      SourceFolder: '${{ parameters.tempPath }}'
+      Contents: '**/*'
+      RemoveDotFiles: true
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: drop'
