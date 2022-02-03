@@ -2,6 +2,9 @@ parameters:
 - name: artifactsPath
   type: string 
   default: "."
+- name: archiveFile
+  type: string 
+  default: "archive.zip"
 - name: srcPath 
   type: string 
   default: "."

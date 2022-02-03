@@ -5,15 +5,9 @@ parameters:
 - name: srcPath 
   type: string 
   default: "."
-- name: srcProject
-  type: string 
-  default: "*.csproj"
 - name: scriptsPath 
   type: string 
   default: "./pipelines/scripts"
-- name: buildConfiguration
-  type: string 
-  default: "Release"
 
 steps:
   - task: PowerShell@2
