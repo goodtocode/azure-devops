@@ -13,7 +13,7 @@ parameters:
   default: "./pipelines/scripts"
 - name: tempPath
   type: string 
-  default: '/sitetemp'
+  default: './sitetemp'
 
 steps:
   - task: PowerShell@2
