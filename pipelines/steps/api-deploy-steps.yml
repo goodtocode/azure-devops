@@ -4,16 +4,13 @@ parameters:
   default: "."
 - name: archiveFile
   type: string 
-  default: "archive.zip"
+  default: "*.zip"
 - name: apiName
   type: string 
   default: "web-PRODUCT-ENVIRONMENT-001"
 - name: appSettings
   type: string 
   default: '-ASPNETCORE_ENVIRONMENT Development'
-- name: artifactsPath
-  type: string 
-  default: "."
 - name: subscriptionId
   type: string 
   default: "00000000-0000-0000-0000-000000000000"
