@@ -1,4 +1,10 @@
 parameters:
+- name: artifactsPath
+  type: string 
+  default: "."
+- name: archiveFile
+  type: string 
+  default: "archive.zip"
 - name: apiName
   type: string 
   default: "web-PRODUCT-ENVIRONMENT-001"
