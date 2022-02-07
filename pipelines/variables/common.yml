@@ -9,12 +9,8 @@ variables:
     value: '$(Build.ArtifactStagingDirectory)'
   - name: tempPath
     value: '$(Agent.TempDirectory)/ymltemp'
-  - name: archiveFileFree
-    value: 'archivefree.zip'
-  - name: archiveFilePaid
-    value: 'archivepaid.zip'
-  - name: archiveFilePremium
-    value: 'archivepremium.zip'
+  - name: archiveFile
+    value: 'archive.zip'
   - name: pipelinesPath
     value: '$(System.DefaultWorkingDirectory)/pipelines'
   - name: infrastructurePath
@@ -24,9 +20,9 @@ variables:
   - name: srcPath
     value: '$(System.DefaultWorkingDirectory)/src'
   - name: funcPath
-    value: '$(System.DefaultWorkingDirectory)/src'
-  - name: funcPath
     value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.Functions'
+  - name: webjobPath
+    value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.WebJob'
   - name: logicPath
     value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.LogicApps.NAME'
   - name: buildConfiguration

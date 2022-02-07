@@ -1,15 +1,35 @@
 parameters:
-- name: armPath 
+- name: rgEnvironment
+  type: string 
+  default: "COMPANY-rg-PRODUCT-001"
+- name: unitPath 
   type: string 
   default: "."
+- name: unitProject
+  type: string 
+  default: "*.Unit.Tests.csproj"
+- name: appcsConnection
+  type: string 
+  default: ""
+- name: appcsKey
+  type: string 
+  default: "APP_CONFIGURATION_CONNECTION"
 
 steps:
+  - task: UseDotNet@2
+    displayName: 'use .net 6.x'
+    inputs:
+      packageType: 'sdk'
+      version: '6.x'
+      includePreviewVersions: true
+
   - task: DotNetCoreCLI@2
     displayName: 'dotnet test'
     inputs:
       command: test
       projects: |
-        $(srcPath)/**/*.csproj
+        ${{ parameters.unitPath }}/**/${{ parameters.unitProject }}
     env:
-      AppSettingsConnection: $(AppSettingsConnection)
-      ASPNETCORE_ENVIRONMENT: $(ASPNETCORE_ENVIRONMENT)
+      ${{ parameters.appcsKey }}: ${{ parameters.appcsConnection }}
+      ASPNETCORE_ENVIRONMENT: ${{ parameters.rgEnvironment }}
+      AZURE_FUNCTIONS_ENVIRONMENT: ${{ parameters.rgEnvironment }}

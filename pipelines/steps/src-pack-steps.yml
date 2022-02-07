@@ -11,12 +11,6 @@ parameters:
 - name: scriptsPath 
   type: string 
   default: "./pipelines/scripts"
-- name: nugetPathFile
-  type: string 
-  default: ".nuget/NuGet.config"
-- name: buildConfiguration
-  type: string 
-  default: "Release"
 
 steps:
   - task: UseDotNet@2
@@ -34,21 +28,12 @@ steps:
       workingDirectory: '${{ parameters.scriptsPath }}'
 
   - task: DotNetCoreCLI@2
-    displayName: 'dotnet restore'
+    displayName: 'dotnet publish'
     inputs:
-      command: 'restore'
+      command: publish
       projects: |
         ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
-      feedsToUse: config
-      nugetConfigPath: ${{ parameters.nugetPathFile }}
-
-  - task: DotNetCoreCLI@2
-    displayName: 'dotnet build'
-    inputs:
-      command: 'build'
-      projects: |
-        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
-      arguments: '--configuration ${{ parameters.buildConfiguration }}'
+      arguments: '--output ${{ parameters.artifactsPath }}'
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: drop'

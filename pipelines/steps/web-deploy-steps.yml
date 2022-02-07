@@ -1,16 +1,16 @@
 parameters:
 - name: appSettings
   type: string 
-  default: '-ASPNETCORE_ENVIRONMENT Development'
+  default: '-ASPNETCORE_ENVIRONMENT Development -NODE_ENV Development'
 - name: artifactsPath
   type: string 
   default: '.'
 - name: archiveFile
   type: string 
   default: '*.zip'
-- name: funcName
+- name: webName
   type: string 
-  default: 'func-PRODUCT-ENVIRONMENT-001'
+  default: 'web-PRODUCT-ENVIRONMENT-001'
 - name: subscriptionId
   type: string 
   default: "00000000-0000-0000-0000-000000000000"
@@ -27,12 +27,12 @@ steps:
         downloadPath: '${{ parameters.artifactsPath }}'
 
     - task: AzureRmWebAppDeployment@4
-      displayName: 'Deploying ${{ parameters.funcName }}'
+      displayName: 'Deploying ${{ parameters.webName }}'
       inputs:
         ConnectionType: 'AzureRM'
         ConnectedServiceName: ${{ parameters.subscriptionName }}
         subscriptionName: ${{ parameters.subscriptionId }}
         appType: 'webApp'
-        WebAppName: '${{ parameters.funcName }}'
+        WebAppName: '${{ parameters.webName }}'
         packageForLinux: '${{ parameters.artifactsPath }}/**/${{ parameters.archiveFile }}'
         AppSettings: '${{ parameters.appSettings }}'

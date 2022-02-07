@@ -1,99 +1,53 @@
 parameters:
-- name: armPath
+- name: subscriptionId
+  type: string 
+  default: "00000000-0000-0000-0000-000000000000"
+- name: subscriptionName
+  type: string 
+  default: 'COMPANY-PRODUCT-001'
+- name: rgName 
+  type: string 
+  default: 'COMPANY-rg-PRODUCT-001'
+- name: rgLocation 
+  type: string 
+  default: "West US 2"
+- name: logicPath 
   type: string 
   default: "."
+- name: logicName
+  type: string 
+  default: "logic-PRODUCT-ENVIRONMENT-001"
+- name: logicParameters
+  type: string 
+  default: "logic-PRODUCT-ENVIRONMENT-001"
 
 steps:
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Validate $(logicExcelToTableNameFree)"
+    displayName: "Validate ${{ parameters.logicName }}"
     inputs:
         deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "$(subscriptionName)"
-        subscriptionId: "$(subscriptionId)"
+        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
-        resourceGroupName: "$(rgName)"
-        location: "$(locationName)"
+        resourceGroupName: "${{ parameters.rgName }}"
+        location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "$(logicPathFree)/LogicApp.json"
-        csmParametersFile: "$(logicPathFree)/LogicApp.parameters.json"        
+        csmFile: "${{ parameters.logicPath }}/LogicApp.json"
+        csmParametersFile: "${{ parameters.logicPath }}/LogicApp.parameters.json"        
         deploymentMode: "Validation"
-        overrideParameters: -logicAppName "$(logicExcelToTableNameFree)" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_Connection_Name "$(teamscnNameLower)"
+        overrideParameters: "${{ parameters.logicParameters }}"          
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Deploy $(logicExcelToTableNameFree)"
+    displayName: "Deploy ${{ parameters.logicName }}"
     inputs:
         deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "$(subscriptionName)"
-        subscriptionId: "$(subscriptionId)"
+        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
-        resourceGroupName: "$(rgName)"
-        location: "$(locationName)"
+        resourceGroupName: "${{ parameters.rgName }}"
+        location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "$(logicPathFree)/LogicApp.json"
-        csmParametersFile: "$(logicPathFree)/LogicApp.parameters.json"
+        csmFile: "${{ parameters.logicPath }}/LogicApp.json"
+        csmParametersFile: "${{ parameters.logicPath }}/LogicApp.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -logicAppName "$(logicExcelToTableNameFree)" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_token:TenantId "$(tenantId)"
-
-
-  - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Validate $(logicExcelToTableNamePaid)"
-    inputs:
-        deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "$(subscriptionName)"
-        subscriptionId: "$(subscriptionId)"
-        action: "Create Or Update Resource Group"
-        resourceGroupName: "$(rgName)"
-        location: "$(locationName)"
-        templateLocation: "Linked artifact"
-        csmFile: "$(logicPathPaid)/LogicApp.json"
-        csmParametersFile: "$(logicPathPaid)/LogicApp.parameters.json"        
-        deploymentMode: "Validation"
-        overrideParameters: -logicAppName "$(logicExcelToTableNamePaid)" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_Connection_Name "$(teamscnNameLower)"
-
-    
-  - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Deploy $(logicExcelToTableNamePaid)"
-    inputs:
-        deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "$(subscriptionName)"
-        subscriptionId: "$(subscriptionId)"
-        action: "Create Or Update Resource Group"
-        resourceGroupName: "$(rgName)"
-        location: "$(locationName)"
-        templateLocation: "Linked artifact"
-        csmFile: "$(logicPathPaid)/LogicApp.json"
-        csmParametersFile: "$(logicPathPaid)/LogicApp.parameters.json"
-        deploymentMode: "Incremental"
-        overrideParameters: -logicAppName "$(logicExcelToTableNamePaid)" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_Connection_Name "$(teamscnNameLower)"
-
-
-  - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Validate $(logicExcelToTableNamePremium)"
-    inputs:
-        deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "$(subscriptionName)"
-        subscriptionId: "$(subscriptionId)"
-        action: "Create Or Update Resource Group"
-        resourceGroupName: "$(rgName)"
-        location: "$(locationName)"
-        templateLocation: "Linked artifact"
-        csmFile: "$(logicPathPremium)/LogicApp.json"
-        csmParametersFile: "$(logicPathPremium)/LogicApp.parameters.json"        
-        deploymentMode: "Validation"
-        overrideParameters: -logicAppName "$(logicExcelToTableNamePremium)" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_Connection_Name "$(teamscnNameLower)"
-
-
-  - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Deploy $(logicExcelToTableNamePremium)"
-    inputs:
-        deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "$(subscriptionName)"
-        subscriptionId: "$(subscriptionId)"
-        action: "Create Or Update Resource Group"
-        resourceGroupName: "$(rgName)"
-        location: "$(locationName)"
-        templateLocation: "Linked artifact"
-        csmFile: "$(logicPathPremium)/LogicApp.json"
-        csmParametersFile: "$(logicPathPremium)/LogicApp.parameters.json"
-        deploymentMode: "Incremental"
-        overrideParameters: -logicAppName "$(logicExcelToTableNamePremium)" -azureblob_1_Connection_DisplayName "$(stblobcnName)" -azureblob_1_Connection_Name "$(stblobcnNameLower)" -azureblob_1_accountName "$(storageName)" -azureblob_1_accessKey "$(storageKey)" -teams_1_Connection_DisplayName "$(teamscnName)" -teams_1_Connection_Name "$(teamscnNameLower)" -teams_1_Connection_Name "$(teamscnNameLower)"
+        overrideParameters: "${{ parameters.logicParameters }}"

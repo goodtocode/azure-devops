@@ -1,7 +1,19 @@
 parameters:
-- name: armPath
+- name: artifactsPath
   type: string 
   default: "."
+- name: nugetFile
+  type: string 
+  default: "*.nupkg"
+- name: nugetType
+  type: string 
+  default: "external"
+- name: nugetServiceConnection
+  type: string 
+  default: ""
+- name: nugetFeeds
+  type: string 
+  default: "select"
 
 steps:
     - task: DownloadBuildArtifacts@0
@@ -9,7 +21,7 @@ steps:
         buildType: 'current'
         downloadType: 'single'
         artifactName: 'drop'
-        downloadPath: '$(System.ArtifactsDirectory)'
+        downloadPath: '${{ parameters.artifactsPath }}'
 
     - task: NuGetToolInstaller@1
       inputs:
@@ -19,8 +31,8 @@ steps:
     - task: NuGetCommand@2
       inputs:
         command: 'push'
-        feedsToUse: 'select'
-        nuGetFeedType: 'external'
+        feedsToUse: '${{ parameters.nugetFeeds }}'
+        nuGetFeedType: '${{ parameters.nugetType }}'
         includeNuGetOrg: true
-        publishFeedCredentials: '$(nugetServiceConnection)'
-        packagesToPush: $(artifactsPath)/**/*.nupkg    
+        publishFeedCredentials: '${{ parameters.nugetServiceConnection }}'
+        packagesToPush: '${{ parameters.artifactsPath }}/**/${{ parameters.nugetFile }}'
