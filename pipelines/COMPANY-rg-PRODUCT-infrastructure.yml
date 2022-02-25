@@ -7,6 +7,11 @@ trigger:
     include:
     - infrastructure/*
 
+pr:
+  branches:
+    exclude:
+    - '*'
+
 pool:
   vmImage: 'ubuntu-latest'
 
@@ -19,7 +24,7 @@ variables:
 
 stages:
   - stage: development
-    condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull')))
+    condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
     variables:
       - template: variables/development.yml
       
@@ -29,6 +34,14 @@ stages:
           - template: steps/lz-deploy-steps.yml
             parameters:
               armPath: 'infrastructure'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
+              appiName: '$(appiName)'
+              kvName: '$(kvName)'
+              stName: '$(stName)'
+              workName: '$(workName)'
 
       - job: deploy_infrastructure
         dependsOn: deploy_landing_zone
@@ -36,3 +49,64 @@ stages:
           - template: steps/infrastructure-deploy-steps.yml
             parameters:
               armPath: 'infrastructure'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
+              rgEnvironment: '$(rgEnvironment)'
+              appiKey: '$(appiKey)'
+              appiConnection: '$(appiConnection)'
+              funcName: '$(funcName)'
+              planName: '$(planName)'
+              sbName: '$(sbName)'
+              sbSku: '$(sbSku)'
+              spocnName: '$(spocnName)'
+              stblobcnName: '$(stblobcnName)'
+              stName: '$(stName)'
+              teamscnName: '$(teamscnName)'              
+              webName: '$(webName)'
+              workName: '$(workName)'
+
+  - stage: production
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    variables:
+      - template: variables/production.yml    
+
+    jobs:
+      - job: deploy_landing_zone
+        steps:
+          - template: steps/lz-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
+              appiName: '$(appiName)'
+              kvName: '$(kvName)'
+              stName: '$(stName)'
+              workName: '$(workName)'
+
+      - job: deploy_infrastructure
+        dependsOn: deploy_landing_zone
+        steps:
+          - template: steps/infrastructure-deploy-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
+              rgEnvironment: '$(rgEnvironment)'
+              appiKey: '$(appiKey)'
+              appiConnection: '$(appiConnection)'
+              funcName: '$(funcName)'
+              planName: '$(planName)'
+              sbName: '$(sbName)'
+              sbSku: '$(sbSku)'
+              spocnName: '$(spocnName)'
+              stblobcnName: '$(stblobcnName)'
+              stName: '$(stName)'
+              teamscnName: '$(teamscnName)'              
+              webName: '$(webName)'
+              workName: '$(workName)'
