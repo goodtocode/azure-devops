@@ -28,12 +28,12 @@ steps:
       workingDirectory: '${{ parameters.scriptsPath }}'
 
   - task: DotNetCoreCLI@2
-    displayName: 'dotnet pack'
+    displayName: 'dotnet publish'
     inputs:
-      command: pack
+      command: publish
       projects: |
-        $(srcPath)/**/$(srcProject)
-      arguments: '--output $(Build.ArtifactStagingDirectory)'
+        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
+      arguments: '--output ${{ parameters.artifactsPath }}'
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: drop'
