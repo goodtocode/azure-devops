@@ -31,7 +31,7 @@ stages:
     jobs:    
       - job: build_src
         steps:
-          - template: steps/src-build-steps.yml
+          - template: steps/dotnet-build-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
               srcPath: '$(srcPath)'
@@ -39,7 +39,7 @@ stages:
       - job: test_src
         dependsOn: build_src
         steps:
-          - template: steps/src-test-steps.yml
+          - template: steps/dotnet-test-steps.yml
             parameters:
               unitPath: '$(System.DefaultWorkingDirectory)/src'
               appcsKey: 'CIAC_SSAAS_CONNECTION'
@@ -99,7 +99,7 @@ stages:
     jobs:
       - job: build_src
         steps:
-          - template: steps/src-build-steps.yml
+          - template: steps/dotnet-build-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
               srcPath: '$(srcPath)'
@@ -107,7 +107,7 @@ stages:
       - job: test_src
         dependsOn: build_src
         steps:
-          - template: steps/src-test-steps.yml
+          - template: steps/dotnet-test-steps.yml
             parameters:
               unitPath: '$(System.DefaultWorkingDirectory)/src'
               appcsKey: 'CIAC_SSAAS_CONNECTION'
