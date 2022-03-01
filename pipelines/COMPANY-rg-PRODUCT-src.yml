@@ -7,6 +7,11 @@ trigger:
     include:
     - src/*
 
+pr:
+  branches:
+    exclude:
+    - '*'
+
 pool:
   vmImage: 'ubuntu-latest'
 
@@ -19,65 +24,72 @@ variables:
 
 stages:
   - stage: development
-    condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull')), ne(variables['Build.Reason'], 'PullRequest'))
+    condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
     variables:
       - template: variables/development.yml
       
-    jobs:
+    jobs:    
       - job: build_src
         steps:
-          - template: steps/src-build-steps.yml
+          - template: steps/dotnet-build-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              artifactsPath: '$(artifactsPath)'
+              srcPath: '$(srcPath)'
 
       - job: test_src
         dependsOn: build_src
         steps:
-          - template: steps/src-test-steps.yml
+          - template: steps/dotnet-test-steps.yml
             parameters:
-              armPath: 'infrastructure'
-              unitPath: '$(System.DefaultWorkingDirectory)/src/filter'
+              unitPath: '$(System.DefaultWorkingDirectory)/src'
+              appcsKey: 'CIAC_SSAAS_CONNECTION'
+              appcsConnection: '$(appcsConnection)'
+              rgEnvironment: '$(rgEnvironment)'
 
-      - job: build_func_filter
+      - job: build_func
         dependsOn: test_src
         steps:
-          - template: steps/func-filter-build-steps.yml
+          - template: steps/func-build-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              archiveFile: '$(funcArchiveFile)'
+              funcPath: '$(funcPath)'
+              tempPath: '$(tempPath)'
 
-      - job: deploy_func_filter
-        dependsOn: build_func_filter
+      - job: deploy_func
+        dependsOn: build_func
         steps:
-          - template: steps/func-filter-deploy-steps.yml
+          - template: steps/func-deploy-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              appSettings: '-CIAC_SSAAS_CONNECTION $(appcsConnection) -CIAC_SSAAS_STORAGE $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
+              artifactsPath: '$(artifactsPath)'
+              archiveFile: '$(funcArchiveFile)'
+              funcName: '$(funcName)'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
 
-      - job: deploy_logic_apps
+      - job: build_webjob
         dependsOn: test_src
         steps:
-          - template: steps/logic-filter-deploy-steps.yml
+          - template: steps/webjob-build-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              artifactsPath: '$(artifactsPath)'
+              archiveFile: '$(webjobArchiveFile)'
+              srcPath: '$(srcPath)'
+              webjobProject: '$(webjobProject)'
+              webjobName: '$(webName)'
+              cronSchedule: '$(webjobSchedule)'
 
-
-  - stage: pull_request
-    condition: or(eq(variables['Build.Reason'], 'PullRequest'),  startsWith(variables['Build.SourceBranch'], 'refs/pull'))
-    variables:
-      - template: variables/development.yml
-      
-    jobs:
-      - job: test_src
+      - job: deploy_webjob
+        dependsOn: build_webjob
         steps:
-          - template: steps/src-test-steps.yml
+          - template: steps/web-deploy-steps.yml
             parameters:
-              armPath: 'infrastructure'
-              unitPath: '$(System.DefaultWorkingDirectory)/src/filter'
-
-      - job: test_integration
-        steps:
-          - template: steps/integration-test-steps.yml
-            parameters:
-              armPath: 'infrastructure'
+              appSettings: '-CIAC_SSAAS_CONNECTION $(appcsConnection) -CIAC_SSAAS_STORAGE $(stConnection) -AzureWebJobsDashboard $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
+              artifactsPath: '$(artifactsPath)'
+              archiveFile: '$(webjobArchiveFile)'
+              webName: '$(webName)'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
 
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -87,42 +99,63 @@ stages:
     jobs:
       - job: build_src
         steps:
-          - template: steps/src-build-steps.yml
+          - template: steps/dotnet-build-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              artifactsPath: '$(artifactsPath)'
+              srcPath: '$(srcPath)'
 
       - job: test_src
         dependsOn: build_src
         steps:
-          - template: steps/src-test-steps.yml
+          - template: steps/dotnet-test-steps.yml
             parameters:
-              armPath: 'infrastructure'
-              unitPath: '$(System.DefaultWorkingDirectory)/src/filter'              
+              unitPath: '$(System.DefaultWorkingDirectory)/src'
+              appcsKey: 'CIAC_SSAAS_CONNECTION'
+              appcsConnection: '$(appcsConnection)'
+              rgEnvironment: '$(rgEnvironment)'
 
-      - job: build_func_filter
+      - job: build_func
         dependsOn: test_src
         steps:
-          - template: steps/func-filter-build-steps.yml
+          - template: steps/func-build-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              artifactsPath: '$(artifactsPath)'
+              archiveFile: '$(funcArchiveFile)'
+              funcPath: '$(funcPath)'
+              tempPath: '$(tempPath)'
 
-      - job: deploy_func_filter
-        dependsOn: build_func_filter
+      - job: deploy_func
+        dependsOn: build_func
         steps:
-          - template: steps/func-filter-deploy-steps.yml
+          - template: steps/func-deploy-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              appSettings: '-CIAC_SSAAS_CONNECTION $(appcsConnection) -CIAC_SSAAS_STORAGE $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
+              artifactsPath: '$(artifactsPath)'
+              archiveFile: '$(funcArchiveFile)'
+              funcName: '$(funcName)'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
 
-      - job: deploy_logic_apps
+      - job: build_webjob
         dependsOn: test_src
         steps:
-          - template: steps/logic-filter-deploy-steps.yml
+          - template: steps/webjob-build-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              artifactsPath: '$(artifactsPath)'
+              archiveFile: '$(webjobArchiveFile)'
+              srcPath: '$(srcPath)'
+              webjobProject: '$(webjobProject)'
+              webjobName: '$(webName)'
+              cronSchedule: '$(webjobSchedule)'
 
-      - job: test_integration
-        dependsOn: deploy_func_filter
+      - job: deploy_webjob
+        dependsOn: build_webjob
         steps:
-          - template: steps/integration-test-steps.yml
+          - template: steps/web-deploy-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              appSettings: '-CIAC_SSAAS_CONNECTION $(appcsConnection) -CIAC_SSAAS_STORAGE $(stConnection) -AzureWebJobsDashboard $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
+              artifactsPath: '$(artifactsPath)'
+              archiveFile: '$(webjobArchiveFile)'
+              webName: '$(webName)'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'

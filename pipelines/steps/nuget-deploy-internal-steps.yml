@@ -5,9 +5,8 @@ parameters:
 - name: nugetFile
   type: string 
   default: "*.nupkg"
-- name: nugetId
+- name: nugetFeed
   type: string 
-  default: "*.nupkg"
 - name: nugetType
   type: string 
   default: "internal"
@@ -30,5 +29,5 @@ steps:
         packagesToPush: '${{ parameters.artifactsPath }}/**/${{ parameters.nugetFile }};'
         feedsToUse: '${{ parameters.nugetFeeds }}'
         nuGetFeedType: '${{ parameters.nugetType }}'
-        publishVstsFeed: '${{ parameters.nugetId }}'
+        publishVstsFeed: '${{ parameters.nugetFeed }}'
         allowPackageConflicts: true      

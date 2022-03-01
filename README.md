@@ -41,8 +41,8 @@ pipelines/steps | logic-deploy-steps.yml | Azure Logic Apps deploy to cloud infr
 pipelines/steps | lz-deploy-steps.yml | Azure ESA Landing Zone deploy
 pipelines/steps | nuget-deploy-external-steps.yml | NuGet.org package (.nupkg) deploy
 pipelines/steps | nuget-deploy-internal-steps.yml | Azure DevOps Feed (.nupkg) deploy
-pipelines/steps | src-build-steps.yml | Source code (/src) build with dotnet build
-pipelines/steps | src-test-steps.yml |  Source code (/src) unit-test with dotnet test
+pipelines/steps | dotnet-build-steps.yml | Source code (/src) build with dotnet build
+pipelines/steps | dotnet-test-steps.yml |  Source code (/src) unit-test with dotnet test
 
 #### /pipeline/variables YML Files
 Path | Item | Contents

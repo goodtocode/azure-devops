@@ -68,7 +68,7 @@ $thumbprint=$Certificate.Thumbprint
 Write-Host "$crlf[Info] Created $CertStoreLocation with thumbprint $thumbprint $crlf"
 
 # Export Pfx
-$securePw = ConvertTo-SecureString -String $Password -Force �AsPlainText
+$securePw = ConvertTo-SecureString -String $Password -Force -AsPlainText
 Export-PfxCertificate -Cert "$CertStoreLocation\$thumbprint" -FilePath $FilePath -Password $securePw
 Write-Host "$crlf[Info] Created $FilePath with password $Password $crlf"
 
