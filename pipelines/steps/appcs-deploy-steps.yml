@@ -14,9 +14,6 @@ parameters:
 - name: rgLocation 
   type: string 
   default: "West US 2"
-- name: rgEnvironment
-  type: string 
-  default: 'Development'
 - name: appcsName
   type: string 
   default: "appcs-PRODUCT-ENVIRONMENT-001"
