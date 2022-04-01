@@ -41,7 +41,7 @@ stages:
         steps:
           - template: steps/dotnet-test-steps.yml
             parameters:
-              unitPath: '$(System.DefaultWorkingDirectory)/src'
+              unitPath: '$(srcPath)'
               appcsKey: 'CIAC_SSAAS_CONNECTION'
               appcsConnection: '$(appcsConnection)'
               rgEnvironment: '$(rgEnvironment)'
@@ -109,7 +109,7 @@ stages:
         steps:
           - template: steps/dotnet-test-steps.yml
             parameters:
-              unitPath: '$(System.DefaultWorkingDirectory)/src'
+              unitPath: '$(srcPath)'
               appcsKey: 'CIAC_SSAAS_CONNECTION'
               appcsConnection: '$(appcsConnection)'
               rgEnvironment: '$(rgEnvironment)'
