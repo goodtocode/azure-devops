@@ -7,7 +7,7 @@ parameters:
   default: "."
 - name: unitProject
   type: string 
-  default: "*.Unit.Tests.csproj"
+  default: "*.csproj"
 - name: appcsConnection
   type: string 
   default: ""
