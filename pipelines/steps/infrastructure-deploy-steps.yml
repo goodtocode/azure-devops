@@ -71,7 +71,7 @@ steps:
         csmFile: "${{ parameters.armPath }}/func-functionsapp.json"        
         csmParametersFile: "${{ parameters.armPath }}/func-functionsapp.parameters.json"        
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.funcName }}" -funcVersion "${{ parameters.funcVersion }}" -workName "${{ parameters.workName }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "dotnet-isolated" -environment "${{ parameters.rgEnvironment }}"
+        overrideParameters: -name "${{ parameters.funcName }}" -funcVersion "${{ parameters.funcVersion }}" -workName "${{ parameters.workName }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "dotnet-isolated" -rgEnvironment "${{ parameters.rgEnvironment }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Deploy ${{ parameters.funcName }}"
@@ -86,7 +86,7 @@ steps:
         csmFile: "${{ parameters.armPath }}/func-functionsapp.json"
         csmParametersFile: "${{ parameters.armPath }}/func-functionsapp.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.funcName }}" -funcVersion "${{ parameters.funcVersion }}" -workName "${{ parameters.workName }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "dotnet-isolated" -environment "${{ parameters.rgEnvironment }}"
+        overrideParameters: -name "${{ parameters.funcName }}" -funcVersion "${{ parameters.funcVersion }}" -workName "${{ parameters.workName }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "dotnet-isolated" -rgEnvironment "${{ parameters.rgEnvironment }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Validate ${{ parameters.planName }}"
