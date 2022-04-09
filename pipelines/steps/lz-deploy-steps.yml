@@ -101,7 +101,7 @@ steps:
         csmFile: "${{ parameters.armPath }}/appi-applicationinsights.json"
         csmParametersFile: "${{ parameters.armPath }}/appi-applicationinsights.parameters.json"
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.appiName  }}" -workspaceName "${{ parameters.workName  }}"
+        overrideParameters: -name "${{ parameters.appiName  }}" -workName "${{ parameters.workName  }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Deploy ${{ parameters.appiName  }}"
@@ -116,7 +116,7 @@ steps:
         csmFile: "${{ parameters.armPath }}/appi-applicationinsights.json"
         csmParametersFile: "${{ parameters.armPath }}/appi-applicationinsights.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.appiName  }}" -workspaceName "${{ parameters.workName  }}"
+        overrideParameters: -name "${{ parameters.appiName  }}" -workName "${{ parameters.workName  }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Validate ${{ parameters.kvName  }}"
