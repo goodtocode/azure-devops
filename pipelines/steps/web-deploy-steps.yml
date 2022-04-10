@@ -19,20 +19,20 @@ parameters:
   default: 'COMPANY-PRODUCT-001'
 
 steps:
-    - task: DownloadBuildArtifacts@0
-      inputs:
-        buildType: 'current'
-        downloadType: 'single'
-        artifactName: 'drop'
-        downloadPath: '${{ parameters.artifactsPath }}'
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'current'
+      downloadType: 'single'
+      artifactName: 'drop'
+      downloadPath: '${{ parameters.artifactsPath }}'
 
-    - task: AzureRmWebAppDeployment@4
-      displayName: 'Deploying ${{ parameters.webName }}'
-      inputs:
-        ConnectionType: 'AzureRM'
-        ConnectedServiceName: ${{ parameters.subscriptionName }}
-        subscriptionName: ${{ parameters.subscriptionId }}
-        appType: 'webApp'
-        WebAppName: '${{ parameters.webName }}'
-        packageForLinux: '${{ parameters.artifactsPath }}/**/${{ parameters.archiveFile }}'
-        appSettings: '${{ parameters.appSettings }}'
+  - task: AzureRmWebAppDeployment@4
+    displayName: 'Deploying ${{ parameters.webName }}'
+    inputs:
+      ConnectionType: 'AzureRM'
+      ConnectedServiceName: ${{ parameters.subscriptionName }}
+      subscriptionName: ${{ parameters.subscriptionId }}
+      appType: 'webApp'
+      WebAppName: '${{ parameters.webName }}'
+      packageForLinux: '${{ parameters.artifactsPath }}/**/${{ parameters.archiveFile }}'
+      appSettings: '${{ parameters.appSettings }}'

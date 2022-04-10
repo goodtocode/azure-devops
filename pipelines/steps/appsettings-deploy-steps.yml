@@ -1,7 +1,7 @@
 parameters:
 - name: appServiceName
   type: string 
-  default: "api/web-PRODUCT-ENVIRONMENT-001"
+  default: "web-PRODUCT-ENVIRONMENT-001"
 - name: subscriptionName
   type: string 
   default: 'COMPANY-PRODUCT-001'

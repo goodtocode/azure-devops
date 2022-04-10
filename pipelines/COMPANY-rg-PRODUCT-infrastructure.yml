@@ -16,20 +16,33 @@ pool:
   vmImage: 'ubuntu-latest'
 
 parameters:
-  - name: appcsSettings
+  - name: appcsKeys
     type: object
-    default: 
-      - key: 'Company:Product:InfrastructureType:ItemName'
-        value: 'ItemValue'
-      - key: 'Company:Product:InfrastructureType:ItemName2'
-        value: 'ItemValue2'
+    default: [
+      "MyCo:MyProduct:StorageTables:ConnectionString",
+      "MyCo:MyProduct:ServiceBus:ConnectionString",
+      "MyCo:MyProduct:FunctionUrl",
+      "MyCo:MyProduct:FunctionCode",
+      "MyCo:MyProduct:LinkBatchSize",
+      "MyCo:MyProduct:HubName"
+    ]
+  - name: appcsValues
+    type: object
+    default: [
+      "$(stConnection)",
+      "$(sbConnection)",
+      "https://$(funcName).azurewebsites.net",
+      "$(funcCode)",
+      "100",
+      "$(hubName)"
+    ]
 
 variables:
   - template: variables/development.yml
   - name: buildPlatform
-    value: 'Any CPU'
+    value : 'Any CPU'
   - name: buildConfiguration
-    value: 'Release'
+    value : 'Release'
         
 stages:
   - stage: development
@@ -63,19 +76,21 @@ stages:
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
               appcsName: '$(appcsName)'
-              appcsSku: '$(appcsSku)'
+              appcsSku: '$(appcsSku)'              
 
       - job: deploy_appcs_settings
         dependsOn: deploy_appcs_infrastructure
         steps:
           - template: steps/appcs-settings-steps.yml
             parameters:
+              armPath: 'infrastructure'
               subscriptionName: '$(subscriptionName)'
-              rgEnvironment: '$(rgEnvironment)'
+              subscriptionId: '$(subscriptionId)'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
               appcsName: '$(appcsName)'
-              appcsSettingsFile: '$(appcsSettingsFile)'
-              tempPath: '$(tempPath)'
-              appcsSettings: '${{ parameters.appcsSettings }}'
+              appcsKeys: '${{ parameters.appcsKeys }}'
+              appcsValues: '${{ parameters.appcsValues }}'
 
       - job: deploy_sb_infrastructure
         dependsOn: deploy_appcs_settings
@@ -101,7 +116,7 @@ stages:
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
               rgEnvironment: '$(rgEnvironment)'
-              appiKey: '$(appiKey)'
+              appiKey: '$(appiKey) '
               appiConnection: '$(appiConnection)'
               funcName: '$(funcName)'
               stName: '$(stName)'
@@ -152,19 +167,21 @@ stages:
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
               appcsName: '$(appcsName)'
-              appcsSku: '$(appcsSku)'
+              appcsSku: '$(appcsSku)'              
 
       - job: deploy_appcs_settings
         dependsOn: deploy_appcs_infrastructure
         steps:
           - template: steps/appcs-settings-steps.yml
             parameters:
+              armPath: 'infrastructure'
               subscriptionName: '$(subscriptionName)'
-              rgEnvironment: '$(rgEnvironment)'
+              subscriptionId: '$(subscriptionId)'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
               appcsName: '$(appcsName)'
-              appcsSettingsFile: '$(appcsSettingsFile)'
-              tempPath: '$(tempPath)'
-              appcsSettings: '${{ parameters.appcsSettings }}'
+              appcsKeys: '${{ parameters.appcsKeys }}'
+              appcsValues: '${{ parameters.appcsValues }}'
 
       - job: deploy_sb_infrastructure
         dependsOn: deploy_appcs_settings
@@ -190,7 +207,7 @@ stages:
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
               rgEnvironment: '$(rgEnvironment)'
-              appiKey: '$(appiKey)'
+              appiKey: '$(appiKey) '
               appiConnection: '$(appiConnection)'
               funcName: '$(funcName)'
               stName: '$(stName)'
@@ -208,4 +225,4 @@ stages:
               rgLocation: '$(rgLocation)'
               rgEnvironment: '$(rgEnvironment)'
               planName: '$(planName)'
-              webjobName: '$(webjobName)'      
+              webjobName: '$(webjobName)'  

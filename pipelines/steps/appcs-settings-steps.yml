@@ -1,67 +1,56 @@
 parameters:
+- name: armPath
+  type: string 
+  default: "."
+- name: subscriptionId
+  type: string 
+  default: "00000000-0000-0000-0000-000000000000"
 - name: subscriptionName
   type: string 
   default: 'COMPANY-PRODUCT-001'
-- name: rgEnvironment
+- name: rgName 
   type: string 
-  default: 'Development'
+  default: 'COMPANY-rg-PRODUCT-001'
+- name: rgLocation 
+  type: string 
+  default: "West US 2"
 - name: appcsName
   type: string 
   default: "appcs-PRODUCT-ENVIRONMENT-001"
-- name: settingsFileName
-  type: string
-  default: "settings.json"
-- name: tempPath
-  type: string
-  default: "."
-- name: appcsSettings
+- name: appcsKeys
   type: object
-  default: 
-    - name: 'Ciac:Connector:StorageTables:ConnectionString'
-      value: '$(stConnection)'
-      slotSetting: false
-    - name: 'Ciac:Connector:ServiceBus:ConnectionString'
-      value: '$(sbConnection)'
-      slotSetting: false
-    - name: 'Ciac:Connector:FunctionUrl'
-      value: 'https://$(funcName).azurewebsites.net'
-      slotSetting: false
-    - name: 'Ciac:Connector:FunctionCode'
-      value: '$(funcCode)'
-      slotSetting: false
-    - name: 'Ciac:Connector:LinkBatchSize'
-      value: '100'
-      slotSetting: false
-    - name: 'Ciac:Connector:HubName'
-      value: '$(hubName)'
-      slotSetting: false
-
-variables:
-- name: pathFile
-  type: 'string'
-  default: '${{ parameters.tempPath }}/${{ parameters.settingsFileName }}'
-- name: endpoint
-  type: 'string'
-  default: 'https://${{ parameters.appcsName }}.azconfig.io'
+  default: [ "Shared:Sentinel", "Shared:Sentinel$Development" ]
+- name: appcsValues
+  type: object
+  default: [ "1", "1" ]
 
 steps:
-  - job: deploy_app_settings
-    steps:
-      - task: PowerShell@2
-        DisplayName: "Create settings file ${{ appcsName }}"
-        inputs:
-          targetType: 'inline'
-          script: |    
-            New-Item $(pathFile)
-            Set-Content $(pathFile) '${{ parameters.appcsSettings }}'
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Validate ${{ parameters.appcsName }}"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        subscriptionId: "${{ parameters.subscriptionId }}"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "${{ parameters.rgName }}"
+        location: "${{ parameters.rgLocation }}"
+        templateLocation: "Linked artifact"
+        csmFile: "${{ parameters.armPath }}/appcs-appconfigurationsetting.json"        
+        csmParametersFile: "${{ parameters.armPath }}/appcs-appconfigurationsetting.parameters.json"
+        deploymentMode: "Validation"
+        overrideParameters: -name "${{ parameters.appcsName }}" -appcsKeys ${{ convertToJson(parameters.appcsKeys) }} -appcsValues ${{ convertToJson(parameters.appcsValues) }}
 
-      - task: AzureAppConfigurationPush@3
-        DisplayName: "Insert settings to ${{ appcsName }}"
-        inputs:
-          azureSubscription: '${{ parameters.subscriptionName }}'
-          AppConfigurationEndpoint: 'https://${{ parameters.appcsName }}.azconfig.io'
-          ConfigurationFile: '$(pathFile)'
-          Separator: '.'
-          Depth: ''
-          Label: '${{ parameters.rgEnvironment }}'
-          Strict: false
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Configure ${{ parameters.appcsName }}"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        subscriptionId: "${{ parameters.subscriptionId }}"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "${{ parameters.rgName }}"
+        location: "${{ parameters.rgLocation }}"
+        templateLocation: "Linked artifact"
+        csmFile: "${{ parameters.armPath }}/appcs-appconfigurationsetting.json"
+        csmParametersFile: "${{ parameters.armPath }}/appcs-appconfigurationsetting.parameters.json"
+        deploymentMode: "Incremental"
+        overrideParameters: -name "${{ parameters.appcsName }}" -appcsKeys ${{ convertToJson(parameters.appcsKeys) }} -appcsValues ${{ convertToJson(parameters.appcsValues) }}
