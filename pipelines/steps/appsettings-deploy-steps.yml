@@ -1,25 +1,36 @@
 parameters:
-- name: appName
+- name: appServiceName
   type: string 
-  default: "any-PRODUCT-ENVIRONMENT-001"
+  default: "api/web-PRODUCT-ENVIRONMENT-001"
 - name: subscriptionName
   type: string 
   default: 'COMPANY-PRODUCT-001'
-- name: appSetting
+- name: rgEnvironment
+  type: string 
+  default: 'development'
+- name: slotName
+  type: string
+  default: 'development'
+- name: appSettings
   type: object
-  default:
-    name: 'ASPNETCORE_ENVIRONMENT'
-    value: 'Development'
-    slotSetting: false
+  default: 
+    - name: 'Shared:Sentinel'
+      value: '1'
+      slotSetting: false
 
 steps:
+  - ${{ each appSetting in parameters.appSettings }}:
   - task: AzureAppServiceSettings@1
-    displayName: 'App Settings ${{ parameters.appName }}'
+    displayName: 'App Settings ${{ parameters.appServiceName }}'
     inputs:
       azureSubscription: ${{ parameters.subscriptionName }}
-      appName: ${{ parameters.appName }}
-    # slotName: staging
+      appName: ${{ parameters.appServiceName }}    
       appSettings: |
         [
-            ${{ parameters.appSetting }}
+          {
+            "name": "${{ parameters.appSetting.name }}",
+            "value": "${{ parameters.appSetting.value }}",
+            "slotSetting": "${{ parameters.appSetting.slotSetting }}"
+          }
         ]
+      slotName: ${{ parameters.slotName }}

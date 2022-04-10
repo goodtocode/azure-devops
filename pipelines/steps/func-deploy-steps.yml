@@ -35,4 +35,4 @@ steps:
         appType: 'webApp'
         WebAppName: '${{ parameters.funcName }}'
         packageForLinux: '${{ parameters.artifactsPath }}/**/${{ parameters.archiveFile }}'
-        AppSettings: '${{ parameters.appSettings }}'
+        appSettings: '${{ parameters.appSettings }}'

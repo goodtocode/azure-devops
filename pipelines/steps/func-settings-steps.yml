@@ -1,0 +1,69 @@
+parameters:
+- name: subscriptionName
+  type: string 
+  default: 'COMPANY-PRODUCT-001'
+- name: rgEnvironment
+  type: string 
+  default: 'Development'
+- name: funcName
+  type: string 
+  default: "api-PRODUCT-ENVIRONMENT-001"
+- name: funcRuntime
+  type: string 
+  default: "dotnet-isolated"
+- name: funcVersion
+  type: string 
+  default: "~4"
+- name: stEnvironmentVariable
+  type: string 
+  default: 'COMPANY_PRODUCT_STORAGE'
+- name: stConnection
+  type: string 
+  default: 'stConnection not provided'
+- name: appcsEnvironmentVariable
+  type: string 
+  default: 'COMPANY_PRODUCT_CONNECTION'
+- name: appcsConnection
+  type: string 
+- name: appiKey
+  type: string
+
+variables:
+  - name: appSettings
+    type: object
+    default: 
+      - name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+        value: '$(appiKey)'
+        slotSetting: false
+      - name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+        value: '$(appiConnection)'
+        slotSetting: false        
+      - name: 'AZURE_FUNCTIONS_ENVIRONMENT'
+        value: '$(rgEnvironment)'
+        slotSetting: false
+      - name: 'FUNCTIONS_EXTENSION_VERSION'
+        value: '$(funcVersion)'
+        slotSetting: false
+      - name: 'FUNCTIONS_WORKER_RUNTIME'
+        value: '$(funcRuntime)'
+        slotSetting: false
+      - name: '$(appcsEnvironmentVariable)'
+        value: '$(appcsConnection)'
+        slotSetting: false
+      - name: '$(stEnvironmentVariable)'
+        value: '$(stConnection)'
+        slotSetting: false
+
+steps:
+  - job: deploy_app_settings
+    steps:
+    - ${{ each appSetting in $(appSettings) }}
+      - template: appsetting-deploy-steps.yml
+        parameters:
+          appServiceName: '${{ parameters.funcName }}'
+          subscriptionName: '${{ parameters.subscriptionName }}'
+          appSetting: {
+            name: '$(appSetting.name)',
+            value: '$(appSetting.value)',
+            slotSetting: '$(appSetting.slotSetting)',
+            }

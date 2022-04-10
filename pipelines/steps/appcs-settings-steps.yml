@@ -1,0 +1,67 @@
+parameters:
+- name: subscriptionName
+  type: string 
+  default: 'COMPANY-PRODUCT-001'
+- name: rgEnvironment
+  type: string 
+  default: 'Development'
+- name: appcsName
+  type: string 
+  default: "appcs-PRODUCT-ENVIRONMENT-001"
+- name: settingsFileName
+  type: string
+  default: "settings.json"
+- name: tempPath
+  type: string
+  default: "."
+- name: appcsSettings
+  type: object
+  default: 
+    - name: 'Ciac:Connector:StorageTables:ConnectionString'
+      value: '$(stConnection)'
+      slotSetting: false
+    - name: 'Ciac:Connector:ServiceBus:ConnectionString'
+      value: '$(sbConnection)'
+      slotSetting: false
+    - name: 'Ciac:Connector:FunctionUrl'
+      value: 'https://$(funcName).azurewebsites.net'
+      slotSetting: false
+    - name: 'Ciac:Connector:FunctionCode'
+      value: '$(funcCode)'
+      slotSetting: false
+    - name: 'Ciac:Connector:LinkBatchSize'
+      value: '100'
+      slotSetting: false
+    - name: 'Ciac:Connector:HubName'
+      value: '$(hubName)'
+      slotSetting: false
+
+variables:
+- name: pathFile
+  type: 'string'
+  default: '${{ parameters.tempPath }}/${{ parameters.settingsFileName }}'
+- name: endpoint
+  type: 'string'
+  default: 'https://${{ parameters.appcsName }}.azconfig.io'
+
+steps:
+  - job: deploy_app_settings
+    steps:
+      - task: PowerShell@2
+        DisplayName: "Create settings file ${{ appcsName }}"
+        inputs:
+          targetType: 'inline'
+          script: |    
+            New-Item $(pathFile)
+            Set-Content $(pathFile) '${{ parameters.appcsSettings }}'
+
+      - task: AzureAppConfigurationPush@3
+        DisplayName: "Insert settings to ${{ appcsName }}"
+        inputs:
+          azureSubscription: '${{ parameters.subscriptionName }}'
+          AppConfigurationEndpoint: 'https://${{ parameters.appcsName }}.azconfig.io'
+          ConfigurationFile: '$(pathFile)'
+          Separator: '.'
+          Depth: ''
+          Label: '${{ parameters.rgEnvironment }}'
+          Strict: false

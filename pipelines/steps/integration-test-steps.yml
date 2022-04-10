@@ -11,7 +11,7 @@ parameters:
 - name: appcsConnection
   type: string 
   default: ""
-- name: appcsKey
+- name: appcsEnvironmentVariable
   type: string 
   default: "APP_CONFIGURATION_CONNECTION"
 
@@ -30,6 +30,6 @@ steps:
       projects: |
         ${{ parameters.integrationPath }}/**/${{ parameters.integrationProject }}
     env:
-      ${{ parameters.appcsKey }}: ${{ parameters.appcsConnection }}
+      ${{ parameters.appcsEnvironmentVariable }}: ${{ parameters.appcsConnection }}
       ASPNETCORE_ENVIRONMENT: ${{ parameters.rgEnvironment }}
       AZURE_FUNCTIONS_ENVIRONMENT: ${{ parameters.rgEnvironment }}

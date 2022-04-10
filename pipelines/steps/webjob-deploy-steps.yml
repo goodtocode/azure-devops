@@ -8,7 +8,7 @@ parameters:
 - name: archiveFile
   type: string 
   default: '*.zip'
-- name: webName
+- name: webjobName
   type: string 
   default: 'web-PRODUCT-ENVIRONMENT-001'
 - name: subscriptionId
@@ -27,7 +27,7 @@ steps:
         downloadPath: '${{ parameters.artifactsPath }}'
 
     - task: AzureRmWebAppDeployment@4
-      displayName: 'Deploying ${{ parameters.webName }}'
+      displayName: 'Deploying ${{ parameters.webJobName }}'
       inputs:
         ConnectionType: 'AzureRM'
         ConnectedServiceName: ${{ parameters.subscriptionName }}

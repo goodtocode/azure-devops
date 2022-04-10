@@ -31,7 +31,7 @@ stages:
     jobs:
       - job: deploy_landing_zone
         steps:
-          - template: steps/lz-deploy-steps.yml
+          - template: steps/lz-infrastructure-steps.yml
             parameters:
               armPath: 'infrastructure'
               subscriptionId: '$(subscriptionId)'
@@ -43,10 +43,36 @@ stages:
               stName: '$(stName)'
               workName: '$(workName)'
 
-      - job: deploy_infrastructure
+      - job: deploy_appcs_infrastructure
         dependsOn: deploy_landing_zone
         steps:
-          - template: steps/infrastructure-deploy-steps.yml
+          - template: steps/appcs-infrastructure-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
+              appcsName: '$(appcsName)'
+              appcsSku: '$(appcsSku)'
+
+      - job: deploy_sb_infrastructure
+        dependsOn: deploy_landing_zone
+        steps:
+          - template: steps/sb-infrastructure-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
+              sbName: '$(sbName)'
+              sbSku: '$(sbSku)'
+
+      - job: deploy_func_infrastructure
+        dependsOn: deploy_landing_zone
+        steps:
+          - template: steps/func-infrastructure-steps.yml
             parameters:
               armPath: 'infrastructure'
               subscriptionId: '$(subscriptionId)'
@@ -57,15 +83,22 @@ stages:
               appiKey: '$(appiKey)'
               appiConnection: '$(appiConnection)'
               funcName: '$(funcName)'
-              planName: '$(planName)'
-              sbName: '$(sbName)'
-              sbSku: '$(sbSku)'
-              spocnName: '$(spocnName)'
-              stblobcnName: '$(stblobcnName)'
               stName: '$(stName)'
-              teamscnName: '$(teamscnName)'              
-              webName: '$(webName)'
               workName: '$(workName)'
+
+      - job: deploy_webjob_infrastructure
+        dependsOn: deploy_landing_zone
+        steps:
+          - template: steps/webjob-infrastructure-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
+              rgEnvironment: '$(rgEnvironment)'
+              planName: '$(planName)'
+              webjobName: '$(webjobName)'
 
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -75,7 +108,7 @@ stages:
     jobs:
       - job: deploy_landing_zone
         steps:
-          - template: steps/lz-deploy-steps.yml
+          - template: steps/lz-infrastructure-steps.yml
             parameters:
               armPath: 'infrastructure'
               subscriptionId: '$(subscriptionId)'
@@ -87,10 +120,36 @@ stages:
               stName: '$(stName)'
               workName: '$(workName)'
 
-      - job: deploy_infrastructure
+      - job: deploy_appcs_infrastructure
         dependsOn: deploy_landing_zone
         steps:
-          - template: steps/infrastructure-deploy-steps.yml
+          - template: steps/appcs-infrastructure-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
+              appcsName: '$(appcsName)'
+              appcsSku: '$(appcsSku)'
+
+      - job: deploy_sb_infrastructure
+        dependsOn: deploy_landing_zone
+        steps:
+          - template: steps/sb-infrastructure-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
+              sbName: '$(sbName)'
+              sbSku: '$(sbSku)'
+
+      - job: deploy_func_infrastructure
+        dependsOn: deploy_landing_zone
+        steps:
+          - template: steps/func-infrastructure-steps.yml
             parameters:
               armPath: 'infrastructure'
               subscriptionId: '$(subscriptionId)'
@@ -101,12 +160,20 @@ stages:
               appiKey: '$(appiKey)'
               appiConnection: '$(appiConnection)'
               funcName: '$(funcName)'
-              planName: '$(planName)'
-              sbName: '$(sbName)'
-              sbSku: '$(sbSku)'
-              spocnName: '$(spocnName)'
-              stblobcnName: '$(stblobcnName)'
               stName: '$(stName)'
-              teamscnName: '$(teamscnName)'              
-              webName: '$(webName)'
               workName: '$(workName)'
+
+      - job: deploy_webjob_infrastructure
+        dependsOn: deploy_landing_zone
+        steps:
+          - template: steps/webjob-infrastructure-steps.yml
+            parameters:
+              armPath: 'infrastructure'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
+              rgEnvironment: '$(rgEnvironment)'
+              planName: '$(planName)'
+              planSku: '$(planSku)'
+              webjobName: '$(webjobName)'

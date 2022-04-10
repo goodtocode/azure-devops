@@ -41,8 +41,8 @@ stages:
         steps:
           - template: steps/dotnet-test-steps.yml
             parameters:
-              unitPath: '$(srcPath)'
-              appcsKey: 'CIAC_SSAAS_CONNECTION'
+              unitPath: '$(System.DefaultWorkingDirectory)/src'
+              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
               appcsConnection: '$(appcsConnection)'
               rgEnvironment: '$(rgEnvironment)'
 
@@ -60,7 +60,7 @@ stages:
         steps:
           - template: steps/func-deploy-steps.yml
             parameters:
-              appSettings: '-CIAC_SSAAS_CONNECTION $(appcsConnection) -CIAC_SSAAS_STORAGE $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
+              appSettings: '-$(appcsEnvironmentVariable) $(appcsConnection) -$(stEnvironmentVariable) $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
               artifactsPath: '$(artifactsPath)'
               archiveFile: '$(funcArchiveFile)'
               funcName: '$(funcName)'
@@ -76,7 +76,7 @@ stages:
               archiveFile: '$(webjobArchiveFile)'
               srcPath: '$(srcPath)'
               webjobProject: '$(webjobProject)'
-              webjobName: '$(webName)'
+              webjobName: '$(webjobName)'
               cronSchedule: '$(webjobSchedule)'
 
       - job: deploy_webjob
@@ -84,10 +84,10 @@ stages:
         steps:
           - template: steps/web-deploy-steps.yml
             parameters:
-              appSettings: '-CIAC_SSAAS_CONNECTION $(appcsConnection) -CIAC_SSAAS_STORAGE $(stConnection) -AzureWebJobsDashboard $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
+              appSettings: '-$(appcsEnvironmentVariable) $(appcsConnection) -$(stEnvironmentVariable) $(stConnection) -AzureWebJobsDashboard $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
               artifactsPath: '$(artifactsPath)'
               archiveFile: '$(webjobArchiveFile)'
-              webName: '$(webName)'
+              webName: '$(webjobName)'
               subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
 
@@ -109,8 +109,8 @@ stages:
         steps:
           - template: steps/dotnet-test-steps.yml
             parameters:
-              unitPath: '$(srcPath)'
-              appcsKey: 'CIAC_SSAAS_CONNECTION'
+              unitPath: '$(System.DefaultWorkingDirectory)/src'
+              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
               appcsConnection: '$(appcsConnection)'
               rgEnvironment: '$(rgEnvironment)'
 
@@ -129,7 +129,7 @@ stages:
         steps:
           - template: steps/func-deploy-steps.yml
             parameters:
-              appSettings: '-CIAC_SSAAS_CONNECTION $(appcsConnection) -CIAC_SSAAS_STORAGE $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
+              appSettings: '-$(appcsEnvironmentVariable) $(appcsConnection) -$(stEnvironmentVariable) $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
               artifactsPath: '$(artifactsPath)'
               archiveFile: '$(funcArchiveFile)'
               funcName: '$(funcName)'
@@ -145,7 +145,7 @@ stages:
               archiveFile: '$(webjobArchiveFile)'
               srcPath: '$(srcPath)'
               webjobProject: '$(webjobProject)'
-              webjobName: '$(webName)'
+              webjobName: '$(webjobName)'
               cronSchedule: '$(webjobSchedule)'
 
       - job: deploy_webjob
@@ -153,9 +153,9 @@ stages:
         steps:
           - template: steps/web-deploy-steps.yml
             parameters:
-              appSettings: '-CIAC_SSAAS_CONNECTION $(appcsConnection) -CIAC_SSAAS_STORAGE $(stConnection) -AzureWebJobsDashboard $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
+              appSettings: '-$(appcsEnvironmentVariable) $(appcsConnection) -$(stEnvironmentVariable) $(stConnection) -AzureWebJobsDashboard $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
               artifactsPath: '$(artifactsPath)'
               archiveFile: '$(webjobArchiveFile)'
-              webName: '$(webName)'
+              webName: '$(webjobName)'
               subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'

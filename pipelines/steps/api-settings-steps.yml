@@ -1,0 +1,57 @@
+parameters:
+- name: subscriptionName
+  type: string 
+  default: 'COMPANY-PRODUCT-001'
+- name: rgEnvironment
+  type: string 
+  default: 'Development'
+- name: apiName
+  type: string 
+  default: "api-PRODUCT-ENVIRONMENT-001"
+- name: stEnvironmentVariable
+  type: string 
+  default: 'COMPANY_PRODUCT_STORAGE'
+- name: stConnection
+  type: string 
+  default: 'stConnection not provided'
+- name: appcsEnvironmentVariable
+  type: string 
+  default: 'COMPANY_PRODUCT_CONNECTION'
+- name: appcsConnection
+  type: string 
+- name: appiKey
+  type: string
+
+variables:
+  - name: appSettings
+    type: object
+    default: 
+      - name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+        value: '$(appiKey)'
+        slotSetting: false
+      - name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+        value: '$(appiConnection)'
+        slotSetting: false        
+      - name: 'ASPNETCORE_ENVIRONMENT'
+        value: '$(rgEnvironment)'
+        slotSetting: false
+      - name: '$(appcsEnvironmentVariable)'
+        value: '$(appcsConnection)'
+        slotSetting: false
+      - name: '$(stEnvironmentVariable)'
+        value: '$(stConnection)'
+        slotSetting: false
+
+steps:
+  - job: deploy_app_settings
+    steps:
+    - ${{ each appSetting in $(appSettings) }}
+      - template: appsetting-deploy-steps.yml
+        parameters:
+          appServiceName: '${{ parameters.apiName }}'
+          subscriptionName: '${{ parameters.subscriptionName }}'
+          appSetting: {
+            name: '$(appSetting.name)',
+            value: '$(appSetting.value)',
+            slotSetting: '$(appSetting.slotSetting)',
+            }
