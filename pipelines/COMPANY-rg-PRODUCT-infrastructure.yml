@@ -15,19 +15,28 @@ pr:
 pool:
   vmImage: 'ubuntu-latest'
 
+parameters:
+  - name: appcsSettings
+    type: object
+    default: 
+      - key: 'Company:Product:InfrastructureType:ItemName'
+        value: 'ItemValue'
+      - key: 'Company:Product:InfrastructureType:ItemName2'
+        value: 'ItemValue2'
+
 variables:
   - template: variables/development.yml
   - name: buildPlatform
     value: 'Any CPU'
   - name: buildConfiguration
     value: 'Release'
-
+        
 stages:
   - stage: development
     condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
     variables:
       - template: variables/development.yml
-      
+
     jobs:
       - job: deploy_landing_zone
         steps:
@@ -56,8 +65,20 @@ stages:
               appcsName: '$(appcsName)'
               appcsSku: '$(appcsSku)'
 
+      - job: deploy_appcs_settings
+        dependsOn: deploy_appcs_infrastructure
+        steps:
+          - template: steps/appcs-settings-steps.yml
+            parameters:
+              subscriptionName: '$(subscriptionName)'
+              rgEnvironment: '$(rgEnvironment)'
+              appcsName: '$(appcsName)'
+              appcsSettingsFile: '$(appcsSettingsFile)'
+              tempPath: '$(tempPath)'
+              appcsSettings: '${{ parameters.appcsSettings }}'
+
       - job: deploy_sb_infrastructure
-        dependsOn: deploy_landing_zone
+        dependsOn: deploy_appcs_settings
         steps:
           - template: steps/sb-infrastructure-steps.yml
             parameters:
@@ -70,7 +91,7 @@ stages:
               sbSku: '$(sbSku)'
 
       - job: deploy_func_infrastructure
-        dependsOn: deploy_landing_zone
+        dependsOn: deploy_appcs_settings
         steps:
           - template: steps/func-infrastructure-steps.yml
             parameters:
@@ -87,7 +108,7 @@ stages:
               workName: '$(workName)'
 
       - job: deploy_webjob_infrastructure
-        dependsOn: deploy_landing_zone
+        dependsOn: deploy_appcs_settings
         steps:
           - template: steps/webjob-infrastructure-steps.yml
             parameters:
@@ -103,7 +124,7 @@ stages:
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
     variables:
-      - template: variables/production.yml    
+      - template: variables/production.yml
 
     jobs:
       - job: deploy_landing_zone
@@ -133,8 +154,20 @@ stages:
               appcsName: '$(appcsName)'
               appcsSku: '$(appcsSku)'
 
+      - job: deploy_appcs_settings
+        dependsOn: deploy_appcs_infrastructure
+        steps:
+          - template: steps/appcs-settings-steps.yml
+            parameters:
+              subscriptionName: '$(subscriptionName)'
+              rgEnvironment: '$(rgEnvironment)'
+              appcsName: '$(appcsName)'
+              appcsSettingsFile: '$(appcsSettingsFile)'
+              tempPath: '$(tempPath)'
+              appcsSettings: '${{ parameters.appcsSettings }}'
+
       - job: deploy_sb_infrastructure
-        dependsOn: deploy_landing_zone
+        dependsOn: deploy_appcs_settings
         steps:
           - template: steps/sb-infrastructure-steps.yml
             parameters:
@@ -147,7 +180,7 @@ stages:
               sbSku: '$(sbSku)'
 
       - job: deploy_func_infrastructure
-        dependsOn: deploy_landing_zone
+        dependsOn: deploy_appcs_settings
         steps:
           - template: steps/func-infrastructure-steps.yml
             parameters:
@@ -164,7 +197,7 @@ stages:
               workName: '$(workName)'
 
       - job: deploy_webjob_infrastructure
-        dependsOn: deploy_landing_zone
+        dependsOn: deploy_appcs_settings
         steps:
           - template: steps/webjob-infrastructure-steps.yml
             parameters:
@@ -175,5 +208,4 @@ stages:
               rgLocation: '$(rgLocation)'
               rgEnvironment: '$(rgEnvironment)'
               planName: '$(planName)'
-              planSku: '$(planSku)'
-              webjobName: '$(webjobName)'
+              webjobName: '$(webjobName)'      
