@@ -6,7 +6,7 @@ Param(
     [string] $ResourceLocation = 'eastus | westus | etc.',
     [string] $api = 'office365 | dropbox | dynamicscrmonline | etc.',
     [string] $ConnectionName = 'YourConnectionName',
-    [string] $subscriptionId = '80d4fe69-xxxx-xxxx-a938-9250f1c8ab03',
+    [string] $subscriptionId = '00000000-0000-0000-0000-000000000000',
     [bool] $createConnection =  $true
 )
  #region mini window, made by Scripting Guy Blog

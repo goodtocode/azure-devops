@@ -38,11 +38,11 @@ Install-Module -Name AzureAD -AllowClobber -Scope CurrentUser
 # *** Auth
 # ***
 Write-Host "*** Auth ***"
-Connect-AzureAD -TenantId "ca4fd2d7-85ea-42d2-b7b3-30ef2666c7ab"
+Connect-AzureAD -TenantId "00000000-0000-0000-0000-000000000000"
 
 # Find service principal object ID
 Write-Host "*** Get-AzureADServicePrincipal ***"
-$oid = $(Get-AzureADServicePrincipal -Filter "AppId eq '5fc9c9fc-db97-433d-8234-bc866e5ec233'").ObjectId
+$oid = $(Get-AzureADServicePrincipal -Filter "AppId eq '00000000-0000-0000-0000-000000000000'").ObjectId
 Write-host "$oid"
 #$(Get-AzureADServicePrincipal -Filter "DisplayName eq 'testapp'").ObjectId
 # Find user object ID
