@@ -1,7 +1,7 @@
 #-----------------------------------------------------------------------
-# Remove-StorageAccount [-Path [<String>]] [-VersionToReplace [<String>]]
+# Remove-LandingZone [-TenantId [<Guid>]] [-SubscriptionId [<Guid>]]
 #
-# Example: .\Remove-StorageAccount -TenantId -SubscriptionId -ResourceGroup -StorageAccount
+# Example: .\Remove-LandingZone -TenantId -SubscriptionId -ResourceGroup -KeyVault -StorageAccount -Workspace
 #-----------------------------------------------------------------------
 
 # ***
@@ -12,7 +12,9 @@ param
 	[string] $TenantId=$(throw '-TenantId is a required parameter. (00000000-0000-0000-0000-000000000000)'),
     [string] $SubscriptionId=$(throw '-TenantId is a required parameter. (00000000-0000-0000-0000-000000000000)'),
 	[string] $ResourceGroup=$(throw '-ResourceGroup is a required parameter. (COMPANY-rg-PRODUCT-ENVIRONMENT-001)'),
-    [string] $StorageAccount=$(throw '-StorageAccount is a required parameter. (stPRODUCTENVIRONMENT001)')
+    [string] $KeyVault=$(throw '-KeyVault is a required parameter. (kv-PRODUCT-ENVIRONMENT-001)'),
+    [string] $StorageAccount=$(throw '-StorageAccount is a required parameter. (stPRODUCTENVIRONMENT001)'),
+    [string] $Workspace=$(throw '-Workspace is a required parameter. (work-PRODUCT-ENVIRONMENT-001)')
 )
 
 # ***
@@ -33,17 +35,14 @@ Install-Module -Name Az.Accounts -AllowClobber -Scope CurrentUser
 Install-Module -Name Az.Resources -AllowClobber -Scope CurrentUser
 
 # ***
-# *** Locals
-# ***
-
-# ***
 # *** Auth
 # ***
 Write-Host "*** Auth ***"
-
 Connect-AzAccount -Tenant $TenantId -Subscription $SubscriptionId
 
 # ***
 # *** Execute
 # ***
 Remove-AzStorageAccount -ResourceGroupName $ResourceGroup -AccountName $StorageAccount
+Remove-AzKeyVault -VaultName $KeyVault -PassThru
+Remove-AzOperationalInsightsWorkspace -ResourceGroupName $ResourceGroup -Name $Workspace -ForceDelete
