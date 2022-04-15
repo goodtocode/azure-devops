@@ -31,8 +31,7 @@ Write-Host "*****************************"
 Write-Host "*** Starting: $ThisScript on $Now"
 Write-Host "*****************************"
 # Imports
-Import-Module ".\Helpers.Code.psm1"
-Import-Module ".\Helpers.System.psm1"
+Import-Module "./System.psm1"
 
 # ***
 # *** Validate and cleanse

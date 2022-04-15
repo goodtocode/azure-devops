@@ -23,8 +23,7 @@ pipelines | COMPANY-rg-PRODUCT-tests.yml | Main-pipeline file to test ONLY: Exte
 Path | Item | Contents
 --- | --- | ---
 pipelines/scripts | - | Contains Azure DevOps YML files, Windows PowerShell scripts, and variables to support Azure DevOps YML Pipelines.
-pipelines/scripts | Helpers.Code.psm1 | Powershell helpers for code functions
-pipelines/scripts | Helpers.System.psm1 | Powershell helpers for system-level functions
+pipelines/scripts | System.psm1 | Powershell helpers for system-level functions
 pipelines/scripts | Set-Version.ps1 | Sets version per MAJOR.MINOR.REVISION.BUILD methodology
 pipelines/scripts/get-azuread | Get-AzureAd.ps1 | Manual script for getting Azure AD information
 pipelines/scripts/new-selfsignedcert | New-SelfSignedCert.ps1 | Manual script for generating a self-signed certificate
