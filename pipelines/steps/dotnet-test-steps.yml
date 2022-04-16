@@ -1,19 +1,25 @@
 parameters:
-- name: rgEnvironment
-  type: string 
-  default: "COMPANY-rg-PRODUCT-001"
-- name: unitPath 
-  type: string 
-  default: "."
-- name: unitProject
-  type: string 
-  default: "*.csproj"
-- name: appcsConnection
-  type: string 
-  default: ""
-- name: appcsEnvironmentVariable
-  type: string 
-  default: "APP_CONFIGURATION_CONNECTION"
+  - name: rgEnvironment
+    type: string 
+    default: "COMPANY-rg-PRODUCT-001"
+  - name: unitPath 
+    type: string 
+    default: "."
+  - name: unitProject
+    type: string 
+    default: "*.csproj"
+  - name: appcsConnection
+    type: string 
+    default: ""
+  - name: appcsEnvironmentVariable
+    type: string 
+    default: "AZURE_APP_CONFIGURATION_CONNECTION"
+  - name: stConnection
+    type: string 
+    default: ""
+  - name: stEnvironmentVariable
+    type: string 
+    default: "AZURE_STORAGE_CONNECTION"
 
 steps:
   - task: UseDotNet@2
@@ -31,5 +37,6 @@ steps:
         ${{ parameters.unitPath }}/**/${{ parameters.unitProject }}
     env:
       ${{ parameters.appcsEnvironmentVariable }}: ${{ parameters.appcsConnection }}
+      ${{ parameters.stEnvironmentVariable }}: ${{ parameters.stConnection }}
       ASPNETCORE_ENVIRONMENT: ${{ parameters.rgEnvironment }}
       AZURE_FUNCTIONS_ENVIRONMENT: ${{ parameters.rgEnvironment }}

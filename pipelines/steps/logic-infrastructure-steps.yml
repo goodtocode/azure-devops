@@ -1,25 +1,25 @@
 parameters:
-- name: subscriptionId
-  type: string 
-  default: "00000000-0000-0000-0000-000000000000"
-- name: subscriptionName
-  type: string 
-  default: 'COMPANY-PRODUCT-001'
-- name: rgName 
-  type: string 
-  default: 'COMPANY-rg-PRODUCT-001'
-- name: rgLocation 
-  type: string 
-  default: "West US 2"
-- name: logicPath 
-  type: string 
-  default: "."
-- name: logicName
-  type: string 
-  default: "logic-PRODUCT-ENVIRONMENT-001"
-- name: logicParameters
-  type: string 
-  default: "logic-PRODUCT-ENVIRONMENT-001"
+  - name: subscriptionId
+    type: string 
+    default: "00000000-0000-0000-0000-000000000000"
+  - name: subscriptionName
+    type: string 
+    default: 'COMPANY-PRODUCT-001'
+  - name: rgName 
+    type: string 
+    default: 'COMPANY-rg-PRODUCT-001'
+  - name: rgLocation 
+    type: string 
+    default: "West US 2"
+  - name: logicPath 
+    type: string 
+    default: "."
+  - name: logicName
+    type: string 
+    default: "logic-PRODUCT-ENVIRONMENT-001"
+  - name: logicParameters
+    type: string 
+    default: "logic-PRODUCT-ENVIRONMENT-001"
 
 steps:
   - task: AzureResourceManagerTemplateDeployment@3

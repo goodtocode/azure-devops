@@ -1,22 +1,19 @@
 parameters:
-- name: appSettings
-  type: string 
-  default: '-ASPNETCORE_ENVIRONMENT Development -NODE_ENV Development'
-- name: artifactsPath
-  type: string 
-  default: '.'
-- name: archiveFile
-  type: string 
-  default: '*.zip'
-- name: webName
-  type: string 
-  default: 'web-PRODUCT-ENVIRONMENT-001'
-- name: subscriptionId
-  type: string 
-  default: "00000000-0000-0000-0000-000000000000"
-- name: subscriptionName
-  type: string 
-  default: 'COMPANY-PRODUCT-001'
+  - name: artifactsPath
+    type: string 
+    default: '.'
+  - name: archiveFile
+    type: string 
+    default: '*.zip'
+  - name: webName
+    type: string 
+    default: 'web-PRODUCT-ENVIRONMENT-001'
+  - name: subscriptionId
+    type: string 
+    default: "00000000-0000-0000-0000-000000000000"
+  - name: subscriptionName
+    type: string 
+    default: 'COMPANY-PRODUCT-001'
 
 steps:
   - task: DownloadBuildArtifacts@0
@@ -35,4 +32,3 @@ steps:
       appType: 'webApp'
       WebAppName: '${{ parameters.webName }}'
       packageForLinux: '${{ parameters.artifactsPath }}/**/${{ parameters.archiveFile }}'
-      appSettings: '${{ parameters.appSettings }}'

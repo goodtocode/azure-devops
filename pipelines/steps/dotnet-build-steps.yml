@@ -1,22 +1,22 @@
 parameters:
-- name: artifactsPath
-  type: string 
-  default: "."
-- name: srcPath 
-  type: string 
-  default: "."
-- name: srcProject
-  type: string 
-  default: "*.csproj"
-- name: scriptsPath 
-  type: string 
-  default: "./pipelines/scripts"
-- name: nugetPathFile
-  type: string 
-  default: ".nuget/NuGet.config"
-- name: buildConfiguration
-  type: string 
-  default: "Release"
+  - name: artifactsPath
+    type: string 
+    default: "."
+  - name: srcPath 
+    type: string 
+    default: "."
+  - name: srcProject
+    type: string 
+    default: "*.csproj"
+  - name: scriptsPath 
+    type: string 
+    default: "./pipelines/scripts"
+  - name: nugetPathFile
+    type: string 
+    default: ".nuget/NuGet.config"
+  - name: buildConfiguration
+    type: string 
+    default: "Release"
 
 steps:
   - task: UseDotNet@2

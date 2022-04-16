@@ -1,25 +1,25 @@
 parameters:
-- name: artifactsPath
-  type: string 
-  default: '.'
-- name: archiveFile
-  type: string 
-  default: '*.zip'
-- name: funcPath
-  type: string 
-  default: '.'
-- name: funcProject
-  type: string 
-  default: '*.csproj'
-- name: nugetPathFile
-  type: string 
-  default: ".nuget/NuGet.config"
-- name: buildConfiguration
-  type: string 
-  default: "Release"
-- name: tempPath
-  type: string 
-  default: './ymltemp'
+  - name: artifactsPath
+    type: string 
+    default: '.'
+  - name: archiveFile
+    type: string 
+    default: '*.zip'
+  - name: funcPath
+    type: string 
+    default: '.'
+  - name: funcProject
+    type: string 
+    default: '*.csproj'
+  - name: nugetPathFile
+    type: string 
+    default: ".nuget/NuGet.config"
+  - name: buildConfiguration
+    type: string 
+    default: "Release"
+  - name: tempPath
+    type: string 
+    default: './ymltemp'
 
 steps:
   - task: DeleteFiles@1

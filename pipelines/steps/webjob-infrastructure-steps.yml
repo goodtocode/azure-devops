@@ -1,31 +1,31 @@
 parameters:
-- name: armPath
-  type: string 
-  default: "."
-- name: subscriptionId
-  type: string 
-  default: "00000000-0000-0000-0000-000000000000"
-- name: subscriptionName
-  type: string 
-  default: 'COMPANY-PRODUCT-001'
-- name: rgName 
-  type: string 
-  default: 'COMPANY-rg-PRODUCT-001'
-- name: rgLocation 
-  type: string 
-  default: "West US 2"
-- name: rgEnvironment
-  type: string 
-  default: 'Development'
-- name: planName
-  type: string 
-  default: "plan-webjob-PRODUCT-ENVIRONMENT-001"
-- name: planSku
-  type: string 
-  default: "F1"
-- name: webjobName
-  type: string 
-  default: "webjob-PRODUCT-ENVIRONMENT-001"
+  - name: armPath
+    type: string 
+    default: "."
+  - name: subscriptionId
+    type: string 
+    default: "00000000-0000-0000-0000-000000000000"
+  - name: subscriptionName
+    type: string 
+    default: 'COMPANY-PRODUCT-001'
+  - name: rgName 
+    type: string 
+    default: 'COMPANY-rg-PRODUCT-001'
+  - name: rgLocation 
+    type: string 
+    default: "West US 2"
+  - name: rgEnvironment
+    type: string 
+    default: 'Development'
+  - name: planName
+    type: string 
+    default: "plan-webjob-PRODUCT-ENVIRONMENT-001"
+  - name: planSku
+    type: string 
+    default: "F1"
+  - name: webjobName
+    type: string 
+    default: "webjob-PRODUCT-ENVIRONMENT-001"
 
 steps:  
   - task: AzureResourceManagerTemplateDeployment@3

@@ -1,40 +1,40 @@
 parameters:
-- name: armPath
-  type: string 
-  default: "."
-- name: subscriptionId
-  type: string 
-  default: "00000000-0000-0000-0000-000000000000"
-- name: subscriptionName
-  type: string 
-  default: 'COMPANY-PRODUCT-001'
-- name: rgName 
-  type: string 
-  default: 'COMPANY-rg-PRODUCT-001'
-- name: rgLocation 
-  type: string 
-  default: "West US 2"
-- name: rgEnvironment
-  type: string 
-  default: 'Development'
-- name: appiKey
-  type: string 
-  default: ""
-- name: appiConnection
-  type: string 
-  default: ""
-- name: funcName
-  type: string 
-  default: "func-PRODUCT-ENVIRONMENT-001"
-- name: funcVersion
-  type: "number"
-  default: 4
-- name: stName
-  type: string 
-  default: "stPRODUCTENVIRONMENT001"
-- name: workName
-  type: string 
-  default: "work-PRODUCT-ENVIRONMENT-001"
+  - name: armPath
+    type: string 
+    default: "."
+  - name: subscriptionId
+    type: string 
+    default: "00000000-0000-0000-0000-000000000000"
+  - name: subscriptionName
+    type: string 
+    default: 'COMPANY-PRODUCT-001'
+  - name: rgName 
+    type: string 
+    default: 'COMPANY-rg-PRODUCT-001'
+  - name: rgLocation 
+    type: string 
+    default: "West US 2"
+  - name: rgEnvironment
+    type: string 
+    default: 'Development'
+  - name: appiKey
+    type: string 
+    default: ""
+  - name: appiConnection
+    type: string 
+    default: ""
+  - name: funcName
+    type: string 
+    default: "func-PRODUCT-ENVIRONMENT-001"
+  - name: funcVersion
+    type: "number"
+    default: 4
+  - name: stName
+    type: string 
+    default: "stPRODUCTENVIRONMENT001"
+  - name: workName
+    type: string 
+    default: "work-PRODUCT-ENVIRONMENT-001"
 
 steps:  
   - task: AzureResourceManagerTemplateDeployment@3

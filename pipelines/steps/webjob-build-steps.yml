@@ -1,36 +1,36 @@
 parameters:
-- name: artifactsPath
-  type: string 
-  default: '.'
-- name: archiveFile
-  type: string 
-  default: '*.zip'
-- name: srcPath
-  type: string 
-  default: '.'
-- name: webjobProject
-  type: string 
-  default: '*.csproj'
-- name: webjobName
-  type: string 
-- name: nugetPathFile
-  type: string 
-  default: ".nuget/NuGet.config"
-- name: buildConfiguration
-  type: string 
-  default: "Release"
-- name: tempPath
-  type: string 
-  default: './ymltemp'
-- name: webjobType
-  type: string
-  default: 'triggered' #'continuous'  
-- name: webjobPath
-  type: string
-  default: '/App_Data/jobs'
-- name: cronSchedule
-  type: string
-  default: '0 */5 * * * *'
+  - name: artifactsPath
+    type: string 
+    default: '.'
+  - name: archiveFile
+    type: string 
+    default: '*.zip'
+  - name: srcPath
+    type: string 
+    default: '.'
+  - name: webjobProject
+    type: string 
+    default: '*.csproj'
+  - name: webjobName
+    type: string 
+  - name: nugetPathFile
+    type: string 
+    default: ".nuget/NuGet.config"
+  - name: buildConfiguration
+    type: string 
+    default: "Release"
+  - name: tempPath
+    type: string 
+    default: './ymltemp'
+  - name: webjobType
+    type: string
+    default: 'triggered' #'continuous'  
+  - name: webjobPath
+    type: string
+    default: '/App_Data/jobs'
+  - name: cronSchedule
+    type: string
+    default: '0 */5 * * * *'
 
 steps:
   - task: DeleteFiles@1

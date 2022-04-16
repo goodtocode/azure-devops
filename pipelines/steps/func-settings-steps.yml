@@ -1,34 +1,13 @@
 parameters:
-- name: subscriptionName
-  type: string 
-  default: 'COMPANY-PRODUCT-001'
-- name: rgEnvironment
-  type: string 
-  default: 'Development'
-- name: funcName
-  type: string 
-  default: "api-PRODUCT-ENVIRONMENT-001"
-- name: funcRuntime
-  type: string 
-  default: "dotnet-isolated"
-- name: funcVersion
-  type: string 
-  default: "~4"
-- name: stEnvironmentVariable
-  type: string 
-  default: 'COMPANY_PRODUCT_STORAGE'
-- name: stConnection
-  type: string 
-  default: 'stConnection not provided'
-- name: appcsEnvironmentVariable
-  type: string 
-  default: 'COMPANY_PRODUCT_CONNECTION'
-- name: appcsConnection
-  type: string 
-- name: appiKey
-  type: string
-
-variables:
+  - name: subscriptionName
+    type: string 
+    default: 'COMPANY-PRODUCT-001'
+  - name: rgEnvironment
+    type: string 
+    default: 'Development'
+  - name: funcName
+    type: string 
+    default: "func-PRODUCT-ENVIRONMENT-001"
   - name: appSettings
     type: object
     default: 
@@ -55,15 +34,18 @@ variables:
         slotSetting: false
 
 steps:
-  - job: deploy_app_settings
-    steps:
-    - ${{ each appSetting in $(appSettings) }}
-      - template: appsetting-deploy-steps.yml
-        parameters:
-          appServiceName: '${{ parameters.funcName }}'
-          subscriptionName: '${{ parameters.subscriptionName }}'
-          appSetting: {
-            name: '$(appSetting.name)',
-            value: '$(appSetting.value)',
-            slotSetting: '$(appSetting.slotSetting)',
+  - ${{ each appSetting in parameters.appSettings }}:
+    - task: AzureAppServiceSettings@1
+      displayName: 'set_appsettings ${{ appSetting.name }}'
+      inputs:
+        azureSubscription: ${{ parameters.subscriptionName }}
+        appName: ${{ parameters.funcName }}    
+        appSettings: |
+          [
+            {
+              "name": "${{ appSetting.name }}",
+              "value": "${{ appSetting.value }}",
+              "slotSetting": "${{ appSetting.slotSetting }}"
             }
+          ]
+        slotName: ${{ parameters.slotName }}
