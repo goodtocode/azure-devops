@@ -43,7 +43,9 @@ variables:
     value : 'Any CPU'
   - name: buildConfiguration
     value : 'Release'
-        
+  - name: infrastructurePath
+    value : 'infrastructure'
+      
 stages:
   - stage: development
     condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -55,7 +57,7 @@ stages:
         steps:
           - template: steps/landingzone-infrastructure-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              armPath: '$(infrastructurePath)'
               subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
               rgName: '$(rgName)'
