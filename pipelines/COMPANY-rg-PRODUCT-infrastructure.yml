@@ -72,7 +72,7 @@ stages:
         steps:
           - template: steps/appcs-infrastructure-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              armPath: '$(infrastructurePath)'
               subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
               rgName: '$(rgName)'
@@ -85,7 +85,7 @@ stages:
         steps:
           - template: steps/appcs-settings-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              armPath: '$(infrastructurePath)'
               subscriptionName: '$(subscriptionName)'
               subscriptionId: '$(subscriptionId)'
               rgName: '$(rgName)'
@@ -99,7 +99,7 @@ stages:
         steps:
           - template: steps/sb-infrastructure-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              armPath: '$(infrastructurePath)'
               subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
               rgName: '$(rgName)'
@@ -112,7 +112,7 @@ stages:
         steps:
           - template: steps/func-infrastructure-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              armPath: '$(infrastructurePath)'
               subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
               rgName: '$(rgName)'
@@ -129,7 +129,7 @@ stages:
         steps:
           - template: steps/webjob-infrastructure-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              armPath: '$(infrastructurePath)'
               subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
               rgName: '$(rgName)'
@@ -148,7 +148,7 @@ stages:
         steps:
           - template: steps/landingzone-infrastructure-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              armPath: '$(infrastructurePath)'
               subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
               rgName: '$(rgName)'
@@ -163,7 +163,7 @@ stages:
         steps:
           - template: steps/appcs-infrastructure-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              armPath: '$(infrastructurePath)'
               subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
               rgName: '$(rgName)'
@@ -176,7 +176,7 @@ stages:
         steps:
           - template: steps/appcs-settings-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              armPath: '$(infrastructurePath)'
               subscriptionName: '$(subscriptionName)'
               subscriptionId: '$(subscriptionId)'
               rgName: '$(rgName)'
@@ -190,7 +190,7 @@ stages:
         steps:
           - template: steps/sb-infrastructure-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              armPath: '$(infrastructurePath)'
               subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
               rgName: '$(rgName)'
@@ -203,7 +203,7 @@ stages:
         steps:
           - template: steps/func-infrastructure-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              armPath: '$(infrastructurePath)'
               subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
               rgName: '$(rgName)'
@@ -220,7 +220,7 @@ stages:
         steps:
           - template: steps/webjob-infrastructure-steps.yml
             parameters:
-              armPath: 'infrastructure'
+              armPath: '$(infrastructurePath)'
               subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
               rgName: '$(rgName)'
