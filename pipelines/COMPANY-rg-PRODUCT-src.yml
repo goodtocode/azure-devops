@@ -16,11 +16,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  - template: variables/development.yml
-  - name: buildPlatform
-    value: 'Any CPU'
-  - name: buildConfiguration
-    value: 'Release'
+  - template: variables/common.yml
 
 stages:
   - stage: development
