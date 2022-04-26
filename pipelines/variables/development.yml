@@ -7,7 +7,7 @@ variables:
     value: 'rg-PRODUCT-dev-001'
   - name: locationName
     value: 'West US 2'
-  - name: 'appInsightsName'
+  - name: 'appiName'
     value: 'appi-PRODUCT-dev-001'
   - name: 'cogName'
     value: 'cog-PRODUCT-dev-001'
