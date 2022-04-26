@@ -5,7 +5,7 @@ variables:
     value: 'Development'
   - name: rgName
     value: 'rg-PRODUCT-dev-001'
-  - name: locationName
+  - name: rgLocation
     value: 'West US 2'
   - name: 'appiName'
     value: 'appi-PRODUCT-dev-001'
@@ -31,7 +31,7 @@ variables:
     value: 'internal'
   - name: 'nugetId'
     value: '00000000-0000-0000-0000-000000000000'
-  - name: storageName
+  - name: stName
     value: 'stPRODUCTdev001'
   - name: 'stblobcnName'
     value: 'stblobcn-PRODUCT-dev-001'
@@ -41,5 +41,5 @@ variables:
     value: 'teamscn-PRODUCT-dev-001'
   - name: 'teamscnNameLower'
     value: "$[lower(replace(variables['teamscnName'], '-', ''))]"
-  - name: workspaceName
+  - name: workName
     value: 'work-PRODUCT-dev-001'
