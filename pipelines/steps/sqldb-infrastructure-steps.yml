@@ -13,19 +13,19 @@ parameters:
     default: 'COMPANY-rg-PRODUCT-001'
   - name: rgLocation 
     type: string 
-    default: "West US 2"
-  - name: sqlServerName
+    default: "West US 3"
+  - name: sqlName
     type: string 
     default: "sb-PRODUCT-ENVIRONMENT-001"
-  - name: sqlUserName
+  - name: sqlUser
     type: string 
     default: "LocalAdmin"
-  - name: sqlUserPassword
+  - name: sqlPassword
     type: string 
-  - name: sqlDatabaseName
+  - name: sqldbName
     type: string 
     default: "sb-PRODUCT-ENVIRONMENT-001"
-  - name: sqlDatabaseSku
+  - name: sqldbSku
     type: string 
     default: "Basic"
 
@@ -43,7 +43,7 @@ steps:
         csmFile: "${{ parameters.armPath }}/sqldb-sqldatabase.json"
         csmParametersFile: "${{ parameters.armPath }}/sqldb-sqldatabase.parameters.json"
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.sqldbName }}" -sku "${{ parameters.sqlDatabaseSku }}"
+        overrideParameters: -name "${{ parameters.sqldbName }}" -sku "${{ parameters.sqldbSku }}" -adminLogin "${{ parameters.sqlUser }}" -adminPassword "${{ parameters.sqlPassword }}" -sqlName "${{ parameters.sqlName }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Deploy ${{ parameters.sqldbName }}"
@@ -58,4 +58,4 @@ steps:
         csmFile: "${{ parameters.armPath }}/sqldb-sqldatabase.json"
         csmParametersFile: "${{ parameters.armPath }}/sqldb-sqldatabase.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.sqldbName }}" -sku "${{ parameters.sqlDatabaseSku }}"
+        overrideParameters: -name "${{ parameters.sqldbName }}" -sku "${{ parameters.sqldbSku }}" -adminLogin "${{ parameters.sqlUser }}" -adminPassword "${{ parameters.sqlPassword }}" -sqlName "${{ parameters.sqlName }}"
