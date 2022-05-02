@@ -29,5 +29,3 @@ variables:
     value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.LogicApps.NAME'
   - name: buildConfiguration
     value: 'Release'
-  - name: MSBUILDSINGLELOADCONTEXT
-    value: 1
