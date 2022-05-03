@@ -17,6 +17,8 @@ variables:
     value: '$(System.DefaultWorkingDirectory)/infrastructure'
   - name: testsPath
     value: '$(System.DefaultWorkingDirectory)/tests'
+  - name: scriptsPath
+    value: '$(System.DefaultWorkingDirectory)/pipelines/scripts'
   - name: srcPath
     value: '$(System.DefaultWorkingDirectory)/src'
   - name: funcPath
@@ -27,5 +29,3 @@ variables:
     value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.LogicApps.NAME'
   - name: buildConfiguration
     value: 'Release'
-  - name: MSBUILDSINGLELOADCONTEXT
-    value: 1

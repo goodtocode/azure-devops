@@ -20,6 +20,9 @@ parameters:
       - name: 'ASPNETCORE_ENVIRONMENT'
         value: '$(rgEnvironment)'
         slotSetting: false
+      - name: 'NODE_ENVIRONMENT'
+        value: '$(rgEnvironment)'
+        slotSetting: false
       - name: '$(appcsEnvironmentVariable)'
         value: '$(appcsConnection)'
         slotSetting: false

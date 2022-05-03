@@ -20,6 +20,9 @@ parameters:
   - name: stEnvironmentVariable
     type: string 
     default: "AZURE_STORAGE_CONNECTION"
+  - name: arguments
+    type: string
+    default: ""
 
 steps:
   - task: UseDotNet@2
@@ -35,6 +38,7 @@ steps:
       command: test
       projects: |
         ${{ parameters.unitPath }}/**/${{ parameters.unitProject }}
+      arguments: $(arguments)
     env:
       ${{ parameters.appcsEnvironmentVariable }}: ${{ parameters.appcsConnection }}
       ${{ parameters.stEnvironmentVariable }}: ${{ parameters.stConnection }}
