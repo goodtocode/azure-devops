@@ -29,8 +29,6 @@ variables:
     value: 'select'
   - name: 'nugetType'
     value: 'internal'
-  - name: 'nugetId'
-    value: '00000000-0000-0000-0000-000000000000'
   - name: stName
     value: 'stPRODUCTdev001'
   - name: 'stblobcnName'

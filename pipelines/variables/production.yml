@@ -33,8 +33,6 @@ variables:
     value: 'select'
   - name: 'nugetType'
     value: 'external'
-  - name: 'nugetId'
-    value: '00000000-0000-0000-0000-000000000000'
   - name: stName
     value: 'stPRODUCTprod001'
   - name: 'stblobcnName'
