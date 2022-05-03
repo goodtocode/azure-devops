@@ -24,18 +24,18 @@ parameters:
     default: "COMPANY-PRODUCT-001"
 
 variables:
-  - template: variables/common.yml
+  - template: ../variables/common.yml
 
 stages:
   - stage: development
     condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
     variables:
-      - template: variables/development.yml
+      - template: ../variables/development.yml
       
     jobs:    
       - job: build_src
         steps:
-          - template: steps/dotnet-build-steps.yml
+          - template: ../steps/dotnet-build-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
               srcPath: '$(srcPath)'
@@ -43,7 +43,7 @@ stages:
       - job: test_src
         dependsOn: build_src
         steps:
-          - template: steps/dotnet-test-steps.yml
+          - template: ../steps/dotnet-test-steps.yml
             parameters:
               unitPath: '$(System.DefaultWorkingDirectory)/src'
               appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
@@ -53,7 +53,7 @@ stages:
       - job: build_func
         dependsOn: test_src
         steps:
-          - template: steps/func-build-steps.yml
+          - template: ../steps/func-build-steps.yml
             parameters:
               archiveFile: '$(funcArchiveFile)'
               funcPath: '$(funcPath)'
@@ -62,7 +62,7 @@ stages:
       - job: deploy_func
         dependsOn: build_func
         steps:
-          - template: steps/func-deploy-steps.yml
+          - template: ../steps/func-deploy-steps.yml
             parameters:
               appSettings: '-$(appcsEnvironmentVariable) $(appcsConnection) -$(stEnvironmentVariable) $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
               artifactsPath: '$(artifactsPath)'
@@ -74,7 +74,7 @@ stages:
       - job: build_webjob
         dependsOn: test_src
         steps:
-          - template: steps/webjob-build-steps.yml
+          - template: ../steps/webjob-build-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
               archiveFile: '$(webjobArchiveFile)'
@@ -86,7 +86,7 @@ stages:
       - job: deploy_webjob
         dependsOn: build_webjob
         steps:
-          - template: steps/web-deploy-steps.yml
+          - template: ../steps/web-deploy-steps.yml
             parameters:
               appSettings: '-$(appcsEnvironmentVariable) $(appcsConnection) -$(stEnvironmentVariable) $(stConnection) -AzureWebJobsDashboard $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
               artifactsPath: '$(artifactsPath)'
@@ -98,12 +98,12 @@ stages:
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
     variables:
-      - template: variables/production.yml    
+      - template: ../variables/production.yml    
 
     jobs:
       - job: build_src
         steps:
-          - template: steps/dotnet-build-steps.yml
+          - template: ../steps/dotnet-build-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
               srcPath: '$(srcPath)'
@@ -111,7 +111,7 @@ stages:
       - job: test_src
         dependsOn: build_src
         steps:
-          - template: steps/dotnet-test-steps.yml
+          - template: ../steps/dotnet-test-steps.yml
             parameters:
               unitPath: '$(System.DefaultWorkingDirectory)/src'
               appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
@@ -121,7 +121,7 @@ stages:
       - job: build_func
         dependsOn: test_src
         steps:
-          - template: steps/func-build-steps.yml
+          - template: ../steps/func-build-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
               archiveFile: '$(funcArchiveFile)'
@@ -131,7 +131,7 @@ stages:
       - job: deploy_func
         dependsOn: build_func
         steps:
-          - template: steps/func-deploy-steps.yml
+          - template: ../steps/func-deploy-steps.yml
             parameters:
               appSettings: '-$(appcsEnvironmentVariable) $(appcsConnection) -$(stEnvironmentVariable) $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
               artifactsPath: '$(artifactsPath)'
@@ -143,7 +143,7 @@ stages:
       - job: build_webjob
         dependsOn: test_src
         steps:
-          - template: steps/webjob-build-steps.yml
+          - template: ../steps/webjob-build-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
               archiveFile: '$(webjobArchiveFile)'
@@ -155,7 +155,7 @@ stages:
       - job: deploy_webjob
         dependsOn: build_webjob
         steps:
-          - template: steps/web-deploy-steps.yml
+          - template: ../steps/web-deploy-steps.yml
             parameters:
               appSettings: '-$(appcsEnvironmentVariable) $(appcsConnection) -$(stEnvironmentVariable) $(stConnection) -AzureWebJobsDashboard $(stConnection) -APPINSIGHTS_INSTRUMENTATIONKEY $(appiKey) -APPLICATIONINSIGHTS_CONNECTION_STRING $(appiConnection) -AZURE_FUNCTIONS_ENVIRONMENT $(rgEnvironment) -ASPNETCORE_ENVIRONMENT $(rgEnvironment) '
               artifactsPath: '$(artifactsPath)'
