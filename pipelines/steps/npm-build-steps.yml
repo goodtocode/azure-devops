@@ -10,7 +10,7 @@ parameters:
   default: "."
 - name: scriptsPath 
   type: string 
-  default: "./pipelines/scripts"
+  default: "./scripts"
 - name: tempPath
   type: string 
   default: './sitetemp'

@@ -16,7 +16,7 @@ parameters:
     default: "Release"
   - name: scriptsPath 
     type: string 
-    default: "./pipelines/scripts"
+    default: "./scripts"
   - name: versionToReplace
     type: string 
     default: "1.0.0"

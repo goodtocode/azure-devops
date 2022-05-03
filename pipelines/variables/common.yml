@@ -6,13 +6,13 @@ variables:
   - name: archiveFile
     value: 'archive.zip'
   - name: pipelinesPath
-    value: '$(System.DefaultWorkingDirectory)/pipelines'
+    value: '$(System.DefaultWorkingDirectory)/.azure-devops'
   - name: infrastructurePath
     value: '$(System.DefaultWorkingDirectory)/infrastructure'
   - name: testsPath
     value: '$(System.DefaultWorkingDirectory)/tests'
   - name: scriptsPath
-    value: '$(System.DefaultWorkingDirectory)/pipelines/scripts'
+    value: '$(System.DefaultWorkingDirectory)/.azure-devops/scripts'
   - name: srcPath
     value: '$(System.DefaultWorkingDirectory)/src'
   - name: funcPath

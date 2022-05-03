@@ -10,7 +10,7 @@ parameters:
     default: "*.csproj"
   - name: scriptsPath 
     type: string 
-    default: "./pipelines/scripts"
+    default: "./scripts"
 
 steps:
   - task: UseDotNet@2
