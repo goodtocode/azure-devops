@@ -17,7 +17,18 @@ pool:
 
 variables:
   - template: variables/common.yml
-      
+
+parameters:
+  - name: tenantId
+    type: string 
+    default: "$(tenantId)"
+  - name: subscriptionId
+    type: string 
+    default: "$(subscriptionId)"
+  - name: subscriptionService
+    type: string 
+    default: "COMPANY-PRODUCT-001"
+
 stages:
   - stage: development
     condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')

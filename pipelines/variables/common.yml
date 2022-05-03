@@ -1,10 +1,4 @@
 variables:
-  - name: tenantId
-    value: "00000000-0000-0000-0000-000000000000"
-  - name: subscriptionId
-    value: "00000000-0000-0000-0000-000000000000"
-  - name: subscriptionService
-    value: "COMPANY-PRODUCT-001"
   - name: artifactsPath
     value: '$(Build.ArtifactStagingDirectory)'
   - name: tempPath

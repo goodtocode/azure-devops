@@ -15,6 +15,17 @@ pr:
 pool:
   vmImage: 'ubuntu-latest'
 
+parameters:
+  - name: tenantId
+    type: string 
+    default: "$(tenantId)"
+  - name: subscriptionId
+    type: string 
+    default: "$(subscriptionId)"
+  - name: subscriptionService
+    type: string 
+    default: "COMPANY-PRODUCT-001"
+
 variables:
   - template: variables/common.yml
 

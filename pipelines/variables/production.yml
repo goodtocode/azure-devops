@@ -27,8 +27,6 @@ variables:
     value: 'kv-PRODUCT-prod-001'
   - name: 'logicName'
     value: 'logic-PRODUCT-NAME-prod-001'
-  - name: 'nugetService'
-    value: 'COMPANY-nuget-001'
   - name: 'nugetFeeds'
     value: 'select'
   - name: 'nugetType'
