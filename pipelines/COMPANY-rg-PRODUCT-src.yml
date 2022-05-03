@@ -16,12 +16,12 @@ pool:
   vmImage: 'ubuntu-latest'
 
 parameters:
-  - name: nugetService
+  - name: appcsEnvironmentVariable
     type: string 
-    default: "COMPANY-nuget-001"
-  - name: subscriptionService
+    default: "AZURE_APP_CONFIGURATION_CONNECTION"
+  - name: appcsConnection
     type: string 
-    default: "COMPANY-PRODUCT-001"
+    default: "$(appcsConnection)" # from secrets (library)
 
 variables:
   - template: ../variables/common.yml

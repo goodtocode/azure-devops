@@ -18,7 +18,7 @@ pool:
 parameters:
   - name: subscriptionService
     type: string 
-    default: "COMPANY-PRODUCT-001"
+    default: "COMPANY-PRODUCT-001" # cant be in libary, required at parsing time
 
 variables:
   - template: ../variables/common.yml
