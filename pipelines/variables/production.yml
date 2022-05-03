@@ -4,7 +4,7 @@ variables:
   - name: rgEnvironment
     value: 'Production'
   - name: rgName
-    value: 'rg-PRODUCT-prod-001'
+    value: 'COMPANY-rg-PRODUCT-prod-001'
   - name: rgLocation
     value: 'West US 2'
   - name: 'appiName'
