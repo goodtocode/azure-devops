@@ -5,8 +5,6 @@ variables:
     value: '$(Agent.TempDirectory)/ymltemp'
   - name: archiveFile
     value: 'archive.zip'
-  - name: pipelinesPath
-    value: '$(System.DefaultWorkingDirectory)/pipelines'
   - name: infrastructurePath
     value: '$(System.DefaultWorkingDirectory)/infrastructure'
   - name: testsPath
