@@ -16,12 +16,9 @@ pool:
   vmImage: 'ubuntu-latest'
 
 parameters:
-  - name: tenantId
+  - name: nugetService
     type: string 
-    default: "$(tenantId)"
-  - name: subscriptionId
-    type: string 
-    default: "$(subscriptionId)"
+    default: "COMPANY-nuget-001"
   - name: subscriptionService
     type: string 
     default: "COMPANY-PRODUCT-001"
@@ -72,7 +69,7 @@ stages:
               archiveFile: '$(funcArchiveFile)'
               funcName: '$(funcName)'
               subscriptionId: '$(subscriptionId)'
-              subscriptionService: '$(subscriptionService)'
+              subscriptionService: '${{ parameters.subscriptionService }}'
 
       - job: build_webjob
         dependsOn: test_src
@@ -96,7 +93,7 @@ stages:
               archiveFile: '$(webjobArchiveFile)'
               webName: '$(webjobName)'
               subscriptionId: '$(subscriptionId)'
-              subscriptionService: '$(subscriptionService)'
+              subscriptionService: '${{ parameters.subscriptionService }}'
 
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -141,7 +138,7 @@ stages:
               archiveFile: '$(funcArchiveFile)'
               funcName: '$(funcName)'
               subscriptionId: '$(subscriptionId)'
-              subscriptionService: '$(subscriptionService)'
+              subscriptionService: '${{ parameters.subscriptionService }}'
 
       - job: build_webjob
         dependsOn: test_src
@@ -165,4 +162,4 @@ stages:
               archiveFile: '$(webjobArchiveFile)'
               webName: '$(webjobName)'
               subscriptionId: '$(subscriptionId)'
-              subscriptionService: '$(subscriptionService)'
+              subscriptionService: '${{ parameters.subscriptionService }}'
