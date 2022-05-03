@@ -14,7 +14,7 @@ parameters:
   type: string
 - name: subscriptionId
   type: string
-- name: subscriptionName
+- name: subscriptionService
   type: string
 
 steps:
@@ -23,7 +23,7 @@ steps:
     inputs:
       sourcePath: '${{ parameters.filePath }}/${{ parameters.fileMask }}'
       azureSubscription: '${{ parameters.subscriptionId }}'
-      connectedServiceNameARM: '${{ parameters.subscriptionName }}'
+      connectedServiceNameARM: '${{ parameters.subscriptionService }}'
       destination: 'azureBlob'
       storage: '${{ parameters.stName }}'
       containerName: '${{ parameters.containerName }}'

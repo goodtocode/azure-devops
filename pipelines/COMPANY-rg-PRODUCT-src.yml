@@ -61,7 +61,7 @@ stages:
               archiveFile: '$(funcArchiveFile)'
               funcName: '$(funcName)'
               subscriptionId: '$(subscriptionId)'
-              subscriptionName: '$(subscriptionName)'
+              subscriptionService: '$(subscriptionService)'
 
       - job: build_webjob
         dependsOn: test_src
@@ -85,7 +85,7 @@ stages:
               archiveFile: '$(webjobArchiveFile)'
               webName: '$(webjobName)'
               subscriptionId: '$(subscriptionId)'
-              subscriptionName: '$(subscriptionName)'
+              subscriptionService: '$(subscriptionService)'
 
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -130,7 +130,7 @@ stages:
               archiveFile: '$(funcArchiveFile)'
               funcName: '$(funcName)'
               subscriptionId: '$(subscriptionId)'
-              subscriptionName: '$(subscriptionName)'
+              subscriptionService: '$(subscriptionService)'
 
       - job: build_webjob
         dependsOn: test_src
@@ -154,4 +154,4 @@ stages:
               archiveFile: '$(webjobArchiveFile)'
               webName: '$(webjobName)'
               subscriptionId: '$(subscriptionId)'
-              subscriptionName: '$(subscriptionName)'
+              subscriptionService: '$(subscriptionService)'

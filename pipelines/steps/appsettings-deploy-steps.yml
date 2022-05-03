@@ -2,7 +2,7 @@ parameters:
 - name: appServiceName
   type: string 
   default: "web-PRODUCT-ENVIRONMENT-001"
-- name: subscriptionName
+- name: subscriptionService
   type: string 
   default: 'COMPANY-PRODUCT-001'
 - name: rgEnvironment
@@ -23,7 +23,7 @@ steps:
   - task: AzureAppServiceSettings@1
     displayName: 'App Settings ${{ parameters.appServiceName }}'
     inputs:
-      azureSubscription: ${{ parameters.subscriptionName }}
+      azureSubscription: ${{ parameters.subscriptionService }}
       appName: ${{ parameters.appServiceName }}    
       appSettings: |
         [

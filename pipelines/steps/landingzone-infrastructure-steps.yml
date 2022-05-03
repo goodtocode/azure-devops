@@ -5,7 +5,7 @@ parameters:
   - name: subscriptionId
     type: string 
     default: "00000000-0000-0000-0000-000000000000"
-  - name: subscriptionName
+  - name: subscriptionService
     type: string 
     default: 'COMPANY-PRODUCT-001'
   - name: rgName 
@@ -32,7 +32,7 @@ steps:
     displayName: "Validate ${{ parameters.stName  }}"
     inputs:
         deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
         subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
         resourceGroupName: "${{ parameters.rgName }}"
@@ -47,7 +47,7 @@ steps:
     displayName: "Deploy ${{ parameters.stName  }}"
     inputs:
         deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
         subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
         resourceGroupName: "${{ parameters.rgName }}"
@@ -62,7 +62,7 @@ steps:
     displayName: "Validate ${{ parameters.workName  }}"
     inputs:
         deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
         subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
         resourceGroupName: "${{ parameters.rgName }}"
@@ -77,7 +77,7 @@ steps:
     displayName: "Deploy ${{ parameters.workName  }}"
     inputs:
         deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
         subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
         resourceGroupName: "${{ parameters.rgName }}"
@@ -92,7 +92,7 @@ steps:
     displayName: "Validate ${{ parameters.appiName  }}"
     inputs:
         deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
         subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
         resourceGroupName: "${{ parameters.rgName }}"
@@ -107,7 +107,7 @@ steps:
     displayName: "Deploy ${{ parameters.appiName  }}"
     inputs:
         deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
         subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
         resourceGroupName: "${{ parameters.rgName }}"
@@ -122,7 +122,7 @@ steps:
     displayName: "Validate ${{ parameters.kvName  }}"
     inputs:
         deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
         subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
         resourceGroupName: "${{ parameters.rgName }}"
@@ -137,7 +137,7 @@ steps:
     displayName: "Deploy ${{ parameters.kvName  }}"
     inputs:
         deploymentScope: "Resource Group"
-        azureResourceManagerConnection: "${{ parameters.subscriptionName }}"
+        azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
         subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
         resourceGroupName: "${{ parameters.rgName }}"

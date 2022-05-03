@@ -8,7 +8,7 @@ parameters:
   - name: nugetType
     type: string 
     default: "external"
-  - name: nugetServiceConnection
+  - name: nugetService
     type: string 
     default: ""
   - name: nugetFeeds
@@ -34,5 +34,5 @@ steps:
         feedsToUse: '${{ parameters.nugetFeeds }}'
         nuGetFeedType: '${{ parameters.nugetType }}'
         includeNuGetOrg: true
-        publishFeedCredentials: '${{ parameters.nugetServiceConnection }}'
+        publishFeedCredentials: '${{ parameters.nugetService }}'
         packagesToPush: '${{ parameters.artifactsPath }}/**/${{ parameters.nugetFile }}'
