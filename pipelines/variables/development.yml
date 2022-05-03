@@ -24,7 +24,7 @@ variables:
   - name: 'logicName'
     value: 'logic-PRODUCT-NAME-dev-001'
   - name: 'nugetServiceConnection'
-    value: 'COMPANY-nuget-prod-001'
+    value: 'COMPANY-nuget-001'
   - name: 'nugetFeeds'
     value: 'select'
   - name: 'nugetType'
