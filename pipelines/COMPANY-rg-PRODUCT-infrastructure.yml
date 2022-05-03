@@ -15,13 +15,13 @@ pr:
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-  - template: variables/common.yml
-
 parameters:
   - name: subscriptionService
     type: string 
     default: "COMPANY-PRODUCT-001"
+
+variables:
+  - template: variables/common.yml
 
 stages:
   - stage: development
