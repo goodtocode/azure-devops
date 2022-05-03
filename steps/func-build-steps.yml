@@ -22,7 +22,7 @@ parameters:
     default: './ymltemp'
   - name: scriptsPath 
     type: string 
-    default: "./scripts"
+    default: "../scripts"
   - name: versionToReplace
     type: string 
     default: "1.0.0"
