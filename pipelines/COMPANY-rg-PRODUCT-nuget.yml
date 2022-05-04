@@ -1,0 +1,118 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - '*'
+  paths:
+    include:
+    - src/*
+
+pr:
+  branches:
+    exclude:
+    - '*'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+parameters:
+  - name: appcsEnvironmentVariable
+    type: string 
+    default: "GTC_PERSISTENCE_CONNECTION"
+  - name: appcsConnection
+    type: string 
+    default: "$(appcsConnection)"
+  - name: nugetService
+    type: string 
+    default: "gtc-nuget-001"
+  - name: nugetId
+    type: string 
+    default: "$(nugetId)"
+
+variables:
+  - template: ../variables/common.yml
+
+stages:
+  - stage: development
+    condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
+    variables:
+      - template: ../variables/development.yml
+      
+    jobs:    
+      - job: build_src
+        steps:
+          - template: ../steps/dotnet-build-steps.yml
+            parameters:
+              artifactsPath: '$(artifactsPath)'
+              scriptsPath: '$(scriptsPath)'
+              srcPath: '$(srcPath)'
+
+      - job: test_src
+        dependsOn: build_src
+        steps:
+          - template: ../steps/dotnet-test-steps.yml
+            parameters:
+              testPath: '$(System.DefaultWorkingDirectory)/src'
+              arguments: '--filter TestCategory!=Integration'
+              appcsEnvironmentVariable: '${{ parameters.appcsEnvironmentVariable }}'
+              appcsConnection: '${{ parameters.appcsConnection }}'
+              rgEnvironment: '$(rgEnvironment)'
+
+      - job: pack_src
+        dependsOn: test_src
+        steps:
+          - template: ../steps/dotnet-pack-steps.yml
+            parameters:
+              artifactsPath: '$(artifactsPath)'
+              scriptsPath: '$(scriptsPath)'
+              srcPath: '$(srcPath)'
+
+      - job: deploy_nuget
+        dependsOn: pack_src
+        steps:
+          - template: ../steps/nuget-deploy-internal-steps.yml
+            parameters:              
+              artifactsPath: '$(artifactsPath)'
+              nugetId:  '${{ parameters.nugetId }}'
+
+  - stage: production
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    variables:
+      - template: ../variables/production.yml    
+
+    jobs:    
+      - job: build_src
+        steps:
+          - template: ../steps/dotnet-build-steps.yml
+            parameters:
+              artifactsPath: '$(artifactsPath)'
+              scriptsPath: '$(scriptsPath)'
+              srcPath: '$(srcPath)'
+
+      - job: test_src
+        dependsOn: build_src
+        steps:
+          - template: ../steps/dotnet-test-steps.yml
+            parameters:
+              testPath: '$(System.DefaultWorkingDirectory)/src'
+              arguments: '--filter TestCategory!=Integration'
+              appcsEnvironmentVariable: '${{ parameters.appcsEnvironmentVariable }}'
+              appcsConnection: '${{ parameters.appcsConnection }}'
+              rgEnvironment: '$(rgEnvironment)'
+
+      - job: pack_src
+        dependsOn: test_src
+        steps:
+          - template: ../steps/dotnet-pack-steps.yml
+            parameters:
+              artifactsPath: '$(artifactsPath)'
+              scriptsPath: '$(scriptsPath)'
+              srcPath: '$(srcPath)'
+
+      - job: deploy_nuget
+        dependsOn: pack_src
+        steps:
+          - template: ../steps/nuget-deploy-external-steps.yml
+            parameters:              
+              artifactsPath: '$(artifactsPath)'
+              nugetService:  '${{ parameters.nugetService }}'
