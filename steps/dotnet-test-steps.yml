@@ -38,7 +38,7 @@ steps:
       command: test
       projects: |
         ${{ parameters.testPath }}/**/${{ parameters.testProject }}
-      arguments: $(arguments)
+      #arguments: $(arguments)
     env:
       ${{ parameters.appcsEnvironmentVariable }}: ${{ parameters.appcsConnection }}
       ${{ parameters.stEnvironmentVariable }}: ${{ parameters.stConnection }}
