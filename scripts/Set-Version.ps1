@@ -47,7 +47,7 @@ If($IsWindows){
 # ***
 # *** Execute
 # ***
-$Major = $Major.Replace('-1', '1')
+$Major = $Major.Replace('-1', $VersionToReplace.ToString().Substring(0,1))
 $Minor = $Minor.Replace('-1', (Get-Date -UFormat '%Y').ToString().Substring(2,2)) # YY
 $Revision = $Revision.Replace('-1', (Get-Date -UFormat '%j').ToString()) # DayOfYear
 $Build = $Build.Replace('-1', (Get-Date -UFormat '%H%M').ToString()) # HrMinSec
