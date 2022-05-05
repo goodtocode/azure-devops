@@ -1,22 +1,15 @@
 parameters:
-- name: artifactsPath
-  type: string 
-  default: "."
-- name: srcPath 
-  type: string 
-  default: "."
-- name: scriptsPath 
-  type: string 
-  default: "../scripts"
+  - name: artifactsPath
+    type: string 
+    default: "."
+  - name: srcPath 
+    type: string 
+    default: "."
+  - name: scriptsPath 
+    type: string 
+    default: "../scripts"
 
 steps:
-  - task: PowerShell@2
-    displayName: 'Set-Version.ps1'
-    inputs:
-      filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
-      arguments: '-Path ${{ parameters.srcPath }} -VersionToReplace 5.20.1 -Major 5'
-      workingDirectory: '${{ parameters.scriptsPath }}'
-
   - task: NodeTool@0
     displayName: Install Node.js
     inputs:

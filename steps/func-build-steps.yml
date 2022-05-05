@@ -26,6 +26,9 @@ parameters:
   - name: versionToReplace
     type: string 
     default: "1.0.0"
+  - name: majorVersionToSet
+    type: string 
+    default: ""
 
 steps:
   - task: DeleteFiles@1
@@ -45,7 +48,7 @@ steps:
     displayName: 'Set-Version.ps1'
     inputs:
       filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
-      arguments: '-Path ${{ parameters.funcPath }} -VersionToReplace ${{ parameters.funcPath }}'
+      arguments: '-Path ${{ parameters.funcPath }}  -VersionToReplace ${{ parameters.versionToReplace }} -Major ${{ parameters.majorVersionToSet }}'
       workingDirectory: '${{ parameters.scriptsPath }}'
 
   - task: DotNetCoreCLI@2

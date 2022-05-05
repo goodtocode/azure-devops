@@ -14,6 +14,12 @@ parameters:
   - name: scriptsPath 
     type: string 
     default: "../scripts"
+  - name: versionToReplace
+    type: string 
+    default: "1.0.0"
+  - name: majorVersionToSet 
+    type: string 
+    default: ""
 
 steps:
   - task: UseDotNet@2
@@ -27,7 +33,7 @@ steps:
     displayName: 'Set-Version.ps1'
     inputs:
       filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
-      arguments: '-Path ${{ parameters.srcPath }} -VersionToReplace 1.22.1 -Major 5'
+      arguments: '-Path ${{ parameters.srcPath }} -VersionToReplace ${{ parameters.versionToReplace }} -Major ${{ parameters.majorVersionToSet }}'
       workingDirectory: '${{ parameters.scriptsPath }}'
 
   - task: DotNetCoreCLI@2

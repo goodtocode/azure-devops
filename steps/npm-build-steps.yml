@@ -1,26 +1,32 @@
 parameters:
-- name: artifactsPath
-  type: string 
-  default: "."
-- name: archiveFile
-  type: string 
-  default: "archive.zip"
-- name: srcPath 
-  type: string 
-  default: "."
-- name: scriptsPath 
-  type: string 
-  default: "../scripts"
-- name: tempPath
-  type: string 
-  default: './sitetemp'
+  - name: artifactsPath
+    type: string 
+    default: "."
+  - name: archiveFile
+    type: string 
+    default: "archive.zip"
+  - name: srcPath 
+    type: string 
+    default: "."
+  - name: scriptsPath 
+    type: string 
+    default: "../scripts"
+  - name: tempPath
+    type: string 
+    default: './sitetemp'
+  - name: versionToReplace
+    type: string 
+    default: "1.0.0"
+  - name: majorVersionToSet 
+    type: string 
+    default: ""
 
 steps:
   - task: PowerShell@2
     displayName: 'Set-Version.ps1'
     inputs:
       filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
-      arguments: '-Path ${{ parameters.srcPath }} -VersionToReplace 5.20.1 -Major 5'
+      arguments: '-Path ${{ parameters.srcPath }}  -VersionToReplace ${{ parameters.versionToReplace }} -Major ${{ parameters.majorVersionToSet }}'
       workingDirectory: '${{ parameters.scriptsPath }}'
 
   - task: NodeTool@0

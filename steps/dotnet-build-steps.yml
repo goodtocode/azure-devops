@@ -17,9 +17,6 @@ parameters:
   - name: scriptsPath 
     type: string 
     default: "../scripts"
-  - name: versionToReplace
-    type: string 
-    default: "1.0.0"
 
 steps:
   - task: UseDotNet@2
@@ -27,14 +24,7 @@ steps:
     inputs:
       packageType: 'sdk'
       version: '6.x'
-      includePreviewVersions: true
-      
-  - task: PowerShell@2
-    displayName: 'Set-Version.ps1'
-    inputs:
-      filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
-      arguments: '-Path ${{ parameters.srcPath }} -VersionToReplace ${{ parameters.versionToReplace }}'
-      workingDirectory: '${{ parameters.scriptsPath }}'
+      includePreviewVersions: true   
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet restore'

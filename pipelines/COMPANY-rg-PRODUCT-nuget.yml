@@ -18,13 +18,13 @@ pool:
 parameters:
   - name: appcsEnvironmentVariable
     type: string 
-    default: "GTC_PERSISTENCE_CONNECTION"
+    default: "AZURE_APPCONFIGURATION_CONNECTION"
   - name: appcsConnection
     type: string 
     default: "$(appcsConnection)"
   - name: nugetService
     type: string 
-    default: "gtc-nuget-001"
+    default: "COMPANY-nuget-001"
   - name: nugetId
     type: string 
     default: "$(nugetId)"
@@ -38,7 +38,7 @@ stages:
     variables:
       - template: ../variables/development.yml
       
-    jobs:    
+    jobs:
       - job: build_src
         steps:
           - template: ../steps/dotnet-build-steps.yml
@@ -66,6 +66,7 @@ stages:
               artifactsPath: '$(artifactsPath)'
               scriptsPath: '$(scriptsPath)'
               srcPath: '$(srcPath)'
+              versionToReplace: '$(versionToReplace)'
 
       - job: deploy_nuget
         dependsOn: pack_src
@@ -80,7 +81,7 @@ stages:
     variables:
       - template: ../variables/production.yml    
 
-    jobs:    
+    jobs:
       - job: build_src
         steps:
           - template: ../steps/dotnet-build-steps.yml
@@ -108,6 +109,7 @@ stages:
               artifactsPath: '$(artifactsPath)'
               scriptsPath: '$(scriptsPath)'
               srcPath: '$(srcPath)'
+              versionToReplace: '$(versionToReplace)'
 
       - job: deploy_nuget
         dependsOn: pack_src
