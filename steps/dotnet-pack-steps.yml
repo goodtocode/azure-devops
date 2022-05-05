@@ -2,6 +2,9 @@ parameters:
   - name: artifactsPath
     type: string 
     default: "."
+  - name: buildConfiguration
+    type: string 
+    default: "Release"
   - name: srcPath 
     type: string 
     default: "."
@@ -26,6 +29,14 @@ steps:
       filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
       arguments: '-Path ${{ parameters.srcPath }} -VersionToReplace 1.22.1 -Major 5'
       workingDirectory: '${{ parameters.scriptsPath }}'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet build'
+    inputs:
+      command: 'build'
+      projects: |
+        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
+      arguments: '--configuration ${{ parameters.buildConfiguration }}'
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet pack'
