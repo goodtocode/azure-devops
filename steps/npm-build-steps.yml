@@ -17,16 +17,13 @@ parameters:
   - name: versionToReplace
     type: string 
     default: "1.0.0"
-  - name: majorVersionToSet 
-    type: string 
-    default: ""
 
 steps:
   - task: PowerShell@2
     displayName: 'Set-Version.ps1'
     inputs:
       filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
-      arguments: '-Path ${{ parameters.srcPath }}  -VersionToReplace ${{ parameters.versionToReplace }} -Major ${{ parameters.majorVersionToSet }}'
+      arguments: '-Path ${{ parameters.srcPath }}  -VersionToReplace ${{ parameters.versionToReplace }}'
       workingDirectory: '${{ parameters.scriptsPath }}'
 
   - task: NodeTool@0

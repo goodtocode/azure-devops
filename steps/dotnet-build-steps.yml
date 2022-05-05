@@ -42,9 +42,3 @@ steps:
       projects: |
         ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
       arguments: '--configuration ${{ parameters.buildConfiguration }}'
-
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish Artifact: drop'
-    inputs:
-      pathToPublish: '${{ parameters.artifactsPath }}'
-      artifactName: drop
