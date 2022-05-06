@@ -1,0 +1,144 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - '*'
+  paths:
+    include:
+    - src/*
+
+pr:
+  branches:
+    exclude:
+    - '*'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+parameters:
+  - name: apiSettings
+    type: object
+    default: 
+      - name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
+        value: '$(appiKey)'
+        slotSetting: false
+      - name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+        value: '$(appiConnection)'
+        slotSetting: false        
+      - name: 'AZURE_funcTIONS_ENVIRONMENT'
+        value: '$(rgEnvironment)'
+        slotSetting: false
+      - name: 'FUNCTIONS_EXTENSION_VERSION'
+        value: '$(funcVersion)'
+        slotSetting: false
+      - name: 'FUNCTIONS_WORKER_RUNTIME'
+        value: '$(funcRuntime)'
+        slotSetting: false
+      - name: '$(appcsEnvironmentVariable)'
+        value: '$(appcsConnection)'
+        slotSetting: false
+      - name: '$(stEnvironmentVariable)'
+        value: '$(stConnection)'
+        slotSetting: false
+  
+variables:
+  - template: ../variables/development.yml
+  - name: buildPlatform
+    value: 'Any CPU'
+  - name: buildConfiguration
+    value: 'Release'
+
+stages:
+  - stage: development
+    condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
+    variables:
+      - template: ../variables/development.yml
+      
+    jobs:    
+      - job: build_func
+        steps:
+          - template: ../steps/func-build-steps.yml
+            parameters:
+              archiveFile: '$(archiveFile)'
+              funcPath: '$(funcPath)'
+              tempPath: '$(tempPath)'
+
+      - job: test_func
+        dependsOn: build_func
+        steps:
+          - template: ../steps/dotnet-test-steps.yml
+            parameters:
+              unitPath: $(funcPath)
+              rgEnvironment: '$(rgEnvironment)'
+              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
+              appcsConnection: '$(appcsConnection)'
+              stEnvironmentVariable: '$(stEnvironmentVariable)'
+              stConnection: '$(stConnection)'
+
+      - job: settings_func
+        dependsOn: build_func
+        steps:
+          - template: ../steps/func-settings-steps.yml
+            parameters:
+              subscriptionName: '$(subscriptionName)'
+              rgEnvironment: '$(rgEnvironment)'
+              funcName: '$(funcName)'
+              appSettings: '${{ parameters.apiSettings }}'
+
+      - job: deploy_func
+        dependsOn: settings_func
+        steps:
+          - template: ../steps/func-deploy-steps.yml
+            parameters:
+              artifactsPath: '$(artifactsPath)'
+              archiveFile: '$(archiveFile)'
+              funcName: '$(funcName)'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
+
+  - stage: production
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    variables:
+      - template: ../variables/production.yml    
+
+    jobs:    
+      - job: build_func
+        steps:
+          - template: ../steps/func-build-steps.yml
+            parameters:
+              archiveFile: '$(archiveFile)'
+              funcPath: '$(funcPath)'
+              tempPath: '$(tempPath)'
+
+      - job: test_func
+        dependsOn: build_func
+        steps:
+          - template: ../steps/dotnet-test-steps.yml
+            parameters:
+              unitPath: $(funcPath)
+              rgEnvironment: '$(rgEnvironment)'
+              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
+              appcsConnection: '$(appcsConnection)'
+              stEnvironmentVariable: '$(stEnvironmentVariable)'
+              stConnection: '$(stConnection)'
+
+      - job: settings_func
+        dependsOn: build_func
+        steps:
+          - template: ../steps/func-settings-steps.yml
+            parameters:
+              subscriptionName: '$(subscriptionName)'
+              rgEnvironment: '$(rgEnvironment)'
+              funcName: '$(funcName)'
+              appSettings: '${{ parameters.apiSettings }}'
+
+      - job: deploy_func
+        dependsOn: settings_func
+        steps:
+          - template: ../steps/func-deploy-steps.yml
+            parameters:
+              artifactsPath: '$(artifactsPath)'
+              archiveFile: '$(archiveFile)'
+              funcName: '$(funcName)'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionName: '$(subscriptionName)'
