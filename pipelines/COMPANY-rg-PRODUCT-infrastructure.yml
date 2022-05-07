@@ -5,7 +5,7 @@ trigger:
     - '*'
   paths:
     include:
-    - infrastructure/*
+    - .azure/*
 
 pr:
   branches:
@@ -16,13 +16,25 @@ pool:
   vmImage: 'ubuntu-latest'
 
 parameters:
-  - name: subscriptionService
+  - name: appcsConnection
     type: string 
-    default: "COMPANY-PRODUCT-001" # cant be in libary, required at parsing time
+    default: "$(appcsConnection)"
+  - name: appcsKeys
+    type: object
+    default: [ "Shared:Sentinel", "ConnectionStrings:StorageTables" ]
+  - name: appcsValues
+    type: object
+    default: [ "1", "$(stConnection)" ]
+  - name: subscriptionId
+    type: string
+    default: "$(subscriptionId)"
+  - name: subscriptionService 
+    type: string 
+    default: "AZURE_SERVICE_CONNECTION"
 
 variables:
   - template: ../variables/common.yml
-
+      
 stages:
   - stage: development
     condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -35,7 +47,7 @@ stages:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
               armPath: '$(infrastructurePath)'
-              subscriptionId: '$(subscriptionId)'
+              subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
@@ -50,56 +62,26 @@ stages:
           - template: ../steps/appcs-infrastructure-steps.yml
             parameters:
               armPath: '$(infrastructurePath)'
-              subscriptionId: '$(subscriptionId)'
+              subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
               appcsName: '$(appcsName)'
-              appcsSku: '$(appcsSku)'              
+              appcsSku: '$(appcsSku)'
 
-      - job: deploy_sb_infrastructure
-        dependsOn: deploy_landing_zone
+      - job: deploy_appcs_settings
+        dependsOn: deploy_appcs_infrastructure
         steps:
-          - template: ../steps/sb-infrastructure-steps.yml
+          - template: ../steps/appcs-settings-steps.yml
             parameters:
               armPath: '$(infrastructurePath)'
-              subscriptionId: '$(subscriptionId)'
+              subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
-              sbName: '$(sbName)'
-              sbSku: '$(sbSku)'
-
-      - job: deploy_func_infrastructure
-        dependsOn: deploy_landing_zone
-        steps:
-          - template: ../steps/func-infrastructure-steps.yml
-            parameters:
-              armPath: '$(infrastructurePath)'
-              subscriptionId: '$(subscriptionId)'
-              subscriptionService: '${{ parameters.subscriptionService }}'
-              rgName: '$(rgName)'
-              rgLocation: '$(rgLocation)'
-              rgEnvironment: '$(rgEnvironment)'
-              appiKey: '$(appiKey) '
-              appiConnection: '$(appiConnection)'
-              funcName: '$(funcName)'
-              stName: '$(stName)'
-              workName: '$(workName)'
-
-      - job: deploy_webjob_infrastructure
-        dependsOn: deploy_landing_zone
-        steps:
-          - template: ../steps/webjob-infrastructure-steps.yml
-            parameters:
-              armPath: '$(infrastructurePath)'
-              subscriptionId: '$(subscriptionId)'
-              subscriptionService: '${{ parameters.subscriptionService }}'
-              rgName: '$(rgName)'
-              rgLocation: '$(rgLocation)'
-              rgEnvironment: '$(rgEnvironment)'
-              planName: '$(planName)'
-              webjobName: '$(webjobName)'
+              appcsName: '$(appcsName)'
+              appcsKeys: '${{ parameters.appcsKeys }}'
+              appcsValues: '${{ parameters.appcsValues }}'
 
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -112,7 +94,7 @@ stages:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
               armPath: '$(infrastructurePath)'
-              subscriptionId: '$(subscriptionId)'
+              subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
@@ -121,60 +103,3 @@ stages:
               stName: '$(stName)'
               workName: '$(workName)'
 
-      - job: deploy_appcs_settings
-        dependsOn: deploy_landing_zone
-        steps:
-          - template: ../steps/appcs-settings-steps.yml
-            parameters:
-              armPath: '$(infrastructurePath)'
-              subscriptionService: '${{ parameters.subscriptionService }}'
-              subscriptionId: '$(subscriptionId)'
-              rgName: '$(rgName)'
-              rgLocation: '$(rgLocation)'
-              appcsName: '$(appcsName)'
-              appcsKeys: '${{ parameters.appcsKeys }}'
-              appcsValues: '${{ parameters.appcsValues }}'
-
-      - job: deploy_sb_infrastructure
-        dependsOn: deploy_landing_zone
-        steps:
-          - template: ../steps/sb-infrastructure-steps.yml
-            parameters:
-              armPath: '$(infrastructurePath)'
-              subscriptionId: '$(subscriptionId)'
-              subscriptionService: '${{ parameters.subscriptionService }}'
-              rgName: '$(rgName)'
-              rgLocation: '$(rgLocation)'
-              sbName: '$(sbName)'
-              sbSku: '$(sbSku)'
-
-      - job: deploy_func_infrastructure
-        dependsOn: deploy_landing_zone
-        steps:
-          - template: ../steps/func-infrastructure-steps.yml
-            parameters:
-              armPath: '$(infrastructurePath)'
-              subscriptionId: '$(subscriptionId)'
-              subscriptionService: '${{ parameters.subscriptionService }}'
-              rgName: '$(rgName)'
-              rgLocation: '$(rgLocation)'
-              rgEnvironment: '$(rgEnvironment)'
-              appiKey: '$(appiKey) '
-              appiConnection: '$(appiConnection)'
-              funcName: '$(funcName)'
-              stName: '$(stName)'
-              workName: '$(workName)'
-
-      - job: deploy_webjob_infrastructure
-        dependsOn: deploy_landing_zone
-        steps:
-          - template: ../steps/webjob-infrastructure-steps.yml
-            parameters:
-              armPath: '$(infrastructurePath)'
-              subscriptionId: '$(subscriptionId)'
-              subscriptionService: '${{ parameters.subscriptionService }}'
-              rgName: '$(rgName)'
-              rgLocation: '$(rgLocation)'
-              rgEnvironment: '$(rgEnvironment)'
-              planName: '$(planName)'
-              webjobName: '$(webjobName)'  
