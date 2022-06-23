@@ -16,18 +16,15 @@ pool:
   vmImage: 'ubuntu-latest'
 
 parameters:
-  - name: appcsEnvironmentVariable
-    type: string 
-    default: "AZURE_APPCONFIGURATION_CONNECTION"
-  - name: appcsConnection
-    type: string 
-    default: "$(appcsConnection)"
   - name: nugetService
     type: string 
     default: "COMPANY-nuget-001"
   - name: nugetId
     type: string 
     default: "$(nugetId)"
+  - name: versionToReplace
+    type: string
+    default: "1.0.0"
 
 variables:
   - template: ../variables/common.yml
@@ -66,7 +63,7 @@ stages:
               artifactsPath: '$(artifactsPath)'
               scriptsPath: '$(scriptsPath)'
               srcPath: '$(srcPath)'
-              versionToReplace: '$(versionToReplace)'
+              versionToReplace: '${{ parameters.versionToReplace }}'
 
       - job: deploy_nuget
         dependsOn: pack_src
@@ -109,7 +106,7 @@ stages:
               artifactsPath: '$(artifactsPath)'
               scriptsPath: '$(scriptsPath)'
               srcPath: '$(srcPath)'
-              versionToReplace: '$(versionToReplace)'
+              versionToReplace: '${{ parameters.versionToReplace }}'
 
       - job: deploy_nuget
         dependsOn: pack_src
