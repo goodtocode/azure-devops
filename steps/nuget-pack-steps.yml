@@ -2,6 +2,9 @@ parameters:
   - name: artifactsPath
     type: string 
     default: "."
+  - name: buildConfiguration
+    type: string 
+    default: "Release"
   - name: srcPath 
     type: string 
     default: "."
@@ -32,6 +35,14 @@ steps:
       command: 'restore'
       feedsToUse: config
       restoreSolution: ${{ parameters.srcPath }}/**/${{ parameters.srcSolution }}
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet build'
+    inputs:
+      command: 'build'
+      projects: |
+        ${{ parameters.srcPath }}/**/${{ parameters.srcSolution }}
+      arguments: '--configuration ${{ parameters.buildConfiguration }}'
 
 # Package a project
   - task: NuGetCommand@2
