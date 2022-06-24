@@ -26,6 +26,9 @@ parameters:
   - name: versionToReplace
     type: string 
     default: "1.0.0"
+  - name: dotnetVersion 
+    type: string 
+    default: "6.x"
 
 steps:
   - task: DeleteFiles@1
@@ -38,8 +41,8 @@ steps:
     displayName: 'use .net 6.x'
     inputs:
       packageType: 'sdk'
-      version: '6.x'
-      includePreviewVersions: true
+      version: ${{ parameters.dotnetVersion }}
+      includePreviewVersions: true  
 
   - task: PowerShell@2
     displayName: 'Set-Version.ps1'

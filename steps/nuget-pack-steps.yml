@@ -5,7 +5,7 @@ parameters:
   - name: srcPath 
     type: string 
     default: "."
-  - name: nuspecPath
+  - name: srcNuspec
     type: string 
     default: "*.nuspec"
   - name: srcSolution
@@ -37,7 +37,7 @@ steps:
   - task: NuGetCommand@2
     inputs:
       command: 'pack'
-      packagesToPack: ${{ parameters.srcPath }}/**/${{ parameters.nuspecPath }}
+      packagesToPack: ${{ parameters.srcPath }}/**/${{ parameters.srcNuspec }}
       packDestination: '${{ parameters.artifactsPath }}'
 
   - task: PublishBuildArtifacts@1
