@@ -30,7 +30,7 @@ parameters:
     default: "$(subscriptionId)"
   - name: subscriptionService 
     type: string 
-    default: "AZURE_SERVICE_CONNECTION"
+    default: "$(subscriptionService)"
 
 variables:
   - template: ../variables/common.yml
