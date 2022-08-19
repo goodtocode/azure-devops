@@ -1,37 +1,58 @@
 parameters:
   - name: artifactsPath
     type: string 
-    default: "."
+    default: '.'
+  - name: archiveFile
+    type: string 
+    default: '*.zip'
+  - name: srcPath
+    type: string 
+    default: '.'
+  - name: srcProject
+    type: string 
+    default: '*.csproj'
+  - name: nugetPathFile
+    type: string 
+    default: ".nuget/NuGet.config"
   - name: buildConfiguration
     type: string 
     default: "Release"
-  - name: srcPath 
+  - name: outputPath
     type: string 
-    default: "."
-  - name: srcProject
-    type: string 
-    default: "*.csproj"
+    default: '$(Build.ArtifactStagingDirectory)'
   - name: scriptsPath 
     type: string 
     default: "../scripts"
   - name: versionToReplace
     type: string 
     default: "1.0.0"
+  - name: dotnetVersion 
+    type: string 
+    default: "6.x"
 
 steps:
   - task: UseDotNet@2
     displayName: 'use .net 6.x'
     inputs:
       packageType: 'sdk'
-      version: '6.x'
-      includePreviewVersions: true
-      
+      version: ${{ parameters.dotnetVersion }}
+      includePreviewVersions: true  
+
   - task: PowerShell@2
     displayName: 'Set-Version.ps1'
     inputs:
       filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
-      arguments: '-Path ${{ parameters.srcPath }} -VersionToReplace ${{ parameters.versionToReplace }}'
+      arguments: '-Path ${{ parameters.srcPath }}  -VersionToReplace ${{ parameters.versionToReplace }}'
       workingDirectory: '${{ parameters.scriptsPath }}'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet restore'
+    inputs:
+      command: 'restore'
+      projects: |
+        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
+      feedsToUse: config
+      nugetConfigPath: ${{ parameters.nugetPathFile }}
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet build'
@@ -39,15 +60,7 @@ steps:
       command: 'build'
       projects: |
         ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
-      arguments: '--configuration ${{ parameters.buildConfiguration }}'
-
-  - task: DotNetCoreCLI@2
-    displayName: 'dotnet pack'
-    inputs:
-      command: pack
-      projects: |
-        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
-      arguments: '--output ${{ parameters.artifactsPath }}'
+      arguments: --output ${{ parameters.outputPath }} --configuration ${{ parameters.buildConfiguration }}
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: drop'
