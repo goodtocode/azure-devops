@@ -16,6 +16,9 @@ pool:
   vmImage: 'ubuntu-latest'
 
 parameters:
+  - name: subscriptionService
+    type: string 
+    default: "AZURE_DEVOPS_SERVICE_CONNECTION"
   - name: appcsConnection
     type: string 
     default: "$(appcsConnection)"
