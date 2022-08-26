@@ -78,7 +78,6 @@ stages:
               subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
-              rgLocation: '$(rgLocation)'
               appcsName: '$(appcsName)'
               appcsKeys: '${{ parameters.appcsKeys }}'
               appcsValues: '${{ parameters.appcsValues }}'
