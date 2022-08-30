@@ -11,6 +11,9 @@ parameters:
   - name: srcSolution
     type: string 
     default: "*.sln"
+  - name: nugetId
+    type: string 
+    default: "Nuget-Feed-GUID"
   - name: nugetPathFile
     type: string 
     default: ".nuget/NuGet.config"
@@ -26,8 +29,8 @@ steps:
     displayName: 'nuget restore'
     inputs:
       command: 'restore'
-      feedsToUse: config
-      nugetConfigPath: ${{ parameters.nugetPathFile }}
+      feedsToUse: select
+      vstsFeed: '${{ parameters.nugetId }}'
       restoreSolution: ${{ parameters.srcPath }}/**/${{ parameters.srcSolution }}
 
   - task: DotNetCoreCLI@2
