@@ -27,6 +27,7 @@ steps:
     inputs:
       command: 'restore'
       feedsToUse: config
+      nugetConfigPath: ${{ parameters.nugetPathFile }}
       restoreSolution: ${{ parameters.srcPath }}/**/${{ parameters.srcSolution }}
 
   - task: DotNetCoreCLI@2
