@@ -5,6 +5,9 @@ parameters:
   - name: buildConfiguration
     type: string 
     default: "Release"
+  - name: nugetId
+    type: string 
+    default: "Nuget-Feed-GUID"
   - name: srcPath 
     type: string 
     default: "."
@@ -33,7 +36,8 @@ steps:
     displayName: 'nuget restore'
     inputs:
       command: 'restore'
-      feedsToUse: config
+      feedsToUse: select
+      vstsFeed: '${{ parameters.nugetId }}'
       restoreSolution: ${{ parameters.srcPath }}/**/${{ parameters.srcSolution }}
 
   - task: DotNetCoreCLI@2
