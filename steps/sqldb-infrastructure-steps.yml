@@ -16,7 +16,7 @@ parameters:
     default: "West US 3"
   - name: sqlName
     type: string 
-    default: "sb-PRODUCT-ENVIRONMENT-001"
+    default: "sql-PRODUCT-ENVIRONMENT-001"
   - name: sqlUser
     type: string 
     default: "LocalAdmin"
@@ -24,12 +24,12 @@ parameters:
     type: string 
   - name: sqldbName
     type: string 
-    default: "sb-PRODUCT-ENVIRONMENT-001"
+    default: "sqldb-PRODUCT-ENVIRONMENT-001"
   - name: sqldbSku
     type: string 
     default: "Basic"
 
-steps:  
+steps:
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Validate ${{ parameters.sqldbName }}"
     inputs:

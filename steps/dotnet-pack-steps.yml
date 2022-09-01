@@ -17,13 +17,16 @@ parameters:
   - name: versionToReplace
     type: string 
     default: "1.0.0"
+  - name: dotnetVersion 
+    type: string 
+    default: "6.x"
 
 steps:
   - task: UseDotNet@2
-    displayName: 'use .net 6.x'
+    displayName: 'use .net ${{ parameters.dotnetVersion }}'
     inputs:
       packageType: 'sdk'
-      version: '6.x'
+      version: ${{ parameters.dotnetVersion }}
       includePreviewVersions: true
       
   - task: PowerShell@2

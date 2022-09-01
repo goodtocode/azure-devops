@@ -27,7 +27,7 @@ parameters:
 
 steps:
   - task: UseDotNet@2
-    displayName: 'use .net 6.x'
+    displayName: 'use .net ${{ parameters.dotnetVersion }}'
     inputs:
       packageType: 'sdk'
       version: ${{ parameters.dotnetVersion }}
