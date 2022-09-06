@@ -11,6 +11,9 @@ parameters:
   - name: nugetPathFile
     type: string 
     default: ".nuget/NuGet.config"
+  - name: scriptsPath 
+    type: string 
+    default: "../scripts"
   - name: sqldbFile
     type: string 
     default: "migration.sql"
@@ -73,7 +76,7 @@ steps:
     inputs:
       azureSubscription: '${{ parameters.subscriptionService }}'
       ServerName: '${{ parameters.sqlName }}'
-      DatabaseName: ''${{ parameters.sqldbName }}'
+      DatabaseName: '${{ parameters.sqldbName }}'
       SqlUsername: '${{ parameters.sqlUser }}'
       SqlPassword: '${{ parameters.sqlPassword }}'
       DacpacFile: '${{ parameters.sqldbFile }}'
