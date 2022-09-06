@@ -47,6 +47,13 @@ steps:
       arguments: '--configuration ${{ parameters.buildConfiguration }}'
 
   - task: DotNetCoreCLI@2
+    displayName: 'dotnet tool install dotnet-ef'
+    inputs:
+      command: custom
+      custom: tool
+      arguments: 'install --global dotnet-ef'
+
+  - task: DotNetCoreCLI@2
     displayName: 'dotnet ef migrations script'
     inputs:
       command: custom
