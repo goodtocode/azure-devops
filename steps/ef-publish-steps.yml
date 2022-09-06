@@ -1,0 +1,55 @@
+parameters:
+  - name: artifactsPath
+    type: string 
+    default: "."
+  - name: buildConfiguration
+    type: string 
+    default: "Release"
+  - name: dotnetVersion 
+    type: string 
+    default: "6.x"
+  - name: nugetPathFile
+    type: string 
+    default: ".nuget/NuGet.config"
+  - name: sqldbFile
+    type: string 
+    default: "migration.sql"
+  - name: srcPath 
+    type: string 
+    default: "."
+  - name: srcProject
+    type: string 
+    default: "*.csproj"
+
+steps:
+  - task: UseDotNet@2
+    displayName: 'use .net ${{ parameters.dotnetVersion }}'
+    inputs:
+      packageType: 'sdk'
+      version: ${{ parameters.dotnetVersion }}
+      includePreviewVersions: true   
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet restore'
+    inputs:
+      command: 'restore'
+      projects: |
+        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
+      feedsToUse: config
+      nugetConfigPath: ${{ parameters.nugetPathFile }}
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet build'
+    inputs:
+      command: 'build'
+      projects: |
+        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
+      arguments: '--configuration ${{ parameters.buildConfiguration }}'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet ef migrations script'
+    inputs:
+      command: custom
+      custom: ef
+      arguments: 'migrations script -i -o ${{ parameters.artifactsPath }}/${{ parameters.sqldbFile }}' 
+      #arguments: migrations script --output ${{ parameters.sqldbFile }} --idempotent --project $(Build.SourcesDirectory)/src/TodoApi.csproj --context TodoApiDbContext

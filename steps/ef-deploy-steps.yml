@@ -11,9 +11,6 @@ parameters:
   - name: nugetPathFile
     type: string 
     default: ".nuget/NuGet.config"
-  - name: scriptsPath 
-    type: string 
-    default: "../scripts"
   - name: sqldbFile
     type: string 
     default: "migration.sql"

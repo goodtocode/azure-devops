@@ -1,0 +1,50 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - '*'
+  paths:
+    include:
+    - src/**/migrations/*
+
+pr:
+  branches:
+    exclude:
+    - '*'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+parameters:
+  - name: sqlUser
+    type: string 
+    default: "$(SQL_USER_VARIABLE_FROM_AZUREDEVOPS_LIBRARY)"
+  - name: sqlPassword
+    type: string 
+    default: "$(SQL_PASSWORD_VARIABLE_FROM_AZUREDEVOPS_LIBRARY)"
+  - name: subscriptionService
+    type: string 
+    default: "COMPANY-SUBSCRIPTION-001"
+
+variables:
+  - template: ../variables/common.yml
+
+stages:
+  - stage: development
+    variables:
+      - template: ../variables/development.yml
+
+    jobs:    
+      - job: deploy_ef_migration
+        steps:
+          - template: ../steps/ef-deploy-steps.yml
+            parameters:
+              artifactsPath: '$(artifactsPath)'             
+              buildConfiguration: '$(buildConfiguration)'
+              sqldbName: '$(sqldbName)'
+              sqlName: '$(sqlName)'
+              sqlUser: '${{ parameters.sqlUser }}'
+              sqlPassword: '${{ parameters.sqlPassword }}'
+              srcPath: '$(srcPath)'
+              srcProject: '$(srcProject)'
+              subscriptionService: '${{ parameters.subscriptionService }}'
