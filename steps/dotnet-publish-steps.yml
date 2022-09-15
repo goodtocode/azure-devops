@@ -2,6 +2,15 @@ parameters:
   - name: artifactsPath
     type: string 
     default: "."
+  - name: nugetPathFile
+    type: string 
+    default: ".nuget/NuGet.config"
+  - name: restorePath 
+    type: string 
+    default: "."
+  - name: restoreProject
+    type: string 
+    default: "*.csproj"
   - name: srcPath 
     type: string 
     default: "."
@@ -21,7 +30,7 @@ parameters:
 
 steps:
   - task: UseDotNet@2
-    displayName: 'use .net ${{ parameters.dotnetVersion }}'
+    displayName: 'use .net 6.x'
     inputs:
       packageType: 'sdk'
       version: ${{ parameters.dotnetVersion }}
@@ -33,6 +42,15 @@ steps:
       filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
       arguments: '-Path ${{ parameters.srcPath }} -VersionToReplace ${{ parameters.versionToReplace }}'
       workingDirectory: '${{ parameters.scriptsPath }}'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet restore'
+    inputs:
+      command: 'restore'
+      projects: |
+        ${{ parameters.restorePath }}/**/${{ parameters.restoreProject }}
+      feedsToUse: config
+      nugetConfigPath: ${{ parameters.nugetPathFile }}
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet publish'

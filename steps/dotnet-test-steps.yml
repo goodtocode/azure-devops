@@ -8,6 +8,15 @@ parameters:
   - name: testProject
     type: string 
     default: "*.csproj"
+  - name: restorePath 
+    type: string 
+    default: "."
+  - name: restoreProject
+    type: string 
+    default: "*.csproj"
+  - name: nugetPathFile
+    type: string 
+    default: ".nuget/NuGet.config"
   - name: appcsConnection
     type: string 
     default: ""
@@ -30,11 +39,20 @@ parameters:
 
 steps:
   - task: UseDotNet@2
-    displayName: 'use .net ${{ parameters.dotnetVersion }}'
+    displayName: 'use .net 6.x'
     inputs:
       packageType: 'sdk'
       version: ${{ parameters.dotnetVersion }}
       includePreviewVersions: true  
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet restore'
+    inputs:
+      command: 'restore'
+      projects: |
+        ${{ parameters.restorePath }}/**/${{ parameters.restoreProject }}
+      feedsToUse: config
+      nugetConfigPath: ${{ parameters.nugetPathFile }}
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet test'
