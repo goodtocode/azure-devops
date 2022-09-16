@@ -11,6 +11,12 @@ parameters:
   - name: nugetPathFile
     type: string 
     default: ".nuget/NuGet.config"
+  - name: srcPath
+    type: string 
+    default: "."
+  - name: srcProjectMask
+    type: string 
+    default: "*.csproj"
   - name: scriptsPath 
     type: string 
     default: "../scripts"
@@ -28,15 +34,18 @@ parameters:
     default: "LocalAdmin"
   - name: sqlPassword
     type: string
-  - name: srcPath 
+  - name: efStartupPath
     type: string 
     default: "."
-  - name: srcProject
+  - name: startupProject
     type: string 
     default: "*.csproj"
   - name: subscriptionService
     type: string 
     default: 'COMPANY-PRODUCT-001'
+  - name: efTargetPath
+    type: string 
+    default: "."
 
 steps:
   - task: UseDotNet@2
@@ -51,7 +60,7 @@ steps:
     inputs:
       command: 'restore'
       projects: |
-        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
+        ${{ parameters.srcPath }}/**/${{ parameters.srcProjectMask }}
       feedsToUse: config
       nugetConfigPath: ${{ parameters.nugetPathFile }}
 
@@ -60,7 +69,7 @@ steps:
     inputs:
       command: 'build'
       projects: |
-        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
+        ${{ parameters.srcPath }}/**/${{ parameters.srcProjectMask }}
       arguments: '--configuration ${{ parameters.buildConfiguration }}'
 
   - task: DotNetCoreCLI@2
@@ -75,7 +84,7 @@ steps:
     inputs:
       command: custom
       custom: ef
-      arguments: 'migrations script -i -o ${{ parameters.sqldbFile }}' 
+      arguments: 'migrations script -i -o ${{ parameters.sqldbFile }} -p ${{ parameters.efTargetPath }} -s ${{ parameters.efStartupPath }}' 
       #arguments: migrations script --output ${{ parameters.sqldbFile }} --idempotent --project $(Build.SourcesDirectory)/src/TodoApi.csproj --context TodoApiDbContext
 
   - task: SqlAzureDacpacDeployment@1
