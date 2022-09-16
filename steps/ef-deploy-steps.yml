@@ -5,6 +5,8 @@ parameters:
   - name: buildConfiguration
     type: string 
     default: "Release"
+  - name: dbContext 
+    type: string 
   - name: dotnetVersion 
     type: string 
     default: "6.x"
@@ -84,8 +86,7 @@ steps:
     inputs:
       command: custom
       custom: ef
-      arguments: 'migrations script -i -o ${{ parameters.sqldbFile }} -p ${{ parameters.efTargetPath }} -s ${{ parameters.efStartupPath }}' 
-      #arguments: migrations script --output ${{ parameters.sqldbFile }} --idempotent --project $(Build.SourcesDirectory)/src/TodoApi.csproj --context TodoApiDbContext
+      arguments: 'migrations script -i -o ${{ parameters.sqldbFile }} -p ${{ parameters.efTargetPath }} -s ${{ parameters.efStartupPath }} -c ${{ parameters.dbContext }}' 
 
   - task: SqlAzureDacpacDeployment@1
     displayName: 'deploy SQL script'
