@@ -39,9 +39,6 @@ parameters:
   - name: efStartupPath
     type: string 
     default: "."
-  - name: startupProject
-    type: string 
-    default: "*.csproj"
   - name: subscriptionService
     type: string 
     default: 'COMPANY-PRODUCT-001'
