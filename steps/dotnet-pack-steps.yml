@@ -5,6 +5,9 @@ parameters:
   - name: buildConfiguration
     type: string 
     default: "Release"
+  - name: nugetPathFile
+    type: string 
+    default: ".nuget/NuGet.config"
   - name: srcPath 
     type: string 
     default: "."
@@ -35,6 +38,15 @@ steps:
       filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
       arguments: '-Path ${{ parameters.srcPath }} -VersionToReplace ${{ parameters.versionToReplace }}'
       workingDirectory: '${{ parameters.scriptsPath }}'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet restore'
+    inputs:
+      command: 'restore'
+      projects: |
+        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
+      feedsToUse: config
+      nugetConfigPath: ${{ parameters.nugetPathFile }}
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet build'
