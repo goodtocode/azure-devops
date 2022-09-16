@@ -92,8 +92,9 @@ steps:
     displayName: 'deploy SQL script'
     inputs:
       azureSubscription: '${{ parameters.subscriptionService }}'
+      deployType: 'SqlTask'
       ServerName: '${{ parameters.sqlName }}.database.windows.net'
       DatabaseName: '${{ parameters.sqldbName }}'
       SqlUsername: '${{ parameters.sqlUser }}'
       SqlPassword: '${{ parameters.sqlPassword }}'
-      DacpacFile: '${{ parameters.sqldbFile }}'
+      SqlFile: '${{ parameters.sqldbFile }}'
