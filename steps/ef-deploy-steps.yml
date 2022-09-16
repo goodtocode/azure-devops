@@ -92,7 +92,7 @@ steps:
     displayName: 'deploy SQL script'
     inputs:
       azureSubscription: '${{ parameters.subscriptionService }}'
-      ServerName: '${{ parameters.sqlName }}'
+      ServerName: '${{ parameters.sqlName }}.database.windows.net'
       DatabaseName: '${{ parameters.sqldbName }}'
       SqlUsername: '${{ parameters.sqlUser }}'
       SqlPassword: '${{ parameters.sqlPassword }}'
