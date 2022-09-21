@@ -83,7 +83,7 @@ steps:
     inputs:
       command: custom
       custom: ef
-      arguments: 'migrations script -i -o ${{ parameters.sqldbFile }} -p ${{ parameters.efTargetPath }} -s ${{ parameters.efStartupPath }} -c ${{ parameters.dbContext }}' 
+      arguments: 'migrations script -i -o ${{ parameters.artifactsPath }}/${{ parameters.sqldbFile }} -p ${{ parameters.efTargetPath }} -s ${{ parameters.efStartupPath }} -c ${{ parameters.dbContext }}' 
 
   - task: SqlAzureDacpacDeployment@1
     displayName: 'deploy SQL script'
@@ -94,4 +94,10 @@ steps:
       DatabaseName: '${{ parameters.sqldbName }}'
       SqlUsername: '${{ parameters.sqlUser }}'
       SqlPassword: '${{ parameters.sqlPassword }}'
-      SqlFile: '${{ parameters.sqldbFile }}'
+      SqlFile: '${{ parameters.artifactsPath }}/${{ parameters.sqldbFile }}'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: drop'
+    inputs:
+      pathToPublish: '${{ parameters.artifactsPath }}'
+      artifactName: drop
