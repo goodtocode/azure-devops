@@ -1,0 +1,69 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - '*'
+  paths:
+    include:
+    - .azure/*
+
+pr:
+  branches:
+    exclude:
+    - '*'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+parameters:
+  - name: subscriptionService
+    type: string 
+    default: "AZURE_DEVOPS_SERVICE_CONNECTION"
+  - name: subscriptionId
+    type: string
+    default: "$(subscriptionId)"
+
+variables:
+  - template: ../variables/common.yml
+      
+stages:
+  - stage: development
+    condition: ne(variables['Build.SourceBranch'], 'refs/heads/main')
+    variables:
+      - template: ../variables/development.yml
+
+    jobs:
+      - job: deploy_landing_zone
+        steps:
+          - template: ../steps/landingzone-infrastructure-steps.yml
+            parameters:
+              armPath: '$(infrastructurePath)'
+              subscriptionId: '${{ parameters.subscriptionId }}'
+              subscriptionService: '${{ parameters.subscriptionService }}'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
+              appiName: '$(appiName)'
+              kvName: '$(kvName)'
+              stName: '$(stName)'
+              workName: '$(workName)'
+
+  - stage: production
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    variables:
+      - template: ../variables/production.yml
+
+    jobs:
+      - job: deploy_landing_zone
+        steps:
+          - template: ../steps/landingzone-infrastructure-steps.yml
+            parameters:
+              armPath: '$(infrastructurePath)'
+              subscriptionId: '${{ parameters.subscriptionId }}'
+              subscriptionService: '${{ parameters.subscriptionService }}'
+              rgName: '$(rgName)'
+              rgLocation: '$(rgLocation)'
+              appiName: '$(appiName)'
+              kvName: '$(kvName)'
+              stName: '$(stName)'
+              workName: '$(workName)'
+
