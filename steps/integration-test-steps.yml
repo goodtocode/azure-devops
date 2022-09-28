@@ -1,7 +1,7 @@
 parameters:
   - name: rgEnvironment
     type: string 
-    default: "COMPANY-rg-PRODUCT-001"
+    default: "rg-PRODUCT-001"
   - name: integrationPath 
     type: string 
     default: "."

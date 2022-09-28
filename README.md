@@ -15,8 +15,8 @@ This repository relates to the following activities:
 Path | Item | Contents
 --- | --- | ---
 /pipelines | - | Contains all scripts, steps, variables and main-pipeline files
-/pipelines | COMPANY-rg-PRODUCT-infrastructure.yml | Main-pipeline file to deploy cloud landing zone, and infrastructure
-/pipelines | COMPANY-rg-PRODUCT-src.yml | Main-pipeline file to build/test/deply src, unit tests and integration tests
+/pipelines | rg-PRODUCT-infrastructure.yml | Main-pipeline file to deploy cloud landing zone, and infrastructure
+/pipelines | rg-PRODUCT-src.yml | Main-pipeline file to build/test/deply src, unit tests and integration tests
 
 #### /steps folder (YAML)
 Path | Item | Contents

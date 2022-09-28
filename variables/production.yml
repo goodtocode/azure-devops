@@ -1,10 +1,10 @@
 variables:
-  - group: COMPANY-rg-PRODUCT-prod
+  - group: rg-PRODUCT-prod
   - template: common.yml  
   - name: rgEnvironment
     value: 'Production'
   - name: rgName
-    value: 'COMPANY-rg-PRODUCT-prod-001'
+    value: 'rg-PRODUCT-prod-001'
   - name: rgLocation
     value: 'West US 2'
   - name: 'appiName'

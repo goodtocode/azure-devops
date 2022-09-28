@@ -10,7 +10,7 @@ parameters:
     default: 'COMPANY-PRODUCT-001'
   - name: rgName 
     type: string 
-    default: 'COMPANY-rg-PRODUCT-001'
+    default: 'rg-PRODUCT-001'
   - name: rgLocation 
     type: string 
     default: "West US 2"
