@@ -26,6 +26,9 @@ parameters:
   - name: workName 
     type: string 
     default: "work-PRODUCT-ENVIRONMENT-001"
+  - name: workResourceGroupName 
+    type: string 
+    default: "rg-PRODUCT-001"
 
 steps:
   - task: AzureResourceManagerTemplateDeployment@3
@@ -65,7 +68,7 @@ steps:
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
         subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
-        resourceGroupName: "${{ parameters.rgName }}"
+        resourceGroupName: "${{ parameters.workResourceGroupName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
         csmFile: "${{ parameters.armPath }}/work-loganalyticsworkspace.json"
@@ -80,7 +83,7 @@ steps:
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
         subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
-        resourceGroupName: "${{ parameters.rgName }}"
+        resourceGroupName: "${{ parameters.workResourceGroupName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
         csmFile: "${{ parameters.armPath }}/work-loganalyticsworkspace.json"
@@ -89,7 +92,7 @@ steps:
         overrideParameters: -name "${{ parameters.workName  }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Validate ${{ parameters.appiName  }}"
+    displayName: "Validate ${{ parameters.appiName }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
@@ -98,13 +101,13 @@ steps:
         resourceGroupName: "${{ parameters.rgName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "${{ parameters.armPath }}/appi-applicationinsights.json"
-        csmParametersFile: "${{ parameters.armPath }}/appi-applicationinsights.parameters.json"
+        csmFile: "${{ parameters.infrastructurePath }}/appi-applicationinsights.json"
+        csmParametersFile: "${{ parameters.infrastructurePath }}/appi-applicationinsights.parameters.json"
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.appiName  }}" -workName "${{ parameters.workName  }}"
+        overrideParameters: -name "${{ parameters.appiName }}" -workName "${{ parameters.workName }}" -workResourceGroupName "${{ parameters.workResourceGroupName }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Deploy ${{ parameters.appiName  }}"
+    displayName: "Deploy ${{ parameters.appiName }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
@@ -113,10 +116,10 @@ steps:
         resourceGroupName: "${{ parameters.rgName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "${{ parameters.armPath }}/appi-applicationinsights.json"
-        csmParametersFile: "${{ parameters.armPath }}/appi-applicationinsights.parameters.json"
+        csmFile: "${{ parameters.infrastructurePath }}/appi-applicationinsights.json"
+        csmParametersFile: "${{ parameters.infrastructurePath }}/appi-applicationinsights.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.appiName  }}" -workName "${{ parameters.workName  }}"
+        overrideParameters: -name "${{ parameters.appiName }}" -workName "${{ parameters.workName }}" -workResourceGroupName "${{ parameters.workResourceGroupName }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Validate ${{ parameters.kvName  }}"
