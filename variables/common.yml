@@ -11,8 +11,6 @@ variables:
     value: '$(System.DefaultWorkingDirectory)/.azure-devops/scripts'
   - name: srcPath
     value: '$(System.DefaultWorkingDirectory)/src'
-  - name: subscriptionService
-    value: 'AZURE_DEVOPS_SERVICE_CONNECTION_NAME'
   - name: testsPath
     value: '$(System.DefaultWorkingDirectory)/tests'
   - name: funcPath
