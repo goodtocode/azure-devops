@@ -37,15 +37,17 @@ stages:
         steps:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
-              armPath: '$(infrastructurePath)'
+              armPath: '${{ variables.infrastructurePath}}'
               subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
-              rgName: '$(rgName)'
-              rgLocation: '$(rgLocation)'
-              appiName: '$(appiName)'
-              kvName: '$(kvName)'
-              stName: '$(stName)'
-              workName: '$(workName)'
+              rgName: '${{ variables.rgName}}'
+              rgLocation: '${{ variables.rgLocation}}'
+              appiName: '${{ variables.appiName}}'
+              kvName: '${{ variables.kvName}}'
+              stName: '${{ variables.stName}}'
+              workName: '${{ variables.workName }}'
+              workResourceGroupName: '${{ variables.workResourceGroupName }}'
+              workSubscriptionId: '${{ parameters.subscriptionId }}'
 
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -57,13 +59,14 @@ stages:
         steps:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
-              armPath: '$(infrastructurePath)'
+              armPath: '${{ variables.infrastructurePath}}'
               subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
-              rgName: '$(rgName)'
-              rgLocation: '$(rgLocation)'
-              appiName: '$(appiName)'
-              kvName: '$(kvName)'
-              stName: '$(stName)'
-              workName: '$(workName)'
-
+              rgName: '${{ variables.rgName}}'
+              rgLocation: '${{ variables.rgLocation}}'
+              appiName: '${{ variables.appiName}}'
+              kvName: '${{ variables.kvName}}'
+              stName: '${{ variables.stName}}'
+              workName: '${{ variables.workName }}'
+              workResourceGroupName: '${{ variables.workResourceGroupName }}'
+              workSubscriptionId: '${{ parameters.subscriptionId }}'

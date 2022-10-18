@@ -43,3 +43,5 @@ variables:
     value: "$[lower(replace(variables['teamscnName'], '-', ''))]"
   - name: workName
     value: 'work-PRODUCT-prod-001'
+  - name: workResourceGroupName
+    value: 'rg-PRODUCT-dev-001'
