@@ -19,9 +19,6 @@ parameters:
   - name: subscriptionService
     type: string 
     default: "AZURE_DEVOPS_SERVICE_CONNECTION"
-  - name: subscriptionId
-    type: string
-    default: "$(subscriptionId)"
 
 variables:
   - template: ../variables/common.yml
@@ -38,7 +35,7 @@ stages:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
               armPath: '${{ variables.armPath}}'
-              subscriptionId: '${{ parameters.subscriptionId }}'
+              subscriptionId: '${{ variables.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '${{ variables.rgName}}'
               rgLocation: '${{ variables.rgLocation}}'
@@ -59,7 +56,7 @@ stages:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
               armPath: '${{ variables.armPath}}'
-              subscriptionId: '${{ parameters.subscriptionId }}'
+              subscriptionId: '${{ variables.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '${{ variables.rgName}}'
               rgLocation: '${{ variables.rgLocation}}'

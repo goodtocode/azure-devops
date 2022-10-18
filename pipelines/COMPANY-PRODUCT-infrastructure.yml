@@ -28,9 +28,6 @@ parameters:
   - name: appcsValues
     type: object
     default: [ "1", "$(stConnection)" ]
-  - name: subscriptionId
-    type: string
-    default: "$(subscriptionId)"
 
 variables:
   - template: ../variables/common.yml
@@ -47,7 +44,7 @@ stages:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
               armPath: '$(armPath)'
-              subscriptionId: '${{ parameters.subscriptionId }}'
+              subscriptionId: '${{ variables.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
@@ -62,7 +59,7 @@ stages:
           - template: ../steps/appcs-infrastructure-steps.yml
             parameters:
               armPath: '$(armPath)'
-              subscriptionId: '${{ parameters.subscriptionId }}'
+              subscriptionId: '${{ variables.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
@@ -75,7 +72,7 @@ stages:
           - template: ../steps/appcs-settings-steps.yml
             parameters:
               armPath: '$(armPath)'
-              subscriptionId: '${{ parameters.subscriptionId }}'
+              subscriptionId: '${{ variables.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
               appcsName: '$(appcsName)'
@@ -93,7 +90,7 @@ stages:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
               armPath: '$(armPath)'
-              subscriptionId: '${{ parameters.subscriptionId }}'
+              subscriptionId: '${{ variables.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
