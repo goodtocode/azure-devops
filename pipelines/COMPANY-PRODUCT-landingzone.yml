@@ -47,7 +47,6 @@ stages:
               stName: '${{ variables.stName}}'
               workName: '${{ variables.workName }}'
               workResourceGroupName: '${{ variables.workResourceGroupName }}'
-              workSubscriptionId: '${{ parameters.subscriptionId }}'
 
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -69,4 +68,3 @@ stages:
               stName: '${{ variables.stName}}'
               workName: '${{ variables.workName }}'
               workResourceGroupName: '${{ variables.workResourceGroupName }}'
-              workSubscriptionId: '${{ parameters.subscriptionId }}'
