@@ -5,7 +5,7 @@ variables:
     value: '$(Agent.TempDirectory)/ymltemp'
   - name: archiveFile
     value: 'archive.zip'
-  - name: infrastructurePath
+  - name: armPath
     value: '$(System.DefaultWorkingDirectory)/.azure'
   - name: scriptsPath
     value: '$(System.DefaultWorkingDirectory)/.azure-devops/scripts'

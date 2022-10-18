@@ -23,15 +23,18 @@ parameters:
   - name: stName 
     type: string 
     default: "stPRODUCTENVIRONMENT001"
+  - name: workLocation
+    type: string 
+    default: "$(rgLocation)"
   - name: workName 
     type: string 
     default: "work-PRODUCT-ENVIRONMENT-001"
   - name: workResourceGroupName 
     type: string 
-    default: "rg-PRODUCT-001"
+    default: "$(rgName)"
   - name: workSubscriptionId
     type: string 
-    default: "00000000-0000-0000-0000-000000000000"
+    default: "$(subscriptionId)"
 
 steps:
   - task: AzureResourceManagerTemplateDeployment@3
@@ -69,10 +72,10 @@ steps:
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
-        subscriptionId: "${{ parameters.subscriptionId }}"
+        subscriptionId: "${{ parameters.workSubscriptionId }}"
         action: "Create Or Update Resource Group"
         resourceGroupName: "${{ parameters.workResourceGroupName }}"
-        location: "${{ parameters.rgLocation }}"
+        location: "${{ parameters.workLocation }}"
         templateLocation: "Linked artifact"
         csmFile: "${{ parameters.armPath }}/work-loganalyticsworkspace.json"
         csmParametersFile: "${{ parameters.armPath }}/work-loganalyticsworkspace.parameters.json"
@@ -84,10 +87,10 @@ steps:
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
-        subscriptionId: "${{ parameters.subscriptionId }}"
+        subscriptionId: "${{ parameters.workSubscriptionId }}"
         action: "Create Or Update Resource Group"
         resourceGroupName: "${{ parameters.workResourceGroupName }}"
-        location: "${{ parameters.rgLocation }}"
+        location: "${{ parameters.workLocation }}"
         templateLocation: "Linked artifact"
         csmFile: "${{ parameters.armPath }}/work-loganalyticsworkspace.json"
         csmParametersFile: "${{ parameters.armPath }}/work-loganalyticsworkspace.parameters.json"
@@ -104,8 +107,8 @@ steps:
         resourceGroupName: "${{ parameters.rgName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "${{ parameters.infrastructurePath }}/appi-applicationinsights.json"
-        csmParametersFile: "${{ parameters.infrastructurePath }}/appi-applicationinsights.parameters.json"
+        csmFile: "${{ parameters.armPath }}/appi-applicationinsights.json"
+        csmParametersFile: "${{ parameters.armPath }}/appi-applicationinsights.parameters.json"
         deploymentMode: "Validation"
         overrideParameters: -name "${{ parameters.appiName }}" -workName "${{ parameters.workName }}" -workResourceGroupName "${{ parameters.workResourceGroupName }}"
 
@@ -119,8 +122,8 @@ steps:
         resourceGroupName: "${{ parameters.rgName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "${{ parameters.infrastructurePath }}/appi-applicationinsights.json"
-        csmParametersFile: "${{ parameters.infrastructurePath }}/appi-applicationinsights.parameters.json"
+        csmFile: "${{ parameters.armPath }}/appi-applicationinsights.json"
+        csmParametersFile: "${{ parameters.armPath }}/appi-applicationinsights.parameters.json"
         deploymentMode: "Incremental"
         overrideParameters: -name "${{ parameters.appiName }}" -workName "${{ parameters.workName }}" -workResourceGroupName "${{ parameters.workResourceGroupName }}"
 

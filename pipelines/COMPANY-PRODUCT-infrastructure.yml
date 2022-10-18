@@ -46,7 +46,7 @@ stages:
         steps:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
-              armPath: '$(infrastructurePath)'
+              armPath: '$(armPath)'
               subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
@@ -61,7 +61,7 @@ stages:
         steps:
           - template: ../steps/appcs-infrastructure-steps.yml
             parameters:
-              armPath: '$(infrastructurePath)'
+              armPath: '$(armPath)'
               subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
@@ -74,7 +74,7 @@ stages:
         steps:
           - template: ../steps/appcs-settings-steps.yml
             parameters:
-              armPath: '$(infrastructurePath)'
+              armPath: '$(armPath)'
               subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
@@ -92,7 +92,7 @@ stages:
         steps:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
-              armPath: '$(infrastructurePath)'
+              armPath: '$(armPath)'
               subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'

@@ -37,7 +37,7 @@ stages:
         steps:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
-              armPath: '${{ variables.infrastructurePath}}'
+              armPath: '${{ variables.armPath}}'
               subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '${{ variables.rgName}}'
@@ -59,7 +59,7 @@ stages:
         steps:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
-              armPath: '${{ variables.infrastructurePath}}'
+              armPath: '${{ variables.armPath}}'
               subscriptionId: '${{ parameters.subscriptionId }}'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '${{ variables.rgName}}'
