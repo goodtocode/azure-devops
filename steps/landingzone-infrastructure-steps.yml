@@ -29,6 +29,9 @@ parameters:
   - name: workResourceGroupName 
     type: string 
     default: "rg-PRODUCT-001"
+  - name: workSubscriptionId
+    type: string 
+    default: "00000000-0000-0000-0000-000000000000"
 
 steps:
   - task: AzureResourceManagerTemplateDeployment@3
