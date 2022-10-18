@@ -25,16 +25,16 @@ parameters:
     default: "stPRODUCTENVIRONMENT001"
   - name: workLocation
     type: string 
-    default: "$(rgLocation)"
+    default: "West US 2"
   - name: workName 
     type: string 
     default: "work-PRODUCT-ENVIRONMENT-001"
   - name: workResourceGroupName 
     type: string 
-    default: "$(rgName)"
+    default: 'rg-PRODUCT-001'
   - name: workSubscriptionId
     type: string 
-    default: "$(subscriptionId)"
+    default: "00000000-0000-0000-0000-000000000000"
 
 steps:
   - task: AzureResourceManagerTemplateDeployment@3
