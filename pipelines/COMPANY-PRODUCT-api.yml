@@ -76,7 +76,7 @@ stages:
               subscriptionName: '$(subscriptionName)'
               rgEnvironment: '$(rgEnvironment)'
               apiName: '$(apiName)'
-              appSettings: '${{ parameters.workerSettings }}'
+              appSettings: '${{ parameters.appSettings }}'
 
       - job: deploy_api
         dependsOn: settings_api
@@ -132,8 +132,18 @@ stages:
               appcsConnection: '${{ variables.appcsConnection}}'
               rgEnvironment: '${{ variables.rgEnvironment}}'
 
-      - job: deploy_api
+      - job: settings_api
         dependsOn: test_api
+        steps:
+          - template: ../steps/api-settings-steps.yml
+            parameters:
+              subscriptionName: '$(subscriptionName)'
+              rgEnvironment: '$(rgEnvironment)'
+              apiName: '$(apiName)'
+              appSettings: '${{ parameters.appSettings }}'
+
+      - job: deploy_api
+        dependsOn: settings_api
         steps:
           - template: ../steps/web-deploy-steps.yml
             parameters:
