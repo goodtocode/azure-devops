@@ -60,10 +60,29 @@ stages:
             parameters:
               appSettings: '-${{ variables.appcsEnvironmentVariable}} ${{ variables.appcsConnection}} -${{ variables.stEnvironmentVariable}} ${{ variables.stConnection}} -AzureWebJobsDashboard ${{ variables.stConnection}} -APPINSIGHTS_INSTRUMENTATIONKEY ${{ variables.appiKey}} -APPLICATIONINSIGHTS_CONNECTION_STRING ${{ variables.appiConnection}} -AZURE_FUNCTIONS_ENVIRONMENT ${{ variables.rgEnvironment}} -ASPNETCORE_ENVIRONMENT ${{ variables.rgEnvironment}} '
               artifactsPath: '${{ variables.artifactsPath}}'
-              archiveFile: '${{ variables.webjobArchiveFile}}'
+              archiveFile: '${{ variables.archiveFile}}'
               webName: '${{ variables.apiName}}'
               subscriptionId: '${{ variables.subscriptionId}}'
               subscriptionService: '${{ parameters.subscriptionService}}'
+
+  - stage: pull_request
+    condition: eq(variables['Build.Reason'], 'PullRequest')
+    variables:
+      - template: ../variables/development.yml
+      
+    jobs:
+      - job: test_src
+        steps:
+          - template: ../steps/src-test-steps.yml
+            parameters:
+              armPath: '${{ variables.armPath}}'
+
+      - job: test_integration        
+        dependsOn: test_src
+        steps:
+          - template: ../steps/integration-test-steps.yml
+            parameters:
+              armPath: '${{ variables.armPath}}'
 
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -95,7 +114,7 @@ stages:
             parameters:
               appSettings: '-${{ variables.appcsEnvironmentVariable}} ${{ variables.appcsConnection}} -${{ variables.stEnvironmentVariable}} ${{ variables.stConnection}} -AzureWebJobsDashboard ${{ variables.stConnection}} -APPINSIGHTS_INSTRUMENTATIONKEY ${{ variables.appiKey}} -APPLICATIONINSIGHTS_CONNECTION_STRING ${{ variables.appiConnection}} -AZURE_FUNCTIONS_ENVIRONMENT ${{ variables.rgEnvironment}} -ASPNETCORE_ENVIRONMENT ${{ variables.rgEnvironment}} '
               artifactsPath: '${{ variables.artifactsPath}}'
-              archiveFile: '${{ variables.webjobArchiveFile}}'
+              archiveFile: '${{ variables.archiveFile}}'
               webName: '${{ variables.apiName}}'
               subscriptionId: '${{ variables.subscriptionId}}'
               subscriptionService: '${{ parameters.subscriptionService}}'
