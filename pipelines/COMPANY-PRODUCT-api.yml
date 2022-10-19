@@ -61,7 +61,7 @@ stages:
               appSettings: '-${{ variables.appcsEnvironmentVariable}} ${{ variables.appcsConnection}} -${{ variables.stEnvironmentVariable}} ${{ variables.stConnection}} -AzureWebJobsDashboard ${{ variables.stConnection}} -APPINSIGHTS_INSTRUMENTATIONKEY ${{ variables.appiKey}} -APPLICATIONINSIGHTS_CONNECTION_STRING ${{ variables.appiConnection}} -AZURE_FUNCTIONS_ENVIRONMENT ${{ variables.rgEnvironment}} -ASPNETCORE_ENVIRONMENT ${{ variables.rgEnvironment}} '
               artifactsPath: '${{ variables.artifactsPath}}'
               archiveFile: '${{ variables.archiveFile}}'
-              webName: '${{ variables.apiName}}'
+              apiName: '${{ variables.apiName}}'
               subscriptionId: '${{ variables.subscriptionId}}'
               subscriptionService: '${{ parameters.subscriptionService}}'
 
@@ -115,6 +115,6 @@ stages:
               appSettings: '-${{ variables.appcsEnvironmentVariable}} ${{ variables.appcsConnection}} -${{ variables.stEnvironmentVariable}} ${{ variables.stConnection}} -AzureWebJobsDashboard ${{ variables.stConnection}} -APPINSIGHTS_INSTRUMENTATIONKEY ${{ variables.appiKey}} -APPLICATIONINSIGHTS_CONNECTION_STRING ${{ variables.appiConnection}} -AZURE_FUNCTIONS_ENVIRONMENT ${{ variables.rgEnvironment}} -ASPNETCORE_ENVIRONMENT ${{ variables.rgEnvironment}} '
               artifactsPath: '${{ variables.artifactsPath}}'
               archiveFile: '${{ variables.archiveFile}}'
-              webName: '${{ variables.apiName}}'
+              apiName: '${{ variables.apiName}}'
               subscriptionId: '${{ variables.subscriptionId}}'
               subscriptionService: '${{ parameters.subscriptionService}}'
