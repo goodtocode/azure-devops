@@ -36,15 +36,15 @@ stages:
       - template: ../variables/development.yml
       
     jobs:    
-      - job: build_src
+      - job: build_api
         steps:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
               artifactsPath: '${{ variables.artifactsPath}}'
               srcPath: '${{ variables.srcPath}}'
 
-      - job: test_src
-        dependsOn: build_src
+      - job: test_api
+        dependsOn: build_api
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
@@ -53,27 +53,15 @@ stages:
               appcsConnection: '${{ variables.appcsConnection}}'
               rgEnvironment: '${{ variables.rgEnvironment}}'
 
-      - job: build_api
-        dependsOn: test_src
-        steps:
-          - template: ../steps/webjob-build-steps.yml
-            parameters:
-              artifactsPath: '${{ variables.artifactsPath}}'
-              archiveFile: '${{ variables.webjobArchiveFile}}'
-              srcPath: '${{ variables.srcPath}}'
-              webjobProject: '${{ variables.webjobProject}}'
-              webjobName: '${{ variables.webjobName}}'
-              cronSchedule: '${{ variables.webjobSchedule}}'
-
       - job: deploy_api
-        dependsOn: build_api
+        dependsOn: test_api
         steps:
           - template: ../steps/web-deploy-steps.yml
             parameters:
               appSettings: '-${{ variables.appcsEnvironmentVariable}} ${{ variables.appcsConnection}} -${{ variables.stEnvironmentVariable}} ${{ variables.stConnection}} -AzureWebJobsDashboard ${{ variables.stConnection}} -APPINSIGHTS_INSTRUMENTATIONKEY ${{ variables.appiKey}} -APPLICATIONINSIGHTS_CONNECTION_STRING ${{ variables.appiConnection}} -AZURE_FUNCTIONS_ENVIRONMENT ${{ variables.rgEnvironment}} -ASPNETCORE_ENVIRONMENT ${{ variables.rgEnvironment}} '
               artifactsPath: '${{ variables.artifactsPath}}'
               archiveFile: '${{ variables.webjobArchiveFile}}'
-              webName: '${{ variables.webjobName}}'
+              webName: '${{ variables.apiName}}'
               subscriptionId: '${{ variables.subscriptionId}}'
               subscriptionService: '${{ parameters.subscriptionService}}'
 
@@ -82,16 +70,16 @@ stages:
     variables:
       - template: ../variables/production.yml    
 
-    jobs:
-      - job: build_src
+    jobs:    
+      - job: build_api
         steps:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
               artifactsPath: '${{ variables.artifactsPath}}'
               srcPath: '${{ variables.srcPath}}'
 
-      - job: test_src
-        dependsOn: build_src
+      - job: test_api
+        dependsOn: build_api
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
@@ -100,26 +88,14 @@ stages:
               appcsConnection: '${{ variables.appcsConnection}}'
               rgEnvironment: '${{ variables.rgEnvironment}}'
 
-      - job: build_api
-        dependsOn: test_src
-        steps:
-          - template: ../steps/webjob-build-steps.yml
-            parameters:
-              artifactsPath: '${{ variables.artifactsPath}}'
-              archiveFile: '${{ variables.webjobArchiveFile}}'
-              srcPath: '${{ variables.srcPath}}'
-              webjobProject: '${{ variables.webjobProject}}'
-              webjobName: '${{ variables.webjobName}}'
-              cronSchedule: '${{ variables.webjobSchedule}}'
-
       - job: deploy_api
-        dependsOn: build_api
+        dependsOn: test_api
         steps:
           - template: ../steps/web-deploy-steps.yml
             parameters:
               appSettings: '-${{ variables.appcsEnvironmentVariable}} ${{ variables.appcsConnection}} -${{ variables.stEnvironmentVariable}} ${{ variables.stConnection}} -AzureWebJobsDashboard ${{ variables.stConnection}} -APPINSIGHTS_INSTRUMENTATIONKEY ${{ variables.appiKey}} -APPLICATIONINSIGHTS_CONNECTION_STRING ${{ variables.appiConnection}} -AZURE_FUNCTIONS_ENVIRONMENT ${{ variables.rgEnvironment}} -ASPNETCORE_ENVIRONMENT ${{ variables.rgEnvironment}} '
               artifactsPath: '${{ variables.artifactsPath}}'
               archiveFile: '${{ variables.webjobArchiveFile}}'
-              webName: '${{ variables.webjobName}}'
+              webName: '${{ variables.apiName}}'
               subscriptionId: '${{ variables.subscriptionId}}'
               subscriptionService: '${{ parameters.subscriptionService}}'
