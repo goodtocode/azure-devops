@@ -12,22 +12,22 @@ parameters:
     type: object
     default: 
       - name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-        value: '$(appiKey)'
+        value: '${{ variables.appiKey}}'
         slotSetting: false
       - name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-        value: '$(appiConnection)'
+        value: '${{ variables.appiConnection}}'
         slotSetting: false        
       - name: 'ASPNETCORE_ENVIRONMENT'
-        value: '$(rgEnvironment)'
+        value: '${{ variables.rgEnvironment}}'
         slotSetting: false
       - name: 'NODE_ENVIRONMENT'
-        value: '$(rgEnvironment)'
+        value: '${{ variables.rgEnvironment}}'
         slotSetting: false
-      - name: '$(appcsEnvironmentVariable)'
-        value: '$(appcsConnection)'
+      - name: '${{ variables.appcsEnvironmentVariable}}'
+        value: '${{ variables.appcsConnection}}'
         slotSetting: false
-      - name: '$(stEnvironmentVariable)'
-        value: '$(stConnection)'
+      - name: '${{ variables.stEnvironmentVariable}}'
+        value: '${{ variables.stConnection}}'
         slotSetting: false
 
 steps:

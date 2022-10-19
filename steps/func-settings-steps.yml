@@ -12,13 +12,13 @@ parameters:
     type: object
     default: 
       - name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-        value: '$(appiKey)'
+        value: '${{ variables.appiKey}}'
         slotSetting: false
       - name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-        value: '$(appiConnection)'
+        value: '${{ variables.appiConnection}}'
         slotSetting: false        
       - name: 'AZURE_FUNCTIONS_ENVIRONMENT'
-        value: '$(rgEnvironment)'
+        value: '${{ variables.rgEnvironment}}'
         slotSetting: false
       - name: 'FUNCTIONS_EXTENSION_VERSION'
         value: '~$(funcVersion)'
@@ -26,11 +26,11 @@ parameters:
       - name: 'FUNCTIONS_WORKER_RUNTIME'
         value: '$(funcRuntime)'
         slotSetting: false
-      - name: '$(appcsEnvironmentVariable)'
-        value: '$(appcsConnection)'
+      - name: '${{ variables.appcsEnvironmentVariable}}'
+        value: '${{ variables.appcsConnection}}'
         slotSetting: false
-      - name: '$(stEnvironmentVariable)'
-        value: '$(stConnection)'
+      - name: '${{ variables.stEnvironmentVariable}}'
+        value: '${{ variables.stConnection}}'
         slotSetting: false
 
 steps:

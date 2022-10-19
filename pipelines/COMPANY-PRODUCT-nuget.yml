@@ -40,9 +40,9 @@ stages:
         steps:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
-              artifactsPath: '$(artifactsPath)'
+              artifactsPath: '${{ variables.artifactsPath}}'
               scriptsPath: '$(scriptsPath)'
-              srcPath: '$(srcPath)'
+              srcPath: '${{ variables.srcPath}}'
 
       - job: test_src
         dependsOn: build_src
@@ -53,16 +53,16 @@ stages:
               arguments: '--filter TestCategory!=Integration'
               appcsEnvironmentVariable: '${{ parameters.appcsEnvironmentVariable }}'
               appcsConnection: '${{ parameters.appcsConnection }}'
-              rgEnvironment: '$(rgEnvironment)'
+              rgEnvironment: '${{ variables.rgEnvironment}}'
 
       - job: pack_src
         dependsOn: test_src
         steps:
           - template: ../steps/dotnet-pack-steps.yml
             parameters:
-              artifactsPath: '$(artifactsPath)'
+              artifactsPath: '${{ variables.artifactsPath}}'
               scriptsPath: '$(scriptsPath)'
-              srcPath: '$(srcPath)'
+              srcPath: '${{ variables.srcPath}}'
               versionToReplace: '${{ parameters.versionToReplace }}'
 
       - job: deploy_nuget
@@ -70,7 +70,7 @@ stages:
         steps:
           - template: ../steps/nuget-deploy-internal-steps.yml
             parameters:              
-              artifactsPath: '$(artifactsPath)'
+              artifactsPath: '${{ variables.artifactsPath}}'
               nugetId:  '${{ parameters.nugetId }}'
 
   - stage: production
@@ -83,9 +83,9 @@ stages:
         steps:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
-              artifactsPath: '$(artifactsPath)'
+              artifactsPath: '${{ variables.artifactsPath}}'
               scriptsPath: '$(scriptsPath)'
-              srcPath: '$(srcPath)'
+              srcPath: '${{ variables.srcPath}}'
 
       - job: test_src
         dependsOn: build_src
@@ -96,16 +96,16 @@ stages:
               arguments: '--filter TestCategory!=Integration'
               appcsEnvironmentVariable: '${{ parameters.appcsEnvironmentVariable }}'
               appcsConnection: '${{ parameters.appcsConnection }}'
-              rgEnvironment: '$(rgEnvironment)'
+              rgEnvironment: '${{ variables.rgEnvironment}}'
 
       - job: pack_src
         dependsOn: test_src
         steps:
           - template: ../steps/dotnet-pack-steps.yml
             parameters:
-              artifactsPath: '$(artifactsPath)'
+              artifactsPath: '${{ variables.artifactsPath}}'
               scriptsPath: '$(scriptsPath)'
-              srcPath: '$(srcPath)'
+              srcPath: '${{ variables.srcPath}}'
               versionToReplace: '${{ parameters.versionToReplace }}'
 
       - job: deploy_nuget
@@ -113,5 +113,5 @@ stages:
         steps:
           - template: ../steps/nuget-deploy-external-steps.yml
             parameters:              
-              artifactsPath: '$(artifactsPath)'
+              artifactsPath: '${{ variables.artifactsPath}}'
               nugetService:  '${{ parameters.nugetService }}'

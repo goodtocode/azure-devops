@@ -20,13 +20,13 @@ parameters:
     type: object
     default: 
       - name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-        value: '$(appiKey)'
+        value: '${{ variables.appiKey}}'
         slotSetting: false
       - name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-        value: '$(appiConnection)'
+        value: '${{ variables.appiConnection}}'
         slotSetting: false        
       - name: 'AZURE_funcTIONS_ENVIRONMENT'
-        value: '$(rgEnvironment)'
+        value: '${{ variables.rgEnvironment}}'
         slotSetting: false
       - name: 'FUNCTIONS_EXTENSION_VERSION'
         value: '$(funcVersion)'
@@ -34,11 +34,11 @@ parameters:
       - name: 'FUNCTIONS_WORKER_RUNTIME'
         value: '$(funcRuntime)'
         slotSetting: false
-      - name: '$(appcsEnvironmentVariable)'
-        value: '$(appcsConnection)'
+      - name: '${{ variables.appcsEnvironmentVariable}}'
+        value: '${{ variables.appcsConnection}}'
         slotSetting: false
-      - name: '$(stEnvironmentVariable)'
-        value: '$(stConnection)'
+      - name: '${{ variables.stEnvironmentVariable}}'
+        value: '${{ variables.stConnection}}'
         slotSetting: false
   
 variables:
@@ -60,20 +60,20 @@ stages:
           - template: ../steps/func-build-steps.yml
             parameters:
               archiveFile: '$(archiveFile)'
-              funcPath: '$(funcPath)'
-              tempPath: '$(tempPath)'
+              funcPath: '${{ variables.funcPath}}'
+              tempPath: '${{ variables.tempPath}}'
 
       - job: test_func
         dependsOn: build_func
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
-              unitPath: $(funcPath)
-              rgEnvironment: '$(rgEnvironment)'
-              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
-              appcsConnection: '$(appcsConnection)'
-              stEnvironmentVariable: '$(stEnvironmentVariable)'
-              stConnection: '$(stConnection)'
+              unitPath: ${{ variables.funcPath}}
+              rgEnvironment: '${{ variables.rgEnvironment}}'
+              appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
+              appcsConnection: '${{ variables.appcsConnection}}'
+              stEnvironmentVariable: '${{ variables.stEnvironmentVariable}}'
+              stConnection: '${{ variables.stConnection}}'
 
       - job: settings_func
         dependsOn: build_func
@@ -81,8 +81,8 @@ stages:
           - template: ../steps/func-settings-steps.yml
             parameters:
               subscriptionName: '$(subscriptionName)'
-              rgEnvironment: '$(rgEnvironment)'
-              funcName: '$(funcName)'
+              rgEnvironment: '${{ variables.rgEnvironment}}'
+              funcName: '${{ variables.funcName}}'
               appSettings: '${{ parameters.apiSettings }}'
 
       - job: deploy_func
@@ -90,10 +90,10 @@ stages:
         steps:
           - template: ../steps/func-deploy-steps.yml
             parameters:
-              artifactsPath: '$(artifactsPath)'
+              artifactsPath: '${{ variables.artifactsPath}}'
               archiveFile: '$(archiveFile)'
-              funcName: '$(funcName)'
-              subscriptionId: '$(subscriptionId)'
+              funcName: '${{ variables.funcName}}'
+              subscriptionId: '${{ variables.subscriptionId}}'
               subscriptionName: '$(subscriptionName)'
 
   - stage: production
@@ -107,20 +107,20 @@ stages:
           - template: ../steps/func-build-steps.yml
             parameters:
               archiveFile: '$(archiveFile)'
-              funcPath: '$(funcPath)'
-              tempPath: '$(tempPath)'
+              funcPath: '${{ variables.funcPath}}'
+              tempPath: '${{ variables.tempPath}}'
 
       - job: test_func
         dependsOn: build_func
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
-              unitPath: $(funcPath)
-              rgEnvironment: '$(rgEnvironment)'
-              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
-              appcsConnection: '$(appcsConnection)'
-              stEnvironmentVariable: '$(stEnvironmentVariable)'
-              stConnection: '$(stConnection)'
+              unitPath: ${{ variables.funcPath}}
+              rgEnvironment: '${{ variables.rgEnvironment}}'
+              appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
+              appcsConnection: '${{ variables.appcsConnection}}'
+              stEnvironmentVariable: '${{ variables.stEnvironmentVariable}}'
+              stConnection: '${{ variables.stConnection}}'
 
       - job: settings_func
         dependsOn: build_func
@@ -128,8 +128,8 @@ stages:
           - template: ../steps/func-settings-steps.yml
             parameters:
               subscriptionName: '$(subscriptionName)'
-              rgEnvironment: '$(rgEnvironment)'
-              funcName: '$(funcName)'
+              rgEnvironment: '${{ variables.rgEnvironment}}'
+              funcName: '${{ variables.funcName}}'
               appSettings: '${{ parameters.apiSettings }}'
 
       - job: deploy_func
@@ -137,8 +137,8 @@ stages:
         steps:
           - template: ../steps/func-deploy-steps.yml
             parameters:
-              artifactsPath: '$(artifactsPath)'
+              artifactsPath: '${{ variables.artifactsPath}}'
               archiveFile: '$(archiveFile)'
-              funcName: '$(funcName)'
-              subscriptionId: '$(subscriptionId)'
+              funcName: '${{ variables.funcName}}'
+              subscriptionId: '${{ variables.subscriptionId}}'
               subscriptionName: '$(subscriptionName)'

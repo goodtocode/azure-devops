@@ -21,13 +21,13 @@ parameters:
     default: "AZURE_DEVOPS_SERVICE_CONNECTION"
   - name: appcsConnection
     type: string 
-    default: "$(appcsConnection)"
+    default: "${{ variables.appcsConnection}}"
   - name: appcsKeys
     type: object
     default: [ "Shared:Sentinel", "ConnectionStrings:StorageTables" ]
   - name: appcsValues
     type: object
-    default: [ "1", "$(stConnection)" ]
+    default: [ "1", "${{ variables.stConnection}}" ]
 
 variables:
   - template: ../variables/common.yml
