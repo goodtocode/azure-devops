@@ -42,8 +42,10 @@ stages:
               appiName: '${{ variables.appiName}}'
               kvName: '${{ variables.kvName}}'
               stName: '${{ variables.stName}}'
+              workLocation: '${{ variables.rgLocation }}'
               workName: '${{ variables.workName }}'
               workResourceGroupName: '${{ variables.workResourceGroupName }}'
+              workSubscriptionId: '${{ variables.subscriptionId }}'
 
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -63,5 +65,7 @@ stages:
               appiName: '${{ variables.appiName}}'
               kvName: '${{ variables.kvName}}'
               stName: '${{ variables.stName}}'
+              workLocation: '${{ variables.rgLocation }}'
               workName: '${{ variables.workName }}'
               workResourceGroupName: '${{ variables.workResourceGroupName }}'
+              workSubscriptionId: '${{ variables.subscriptionId }}'
