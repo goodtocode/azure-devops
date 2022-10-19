@@ -95,12 +95,6 @@ stages:
       - template: ../variables/development.yml
       
     jobs:
-      - job: test_src
-        steps:
-          - template: ../steps/src-test-steps.yml
-            parameters:
-              armPath: '${{ variables.armPath}}'
-
       - job: test_integration        
         dependsOn: test_src
         steps:
