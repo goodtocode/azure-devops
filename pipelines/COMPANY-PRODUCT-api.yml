@@ -51,7 +51,7 @@ stages:
       - template: ../variables/development.yml
       
     jobs:    
-      - job: build_api
+- job: build_api
         steps:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
@@ -73,17 +73,16 @@ stages:
         steps:
           - template: ../steps/api-settings-steps.yml
             parameters:
-              subscriptionName: '$(subscriptionName)'
-              rgEnvironment: '$(rgEnvironment)'
-              apiName: '$(apiName)'
+              subscriptionService: '${{ parameters.subscriptionService}}'
+              rgEnvironment: '${{ variables.rgEnvironment}}'
+              apiName: '${{ variables.apiName}}'
               appSettings: '${{ parameters.appSettings }}'
 
       - job: deploy_api
         dependsOn: settings_api
         steps:
-          - template: ../steps/web-deploy-steps.yml
-            parameters:
-              appSettings: '-${{ variables.appcsEnvironmentVariable}} ${{ variables.appcsConnection}} -${{ variables.stEnvironmentVariable}} ${{ variables.stConnection}} -AzureWebJobsDashboard ${{ variables.stConnection}} -APPINSIGHTS_INSTRUMENTATIONKEY ${{ variables.appiKey}} -APPLICATIONINSIGHTS_CONNECTION_STRING ${{ variables.appiConnection}} -AZURE_FUNCTIONS_ENVIRONMENT ${{ variables.rgEnvironment}} -ASPNETCORE_ENVIRONMENT ${{ variables.rgEnvironment}} '
+          - template: ../steps/api-deploy-steps.yml
+            parameters:              
               artifactsPath: '${{ variables.artifactsPath}}'
               archiveFile: '${{ variables.archiveFile}}'
               apiName: '${{ variables.apiName}}'
@@ -137,17 +136,16 @@ stages:
         steps:
           - template: ../steps/api-settings-steps.yml
             parameters:
-              subscriptionName: '$(subscriptionName)'
-              rgEnvironment: '$(rgEnvironment)'
-              apiName: '$(apiName)'
+              subscriptionService: '${{ parameters.subscriptionService}}'
+              rgEnvironment: '${{ variables.rgEnvironment}}'
+              apiName: '${{ variables.apiName}}'
               appSettings: '${{ parameters.appSettings }}'
 
       - job: deploy_api
         dependsOn: settings_api
         steps:
-          - template: ../steps/web-deploy-steps.yml
-            parameters:
-              appSettings: '-${{ variables.appcsEnvironmentVariable}} ${{ variables.appcsConnection}} -${{ variables.stEnvironmentVariable}} ${{ variables.stConnection}} -AzureWebJobsDashboard ${{ variables.stConnection}} -APPINSIGHTS_INSTRUMENTATIONKEY ${{ variables.appiKey}} -APPLICATIONINSIGHTS_CONNECTION_STRING ${{ variables.appiConnection}} -AZURE_FUNCTIONS_ENVIRONMENT ${{ variables.rgEnvironment}} -ASPNETCORE_ENVIRONMENT ${{ variables.rgEnvironment}} '
+          - template: ../steps/api-deploy-steps.yml
+            parameters:              
               artifactsPath: '${{ variables.artifactsPath}}'
               archiveFile: '${{ variables.archiveFile}}'
               apiName: '${{ variables.apiName}}'
