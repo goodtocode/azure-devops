@@ -1,8 +1,8 @@
 variables:
   - name: artifactsPath
     value: '$(Build.ArtifactStagingDirectory)'
-  - name: tempPath
-    value: '$(Agent.TempDirectory)/ymltemp'
+  - name: buildConfiguration
+    value: 'Release'
   - name: archiveFile
     value: 'archive.zip'
   - name: armPath
@@ -11,6 +11,8 @@ variables:
     value: '$(System.DefaultWorkingDirectory)/.azure-devops/scripts'
   - name: srcPath
     value: '$(System.DefaultWorkingDirectory)/src'
+  - name: tempPath
+    value: '$(Agent.TempDirectory)/ymltemp'
   - name: testsPath
     value: '$(System.DefaultWorkingDirectory)/tests'
   - name: funcPath
@@ -19,5 +21,3 @@ variables:
     value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.WebJob'
   - name: logicPath
     value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.LogicApps.NAME'
-  - name: buildConfiguration
-    value: 'Release'
