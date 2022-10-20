@@ -51,7 +51,7 @@ stages:
       - template: ../variables/development.yml
       
     jobs:    
-- job: build_api
+      - job: build_api
         steps:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
@@ -64,7 +64,8 @@ stages:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
               restorePath: '${{ variables.srcPath}}'
-              testPath: '${{ variables.srcPath}}'
+              testPath: '${{ variables.unitPath}}'
+              testProject: '${{ variables.unitProject}}'
               appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
               appcsConnection: '${{ variables.appcsConnection}}'
               rgEnvironment: '${{ variables.rgEnvironment}}'
@@ -108,7 +109,9 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
-              testPath: '${{ variables.srcPath}}'
+              restorePath: '${{ variables.srcPath}}'
+              testPath: '${{ variables.unitPath}}'
+              testProject: '${{ variables.unitProject}}'
               appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
               appcsConnection: '${{ variables.appcsConnection}}'
               rgEnvironment: '${{ variables.rgEnvironment}}'
