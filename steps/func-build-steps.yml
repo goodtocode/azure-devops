@@ -20,13 +20,13 @@ parameters:
   - name: tempPath
     type: string 
     default: './ymltemp'
-  - name: scriptsPath 
+  - name: scriptsPath
     type: string 
     default: "../scripts"
   - name: versionToReplace
     type: string 
     default: "1.0.0"
-  - name: dotnetVersion 
+  - name: dotnetVersion
     type: string 
     default: "6.x"
 

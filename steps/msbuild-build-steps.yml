@@ -2,7 +2,7 @@ parameters:
   - name: artifactsPath
     type: string 
     default: "."
-  - name: srcPath 
+  - name: srcPath
     type: string 
     default: "."
   - name: srcProject
@@ -20,7 +20,7 @@ parameters:
   - name: buildConfiguration
     type: string 
     default: "Release"
-  - name: scriptsPath 
+  - name: scriptsPath
     type: string 
     default: "../scripts"
 

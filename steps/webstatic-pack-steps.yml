@@ -5,10 +5,10 @@ parameters:
 - name: archiveFile
   type: string 
   default: "archive.zip"
-- name: srcPath 
+- name: srcPath
   type: string 
   default: "."
-- name: scriptsPath 
+- name: scriptsPath
   type: string 
   default: "../scripts"
 - name: tempPath

@@ -2,10 +2,10 @@ parameters:
   - name: artifactsPath
     type: string 
     default: "."
-  - name: srcPath 
+  - name: srcPath
     type: string 
     default: "."
-  - name: scriptsPath 
+  - name: scriptsPath
     type: string 
     default: "../scripts"
 

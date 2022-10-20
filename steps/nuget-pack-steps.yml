@@ -8,7 +8,7 @@ parameters:
   - name: nugetPathFile
     type: string 
     default: ".nuget/NuGet.config"
-  - name: srcPath 
+  - name: srcPath
     type: string 
     default: "."
   - name: srcNuspec
@@ -17,7 +17,7 @@ parameters:
   - name: srcSolution
     type: string 
     default: "*.sln"
-  - name: scriptsPath 
+  - name: scriptsPath
     type: string 
     default: "../scripts"
   - name: versionToReplace

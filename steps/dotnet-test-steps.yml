@@ -2,7 +2,7 @@ parameters:
   - name: rgEnvironment
     type: string 
     default: "rg-PRODUCT-001"
-  - name: testPath 
+  - name: testPath
     type: string 
     default: "."
   - name: testProject
@@ -32,7 +32,7 @@ parameters:
   - name: arguments
     type: string
     default: ""
-  - name: dotnetVersion 
+  - name: dotnetVersion
     type: string 
     default: "6.x"
 

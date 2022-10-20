@@ -2,7 +2,7 @@ parameters:
   - name: rgEnvironment
     type: string 
     default: "rg-PRODUCT-001"
-  - name: integrationPath 
+  - name: integrationPath
     type: string 
     default: "."
   - name: integrationProject
@@ -20,7 +20,7 @@ parameters:
   - name: stEnvironmentVariable
     type: string 
     default: "AZURE_STORAGE_CONNECTION"
-  - name: dotnetVersion 
+  - name: dotnetVersion
     type: string 
     default: "6.x"
 

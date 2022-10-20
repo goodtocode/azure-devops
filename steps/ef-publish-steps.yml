@@ -5,9 +5,9 @@ parameters:
   - name: buildConfiguration
     type: string 
     default: "Release"
-  - name: dbContext 
+  - name: dbContext
     type: string
-  - name: dotnetVersion 
+  - name: dotnetVersion
     type: string 
     default: "6.x"
   - name: nugetPathFile
@@ -16,7 +16,7 @@ parameters:
   - name: sqldbFile
     type: string 
     default: "migration.sql"
-  - name: srcPath 
+  - name: srcPath
     type: string 
     default: "."
   - name: srcProject

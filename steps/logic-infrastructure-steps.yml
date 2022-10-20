@@ -5,13 +5,13 @@ parameters:
   - name: subscriptionService
     type: string 
     default: 'COMPANY-PRODUCT-001'
-  - name: rgName 
+  - name: rgName
     type: string 
     default: 'rg-PRODUCT-001'
-  - name: rgLocation 
+  - name: rgLocation
     type: string 
     default: "West US 2"
-  - name: logicPath 
+  - name: logicPath
     type: string 
     default: "."
   - name: logicName

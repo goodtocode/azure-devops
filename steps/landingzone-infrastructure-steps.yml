@@ -1,5 +1,5 @@
 parameters:
-  - name: armPath 
+  - name: armPath
     type: string 
     default: "."
   - name: subscriptionId
@@ -8,28 +8,28 @@ parameters:
   - name: subscriptionService
     type: string 
     default: 'COMPANY-PRODUCT-001'
-  - name: rgName 
+  - name: rgName
     type: string 
     default: 'rg-PRODUCT-001'
-  - name: rgLocation 
+  - name: rgLocation
     type: string 
     default: "West US 2"
-  - name: appiName 
+  - name: appiName
     type: string 
     default: "appi-PRODUCT-ENVIRONMENT-001"
-  - name: kvName 
+  - name: kvName
     type: string 
     default: "kv-PRODUCT-ENVIRONMENT-001"
-  - name: stName 
+  - name: stName
     type: string 
     default: "stPRODUCTENVIRONMENT001"
   - name: workLocation
     type: string 
     default: "West US 2"
-  - name: workName 
+  - name: workName
     type: string 
     default: "work-PRODUCT-ENVIRONMENT-001"
-  - name: workResourceGroupName 
+  - name: workResourceGroupName
     type: string 
     default: 'rg-PRODUCT-001'
   - name: workSubscriptionId

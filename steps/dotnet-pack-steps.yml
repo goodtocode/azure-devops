@@ -8,19 +8,19 @@ parameters:
   - name: nugetPathFile
     type: string 
     default: ".nuget/NuGet.config"
-  - name: srcPath 
+  - name: srcPath
     type: string 
     default: "."
   - name: srcProject
     type: string 
     default: "*.csproj"
-  - name: scriptsPath 
+  - name: scriptsPath
     type: string 
     default: "../scripts"
   - name: versionToReplace
     type: string 
     default: "1.0.0"
-  - name: dotnetVersion 
+  - name: dotnetVersion
     type: string 
     default: "6.x"
 
