@@ -63,6 +63,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
+              restorePath: '${{ variables.srcPath}}'
               testPath: '${{ variables.srcPath}}'
               appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
               appcsConnection: '${{ variables.appcsConnection}}'
