@@ -8,7 +8,7 @@ parameters:
   - name: testProject
     type: string 
     default: "*.csproj"
-  - name: restorePath 
+  - name: restorePath
     type: string 
     default: "."
   - name: restoreProject
