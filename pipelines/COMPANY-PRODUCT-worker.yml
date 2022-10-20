@@ -48,7 +48,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
-              testPath: '$(System.DefaultWorkingDirectory)/src'
+              testPath: '${{ variables.srcPath}}'
               appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
               appcsConnection: '${{ variables.appcsConnection}}'
               rgEnvironment: '${{ variables.rgEnvironment}}'
@@ -116,7 +116,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
-              testPath: '$(System.DefaultWorkingDirectory)/src'
+              testPath: '${{ variables.srcPath}}'
               appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
               appcsConnection: '${{ variables.appcsConnection}}'
               rgEnvironment: '${{ variables.rgEnvironment}}'

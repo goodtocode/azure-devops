@@ -49,7 +49,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
-              testPath: '$(System.DefaultWorkingDirectory)/src'
+              testPath: '${{ variables.srcPath}}'
               arguments: '--filter TestCategory!=Integration'
               appcsEnvironmentVariable: '${{ parameters.appcsEnvironmentVariable }}'
               appcsConnection: '${{ parameters.appcsConnection }}'
@@ -92,7 +92,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
-              testPath: '$(System.DefaultWorkingDirectory)/src'
+              testPath: '${{ variables.srcPath}}'
               arguments: '--filter TestCategory!=Integration'
               appcsEnvironmentVariable: '${{ parameters.appcsEnvironmentVariable }}'
               appcsConnection: '${{ parameters.appcsConnection }}'

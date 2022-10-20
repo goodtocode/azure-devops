@@ -63,7 +63,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
-              testPath: '$(System.DefaultWorkingDirectory)/src'
+              testPath: '${{ variables.srcPath}}'
               appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
               appcsConnection: '${{ variables.appcsConnection}}'
               rgEnvironment: '${{ variables.rgEnvironment}}'
@@ -89,19 +89,6 @@ stages:
               subscriptionId: '${{ variables.subscriptionId}}'
               subscriptionService: '${{ parameters.subscriptionService}}'
 
-  - stage: pull_request
-    condition: eq(variables['Build.Reason'], 'PullRequest')
-    variables:
-      - template: ../variables/development.yml
-      
-    jobs:
-      - job: test_integration        
-        dependsOn: test_src
-        steps:
-          - template: ../steps/integration-test-steps.yml
-            parameters:
-              armPath: '${{ variables.armPath}}'
-
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
     variables:
@@ -120,7 +107,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
-              testPath: '$(System.DefaultWorkingDirectory)/src'
+              testPath: '${{ variables.srcPath}}'
               appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
               appcsConnection: '${{ variables.appcsConnection}}'
               rgEnvironment: '${{ variables.rgEnvironment}}'
