@@ -57,7 +57,7 @@ steps:
     inputs:
       command: publish
       projects: |
-        ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
+        ${{ parameters.srcPath }}/${{ parameters.srcProject }}
       arguments: '--output ${{ parameters.artifactsPath }}'
 
   - task: PublishBuildArtifacts@1
