@@ -56,6 +56,7 @@ steps:
     displayName: 'dotnet publish'
     inputs:
       command: publish
+      publishWebProjects: false
       projects: |
         ${{ parameters.srcPath }}/${{ parameters.srcProject }}
       arguments: '--output ${{ parameters.artifactsPath }}'
