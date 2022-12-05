@@ -21,13 +21,13 @@ parameters:
     default: "AZURE_DEVOPS_SERVICE_CONNECTION"
   - name: appcsConnection
     type: string 
-    default: "${{ variables.appcsConnection}}"
+    default: "$(appcsConnection)"
   - name: appcsKeys
     type: object
     default: [ "Shared:Sentinel", "ConnectionStrings:StorageTables" ]
   - name: appcsValues
     type: object
-    default: [ "1", "${{ variables.stConnection}}" ]
+    default: [ "1", "$(stConnection)" ]
 
 variables:
   - template: ../variables/common.yml
@@ -44,7 +44,7 @@ stages:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
               armPath: '$(armPath)'
-              subscriptionId: '${{ variables.subscriptionId }}'
+              subscriptionId: '$(subscriptionId)'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
@@ -59,7 +59,7 @@ stages:
           - template: ../steps/appcs-infrastructure-steps.yml
             parameters:
               armPath: '$(armPath)'
-              subscriptionId: '${{ variables.subscriptionId }}'
+              subscriptionId: '$(subscriptionId)'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'
@@ -72,7 +72,7 @@ stages:
           - template: ../steps/appcs-settings-steps.yml
             parameters:
               armPath: '$(armPath)'
-              subscriptionId: '${{ variables.subscriptionId }}'
+              subscriptionId: '$(subscriptionId)'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
               appcsName: '$(appcsName)'
@@ -90,7 +90,7 @@ stages:
           - template: ../steps/landingzone-infrastructure-steps.yml
             parameters:
               armPath: '$(armPath)'
-              subscriptionId: '${{ variables.subscriptionId }}'
+              subscriptionId: '$(subscriptionId)'
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgName: '$(rgName)'
               rgLocation: '$(rgLocation)'

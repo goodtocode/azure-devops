@@ -34,8 +34,8 @@ stages:
           - template: ../steps/integration-test-steps.yml
             parameters:
               integrationPath: '$(integrationPath)'
-              appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
-              appcsConnection: '${{ variables.appcsConnection}}'
-              stEnvironmentVariable: '${{ variables.stEnvironmentVariable}}'
-              stConnection: '${{ variables.stConnection}}'
-              rgEnvironment: '${{ variables.rgEnvironment}}'
+              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
+              appcsConnection: '$(appcsConnection)'
+              stEnvironmentVariable: '$(stEnvironmentVariable)'
+              stConnection: '$(stConnection)'
+              rgEnvironment: '$(rgEnvironment)'

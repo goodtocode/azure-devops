@@ -39,12 +39,12 @@ stages:
         steps:
           - template: ../steps/ef-deploy-steps.yml
             parameters:
-              artifactsPath: '${{ variables.artifactsPath}}'             
+              artifactsPath: '$(artifactsPath)'
               buildConfiguration: '$(buildConfiguration)'
               sqldbName: '$(sqldbName)'
               sqlName: '$(sqlName)'
               sqlUser: '${{ parameters.sqlUser }}'
               sqlPassword: '${{ parameters.sqlPassword }}'
-              srcPath: '${{ variables.srcPath}}'
+              srcPath: '$(srcPath)'
               srcProject: '$(srcProject)'
               subscriptionService: '${{ parameters.subscriptionService }}'

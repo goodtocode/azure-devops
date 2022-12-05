@@ -21,7 +21,7 @@ parameters:
     default: "AZURE_APP_CONFIGURATION_CONNECTION"
   - name: appcsConnection
     type: string 
-    default: "${{ variables.appcsConnection}}" # from secrets (library)
+    default: "$(appcsConnection)" # from secrets (library)
   - name: subscriptionService
     type: string 
     default: "AZURE_DEVOPS_SERVICE_CONNECTION"
@@ -55,29 +55,29 @@ stages:
         steps:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
-              artifactsPath: '${{ variables.artifactsPath}}'
-              srcPath: '${{ variables.srcPath}}'
+              artifactsPath: '$(artifactsPath)'
+              srcPath: '$(srcPath)'
 
       - job: test_api
         dependsOn: build_api
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
-              restorePath: '${{ variables.srcPath}}'
-              testPath: '${{ variables.unitPath}}'
-              testProject: '${{ variables.unitProject}}'
-              appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
-              appcsConnection: '${{ variables.appcsConnection}}'
-              rgEnvironment: '${{ variables.rgEnvironment}}'
+              restorePath: '$(srcPath)'
+              testPath: '$(unitPath)'
+              testProject: '$(unitProject)'
+              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
+              appcsConnection: '$(appcsConnection)'
+              rgEnvironment: '$(rgEnvironment)'
 
       - job: settings_api
         dependsOn: test_api
         steps:
           - template: ../steps/api-settings-steps.yml
             parameters:
-              subscriptionService: '${{ parameters.subscriptionService}}'
-              rgEnvironment: '${{ variables.rgEnvironment}}'
-              apiName: '${{ variables.apiName}}'
+              subscriptionService: '${{ parameters.subscriptionService }}'
+              rgEnvironment: '$(rgEnvironment)'
+              apiName: '$(apiName)'
               appSettings: '${{ parameters.appSettings }}'
 
       - job: deploy_api
@@ -85,11 +85,11 @@ stages:
         steps:
           - template: ../steps/api-deploy-steps.yml
             parameters:              
-              artifactsPath: '${{ variables.artifactsPath}}'
-              archiveFile: '${{ variables.archiveFile}}'
-              apiName: '${{ variables.apiName}}'
-              subscriptionId: '${{ variables.subscriptionId}}'
-              subscriptionService: '${{ parameters.subscriptionService}}'
+              artifactsPath: '$(artifactsPath)'
+              archiveFile: '$(archiveFile)'
+              apiName: '$(apiName)'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionService: '${{ parameters.subscriptionService }}'
 
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -101,29 +101,29 @@ stages:
         steps:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
-              artifactsPath: '${{ variables.artifactsPath}}'
-              srcPath: '${{ variables.srcPath}}'
+              artifactsPath: '$(artifactsPath)'
+              srcPath: '$(srcPath)'
 
       - job: test_api
         dependsOn: build_api
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
-              restorePath: '${{ variables.srcPath}}'
-              testPath: '${{ variables.unitPath}}'
-              testProject: '${{ variables.unitProject}}'
-              appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
-              appcsConnection: '${{ variables.appcsConnection}}'
-              rgEnvironment: '${{ variables.rgEnvironment}}'
+              restorePath: '$(srcPath)'
+              testPath: '$(unitPath)'
+              testProject: '$(unitProject)'
+              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
+              appcsConnection: '$(appcsConnection)'
+              rgEnvironment: '$(rgEnvironment)'
 
       - job: settings_api
         dependsOn: test_api
         steps:
           - template: ../steps/api-settings-steps.yml
             parameters:
-              subscriptionService: '${{ parameters.subscriptionService}}'
-              rgEnvironment: '${{ variables.rgEnvironment}}'
-              apiName: '${{ variables.apiName}}'
+              subscriptionService: '${{ parameters.subscriptionService }}'
+              rgEnvironment: '$(rgEnvironment)'
+              apiName: '$(apiName)'
               appSettings: '${{ parameters.appSettings }}'
 
       - job: deploy_api
@@ -131,8 +131,8 @@ stages:
         steps:
           - template: ../steps/api-deploy-steps.yml
             parameters:              
-              artifactsPath: '${{ variables.artifactsPath}}'
-              archiveFile: '${{ variables.archiveFile}}'
-              apiName: '${{ variables.apiName}}'
-              subscriptionId: '${{ variables.subscriptionId}}'
-              subscriptionService: '${{ parameters.subscriptionService}}'
+              artifactsPath: '$(artifactsPath)'
+              archiveFile: '$(archiveFile)'
+              apiName: '$(apiName)'
+              subscriptionId: '$(subscriptionId)'
+              subscriptionService: '${{ parameters.subscriptionService }}'

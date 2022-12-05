@@ -20,22 +20,22 @@ parameters:
     type: object
     default: 
       - name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
-        value: '${{ variables.appiKey}}'
+        value: '$(appiKey)'
         slotSetting: false
       - name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-        value: '${{ variables.appiConnection}}'
+        value: '$(appiConnection)'
         slotSetting: false        
       - name: 'ASPNETCORE_ENVIRONMENT'
-        value: '${{ variables.rgEnvironment}}'
+        value: '$(rgEnvironment)'
         slotSetting: false
       - name: 'AzureWebJobsDashboard'
-        value: '${{ variables.stConnection}}'
+        value: '$(stConnection)'
         slotSetting: false
-      - name: '${{ variables.appcsEnvironmentVariable}}'
-        value: '${{ variables.appcsConnection}}'
+      - name: '$(appcsEnvironmentVariable)'
+        value: '$(appcsConnection)'
         slotSetting: false
-      - name: '${{ variables.stEnvironmentVariable}}'
-        value: '${{ variables.stConnection}}'
+      - name: '$(stEnvironmentVariable)'
+        value: '$(stConnection)'
         slotSetting: false
 
 variables:
@@ -56,11 +56,11 @@ stages:
         steps:
           - template: ../steps/webjob-build-steps.yml
             parameters:
-              artifactsPath: '${{ variables.artifactsPath}}'
+              artifactsPath: '$(artifactsPath)'
               archiveFile: '$(archiveFile)'
               srcPath: '$(webjobPath)'
-              webjobName: '${{ variables.webjobName}}'
-              cronSchedule: '${{ variables.webjobSchedule}}'
+              webjobName: '$(webjobName)'
+              cronSchedule: '$(webjobSchedule)'
 
       - job: test_webjob
         dependsOn: build_webjob
@@ -68,11 +68,11 @@ stages:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
               unitPath: $(webjobPath)
-              rgEnvironment: '${{ variables.rgEnvironment}}'
-              appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
-              appcsConnection: '${{ variables.appcsConnection}}'
-              stEnvironmentVariable: '${{ variables.stEnvironmentVariable}}'
-              stConnection: '${{ variables.stConnection}}'
+              rgEnvironment: '$(rgEnvironment)'
+              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
+              appcsConnection: '$(appcsConnection)'
+              stEnvironmentVariable: '$(stEnvironmentVariable)'
+              stConnection: '$(stConnection)'
 
       - job: settings_webjob
         dependsOn: build_webjob
@@ -80,8 +80,8 @@ stages:
           - template: ../steps/webjob-settings-steps.yml
             parameters:
               subscriptionName: '$(subscriptionName)'
-              rgEnvironment: '${{ variables.rgEnvironment}}'
-              webjobName: '${{ variables.webjobName}}'
+              rgEnvironment: '$(rgEnvironment)'
+              webjobName: '$(webjobName)'
               appSettings: '${{ parameters.workerSettings }}'
 
       - job: deploy_webjob
@@ -89,10 +89,10 @@ stages:
         steps:
           - template: ../steps/webjob-deploy-steps.yml
             parameters:
-              artifactsPath: '${{ variables.artifactsPath}}'
+              artifactsPath: '$(artifactsPath)'
               archiveFile: '$(archiveFile)'
-              webjobName: '${{ variables.webjobName}}'
-              subscriptionId: '${{ variables.subscriptionId}}'
+              webjobName: '$(webjobName)'
+              subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
 
   - stage: production
@@ -105,11 +105,11 @@ stages:
         steps:
           - template: ../steps/webjob-build-steps.yml
             parameters:
-              artifactsPath: '${{ variables.artifactsPath}}'
+              artifactsPath: '$(artifactsPath)'
               archiveFile: '$(archiveFile)'
               srcPath: '$(webjobPath)'
-              webjobName: '${{ variables.webjobName}}'
-              cronSchedule: '${{ variables.webjobSchedule}}'
+              webjobName: '$(webjobName)'
+              cronSchedule: '$(webjobSchedule)'
 
       - job: test_webjob
         dependsOn: build_webjob
@@ -117,11 +117,11 @@ stages:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
               unitPath: $(webjobPath)
-              rgEnvironment: '${{ variables.rgEnvironment}}'
-              appcsEnvironmentVariable: '${{ variables.appcsEnvironmentVariable}}'
-              appcsConnection: '${{ variables.appcsConnection}}'
-              stEnvironmentVariable: '${{ variables.stEnvironmentVariable}}'
-              stConnection: '${{ variables.stConnection}}'
+              rgEnvironment: '$(rgEnvironment)'
+              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
+              appcsConnection: '$(appcsConnection)'
+              stEnvironmentVariable: '$(stEnvironmentVariable)'
+              stConnection: '$(stConnection)'
 
       - job: settings_webjob
         dependsOn: build_webjob
@@ -129,8 +129,8 @@ stages:
           - template: ../steps/webjob-settings-steps.yml
             parameters:
               subscriptionName: '$(subscriptionName)'
-              rgEnvironment: '${{ variables.rgEnvironment}}'
-              webjobName: '${{ variables.webjobName}}'
+              rgEnvironment: '$(rgEnvironment)'
+              webjobName: '$(webjobName)'
               appSettings: '${{ parameters.workerSettings }}'
 
       - job: deploy_webjob
@@ -138,8 +138,8 @@ stages:
         steps:
           - template: ../steps/webjob-deploy-steps.yml
             parameters:
-              artifactsPath: '${{ variables.artifactsPath}}'
+              artifactsPath: '$(artifactsPath)'
               archiveFile: '$(archiveFile)'
-              webjobName: '${{ variables.webjobName}}'
-              subscriptionId: '${{ variables.subscriptionId}}'
+              webjobName: '$(webjobName)'
+              subscriptionId: '$(subscriptionId)'
               subscriptionName: '$(subscriptionName)'
