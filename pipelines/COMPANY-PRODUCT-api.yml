@@ -25,7 +25,7 @@ parameters:
   - name: subscriptionService
     type: string 
     default: "AZURE_DEVOPS_SERVICE_CONNECTION"
-  - name: appSettings
+  - name: apiSettings
     type: object
     default: 
       - name: 'APPINSIGHTS_INSTRUMENTATIONKEY'
@@ -78,7 +78,7 @@ stages:
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgEnvironment: '$(rgEnvironment)'
               apiName: '$(apiName)'
-              appSettings: '${{ parameters.appSettings }}'
+              appSettings: '${{ parameters.apiSettings }}'
 
       - job: deploy_api
         dependsOn: settings_api
@@ -124,7 +124,7 @@ stages:
               subscriptionService: '${{ parameters.subscriptionService }}'
               rgEnvironment: '$(rgEnvironment)'
               apiName: '$(apiName)'
-              appSettings: '${{ parameters.appSettings }}'
+              appSettings: '${{ parameters.apiSettings }}'
 
       - job: deploy_api
         dependsOn: settings_api
