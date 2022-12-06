@@ -19,6 +19,12 @@ variables:
     value: 'F0'
   - name: 'funcName'
     value: 'func-PRODUCT-dev-001'
+  - name: funcRuntime
+    type: string 
+    default: "dotnet-isolated"
+  - name: funcVersion
+    type: string 
+    default: "~4"
   - name: 'kvName'
     value: 'kv-PRODUCT-dev-001'
   - name: 'logicName'

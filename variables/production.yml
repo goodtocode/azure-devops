@@ -17,12 +17,14 @@ variables:
     value: 'cogtext-PRODUCT-prod-225'
   - name: cogtextSku
     value: 'S'
-  - name: 'funcNameFree'
-    value: 'func-PRODUCT-free-prod-001'
-  - name: 'funcNamePaid'
-    value: 'func-PRODUCT-paid-prod-001'
-  - name: 'funcNamePremium'
-    value: 'func-PRODUCT-prem-prod-001'
+  - name: 'funcName'
+    value: 'func-PRODUCT-prod-001'
+  - name: funcRuntime
+    type: string 
+    default: "dotnet-isolated"
+  - name: funcVersion
+    type: string 
+    default: "~4"
   - name: 'kvName'
     value: 'kv-PRODUCT-prod-001'
   - name: 'logicName'
