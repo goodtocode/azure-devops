@@ -80,7 +80,7 @@ stages:
         steps:
           - template: ../steps/func-settings-steps.yml
             parameters:
-              subscriptionName: '$(subscriptionName)'
+              subscriptionService: '$(subscriptionService)'
               rgEnvironment: '$(rgEnvironment)'
               funcName: '$(funcName)'
               appSettings: '${{ parameters.apiSettings }}'
@@ -94,7 +94,7 @@ stages:
               archiveFile: '$(archiveFile)'
               funcName: '$(funcName)'
               subscriptionId: '$(subscriptionId)'
-              subscriptionName: '$(subscriptionName)'
+              subscriptionService: '$(subscriptionService)'
 
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -127,7 +127,7 @@ stages:
         steps:
           - template: ../steps/func-settings-steps.yml
             parameters:
-              subscriptionName: '$(subscriptionName)'
+              subscriptionService: '$(subscriptionService)'
               rgEnvironment: '$(rgEnvironment)'
               funcName: '$(funcName)'
               appSettings: '${{ parameters.apiSettings }}'
@@ -141,4 +141,4 @@ stages:
               archiveFile: '$(archiveFile)'
               funcName: '$(funcName)'
               subscriptionId: '$(subscriptionId)'
-              subscriptionName: '$(subscriptionName)'
+              subscriptionService: '$(subscriptionService)'
