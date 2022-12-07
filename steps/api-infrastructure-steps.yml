@@ -23,6 +23,9 @@ parameters:
   - name: planSku
     type: string
     default: "F1"
+  - name: planCapacity
+    type: string
+    default: "0"
   - name: apiName
     type: string 
     default: "api-PRODUCT-ENVIRONMENT-001"
@@ -41,7 +44,7 @@ steps:
         csmFile: "${{ parameters.armPath }}/plan-appplan.json"        
         csmParametersFile: "${{ parameters.armPath }}/plan-appplan.parameters.json"        
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.planName }}" -sku "${{ parameters.planSku }}"
+        overrideParameters: -name "${{ parameters.planName }}" -sku "${{ parameters.planSku }}"  -skuCapacity "${{ parameters.planCapacity }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Deploy ${{ parameters.planName }}"
@@ -56,7 +59,7 @@ steps:
         csmFile: "${{ parameters.armPath }}/plan-appplan.json"
         csmParametersFile: "${{ parameters.armPath }}/plan-appplan.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.planName }}" -sku "${{ parameters.planSku }}"
+        overrideParameters: -name "${{ parameters.planName }}" -sku "${{ parameters.planSku }}"  -skuCapacity "${{ parameters.planCapacity }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Validate ${{ parameters.apiName }}"

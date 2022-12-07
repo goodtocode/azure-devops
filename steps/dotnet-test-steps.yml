@@ -35,7 +35,9 @@ parameters:
   - name: dotnetVersion
     type: string 
     default: "6.x"
-
+  - name: continueOnFail
+    type: boolean
+    default: false
 
 steps:
   - task: UseDotNet@2
@@ -56,6 +58,7 @@ steps:
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet test'
+    continueOnError: ${{ parameters.continueOnFail }}
     inputs:
       command: test
       projects: |

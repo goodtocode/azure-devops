@@ -29,6 +29,15 @@ parameters:
   - name: funcVersion
     type: "number"
     default: 4
+  - name: planSku
+    type: string
+    default: "Y1"
+  - name: planCapacity
+    type: string
+    default: "0"
+  - name: planTier
+    type: string
+    default: "dynamic"
   - name: stName
     type: string 
     default: "stPRODUCTENVIRONMENT001"
@@ -50,7 +59,7 @@ steps:
         csmFile: "${{ parameters.armPath }}/func-functionsapp.json"        
         csmParametersFile: "${{ parameters.armPath }}/func-functionsapp.parameters.json"        
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.funcName }}" -funcVersion "${{ parameters.funcVersion }}" -workName "${{ parameters.workName }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "dotnet-isolated" -rgEnvironment "${{ parameters.rgEnvironment }}"
+        overrideParameters: -name "${{ parameters.funcName }}" -funcVersion "${{ parameters.funcVersion }}" -workName "${{ parameters.workName }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "dotnet-isolated" -rgEnvironment "${{ parameters.rgEnvironment }}" -sku "${{ parameters.planSku }}" -skuTier "${{ parameters.planTier }}" -skuCapacity  "${{ parameters.planCapacity }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Deploy ${{ parameters.funcName }}"
@@ -65,4 +74,4 @@ steps:
         csmFile: "${{ parameters.armPath }}/func-functionsapp.json"
         csmParametersFile: "${{ parameters.armPath }}/func-functionsapp.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.funcName }}" -funcVersion "${{ parameters.funcVersion }}" -workName "${{ parameters.workName }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "dotnet-isolated" -rgEnvironment "${{ parameters.rgEnvironment }}"
+        overrideParameters: -name "${{ parameters.funcName }}" -funcVersion "${{ parameters.funcVersion }}" -workName "${{ parameters.workName }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "dotnet-isolated" -rgEnvironment "${{ parameters.rgEnvironment }}" -sku "${{ parameters.planSku }}" -skuTier "${{ parameters.planTier }}" -skuCapacity  "${{ parameters.planCapacity }}"

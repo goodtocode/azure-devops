@@ -18,7 +18,7 @@ parameters:
         value: '$(appiConnection)'
         slotSetting: false        
       - name: 'AZURE_FUNCTIONS_ENVIRONMENT'
-        value: '${{ variables.rgEnvironment}}'
+        value: '$(rgEnvironment)'
         slotSetting: false
       - name: 'FUNCTIONS_EXTENSION_VERSION'
         value: '~$(funcVersion)'
