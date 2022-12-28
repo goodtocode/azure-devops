@@ -44,7 +44,7 @@ steps:
         csmFile: "${{ parameters.armPath }}/plan-appplan.json"        
         csmParametersFile: "${{ parameters.armPath }}/plan-appplan.parameters.json"        
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.planName }}" -sku "${{ parameters.planSku }}"  -skuCapacity "${{ parameters.planCapacity }}"
+        overrideParameters: -name "${{ parameters.planName }}" -sku "${{ parameters.planSku }}" -location "${{ parameters.rgLocation }}" -skuCapacity "${{ parameters.planCapacity }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Deploy ${{ parameters.planName }}"
@@ -59,7 +59,7 @@ steps:
         csmFile: "${{ parameters.armPath }}/plan-appplan.json"
         csmParametersFile: "${{ parameters.armPath }}/plan-appplan.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.planName }}" -sku "${{ parameters.planSku }}"  -skuCapacity "${{ parameters.planCapacity }}"
+        overrideParameters: -name "${{ parameters.planName }}" -sku "${{ parameters.planSku }}" -location "${{ parameters.rgLocation }}" -skuCapacity "${{ parameters.planCapacity }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Validate ${{ parameters.apiName }}"
@@ -74,7 +74,7 @@ steps:
         csmFile: "${{ parameters.armPath }}/api-apiapp.json"        
         csmParametersFile: "${{ parameters.armPath }}/api-apiapp.parameters.json"        
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.apiName }}" -planName "${{ parameters.planName }}" 
+        overrideParameters: -name "${{ parameters.apiName }}" -location "${{ parameters.rgLocation }}" -planName "${{ parameters.planName }}" 
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Deploy ${{ parameters.apiName }}"
@@ -89,4 +89,4 @@ steps:
         csmFile: "${{ parameters.armPath }}/api-apiapp.json"
         csmParametersFile: "${{ parameters.armPath }}/api-apiapp.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.apiName }}" -planName "${{ parameters.planName }}" 
+        overrideParameters: -name "${{ parameters.apiName }}" -location "${{ parameters.rgLocation }}" -planName "${{ parameters.planName }}" 
