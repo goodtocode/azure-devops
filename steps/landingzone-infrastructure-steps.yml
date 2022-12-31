@@ -13,7 +13,7 @@ parameters:
     default: 'rg-PRODUCT-001'
   - name: rgLocation
     type: string 
-    default: "West US 2"
+    default: "West US 3"
   - name: appiName
     type: string 
     default: "appi-PRODUCT-ENVIRONMENT-001"
@@ -25,7 +25,7 @@ parameters:
     default: "stPRODUCTENVIRONMENT001"
   - name: workLocation
     type: string 
-    default: "West US 2"
+    default: "West US 3"
   - name: workName
     type: string 
     default: "work-PRODUCT-ENVIRONMENT-001"

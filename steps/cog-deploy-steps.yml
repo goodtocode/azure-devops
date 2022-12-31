@@ -13,7 +13,7 @@ parameters:
   default: 'rg-PRODUCT-001'
 - name: rgLocation
   type: string 
-  default: "West US 2"
+  default: "West US 3"
 - name: rgEnvironment
   type: string 
   default: 'Development'
