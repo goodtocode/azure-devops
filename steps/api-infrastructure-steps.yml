@@ -20,6 +20,9 @@ parameters:
   - name: planName
     type: string 
     default: "plan-api-PRODUCT-ENVIRONMENT-001"
+  - name: planResourceGroupName
+    type: string 
+    default: "plan-api-PRODUCT-ENVIRONMENT-001"
   - name: planSku
     type: string
     default: "F1"
@@ -38,7 +41,7 @@ steps:
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
         subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
-        resourceGroupName: "${{ parameters.rgName }}"
+        resourceGroupName: "${{ parameters.planResourceGroupName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
         csmFile: "${{ parameters.armPath }}/plan-appplan.json"        
@@ -53,7 +56,7 @@ steps:
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
         subscriptionId: "${{ parameters.subscriptionId }}"
         action: "Create Or Update Resource Group"
-        resourceGroupName: "${{ parameters.rgName }}"
+        resourceGroupName: "${{ parameters.planResourceGroupName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
         csmFile: "${{ parameters.armPath }}/plan-appplan.json"
