@@ -176,7 +176,7 @@ function Convert-PathSafe
 	}
 	else
 	{
-		Write-Host "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."		
+		Write-Verbose "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."		
 	}
 	return $ReturnValue
 }
@@ -209,7 +209,7 @@ function Copy-Backup
 	}
 	else
 	{
-		Write-Host "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."		
+		Write-Verbose "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."		
 	}
 }
 export-modulemember -function Copy-Backup
@@ -252,14 +252,14 @@ function Copy-File
 				Copy-Item -Path $Path -Destination $DestinationAbsolute -Include $Include -Exclude $Exclude -Force
 			}
 			catch{
-				Write-Host "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
+				Write-Verbose "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
 			}			
 		}
 		Write-Verbose "[Success] 1 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path to -Destination $DestinationAbsolute"
 	}
 	else
 	{
-		Write-Host "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
+		Write-Verbose "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
 	}
 }
 export-modulemember -function Copy-File
@@ -317,7 +317,7 @@ function Copy-Recurse
 	}
 	else
 	{
-		Write-Host "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
+		Write-Verbose "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
 	}
 }
 export-modulemember -function Copy-Recurse
@@ -405,7 +405,7 @@ function Get-FilesByString {
 		[string[]]$Include = ("*.*"),
 		[string[]]$Exclude = ""
 	)
-	Write-Host "Get-FilesByString -Path $Path -String $String -Include $Include -Exclude $Exclude"
+	Write-Verbose "Get-FilesByString -Path $Path -String $String -Include $Include -Exclude $Exclude"
 	$Path = Set-Unc -Path $Path
 
 	$ReturnData = Get-Childitem -Path $Path -Include $Include -Exclude $Exclude -Recurse | Select-String -pattern $String | group path | select name
@@ -493,7 +493,7 @@ function Move-Path
 	}
 	else
 	{
-		Write-Host "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
+		Write-Verbose "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
 	}
 }
 export-modulemember -function Move-Path
@@ -586,7 +586,7 @@ function Remove-File
 	}
 	else
 	{
-		Write-Host "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
+		Write-Verbose "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
 	}
 }
 export-modulemember -function Remove-File
@@ -991,7 +991,7 @@ function Rename-File
 	}
 	else
 	{
-		Write-Host "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
+		Write-Verbose "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
 	}
 }
 export-modulemember -function Rename-File
@@ -1025,7 +1025,7 @@ function Set-ReadOnly
 	}
 	else
 	{
-		Write-Host "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
+		Write-Verbose "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
 	}
 }
 export-modulemember -function Set-ReadOnly
@@ -1130,7 +1130,7 @@ function Test-PathEmpty
 	}
 	else
 	{
-		Write-Host "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
+		Write-Verbose "[Error] 0 items affected. $(Get-CurrentFile) at $(Get-CurrentLine). -Path $Path does not exist."
 	}
 	return $ReturnValue
 }
@@ -1208,7 +1208,7 @@ function Update-LineByContains
 		[string[]]$Exclude = "",
 		[Int32]$First = 100
 	)
-	Write-Host "Update-LineByContains -Path $Path -Contains $Contains -Line $Line -Include $Include -Exclude $Exclude -First $First"
+	Write-Verbose "Update-LineByContains -Path $Path -Contains $Contains -Line $Line -Include $Include -Exclude $Exclude -First $First"
 	$Path = Remove-Suffix -String $Path -Remove "\"
 	if (Test-Path $Path)
 	{
@@ -1274,7 +1274,7 @@ function Update-ContentsByTag
 		[string[]]$Exclude = "",
 		[Int32]$First = 100
 	)
-	Write-Host "Update-ContentsByTag -Path $Path -Open $Open -Close $Close -Include $Include -Exclude $Exclude -First $First"
+	Write-Verbose "Update-ContentsByTag -Path $Path -Open $Open -Close $Close -Include $Include -Exclude $Exclude -First $First"
 	$Path = Remove-Suffix -String $Path -Remove "\"
 	[String]$PaddingLeft = '    '
 	if (Test-Path $Path)
@@ -1355,7 +1355,7 @@ function Update-Text
 		[string[]]$Exclude = "",
 		[Int32]$First = 100
 	)
-	Write-Host "Update-Text -Path $Path -Old $Old -New $New -Include $Include -Exclude $Exclude -First $First"
+	Write-Verbose "Update-Text -Path $Path -Old $Old -New $New -Include $Include -Exclude $Exclude -First $First"
 	$Path = Remove-Suffix -String $Path -Remove "\"
 	$Count = 0
 	if (Test-Path $Path)
@@ -1396,7 +1396,7 @@ function Update-TextByContains
 		[string[]]$Exclude = "",
 		[Int32]$First = 100
 	)
-	Write-Host "Update-TextByContains -Path $Path -Contains $Contains -Old $Old -New $New -Include $Include -Exclude $Exclude -First $First"
+	Write-Verbose "Update-TextByContains -Path $Path -Contains $Contains -Old $Old -New $New -Include $Include -Exclude $Exclude -First $First"
 	$Path = Remove-Suffix -String $Path -Remove "\"
 	if (Test-Path $Path)
 	{
@@ -1466,7 +1466,7 @@ function Update-TextByTable
 		[string[]]$Exclude = "",
 		[Int32]$First = 100
 	)
-	Write-Host "Update-Text -Path $Path -Old $Old -New $New -Include $Include -Exclude $Exclude -First $First"
+	Write-Verbose "Update-Text -Path $Path -Old $Old -New $New -Include $Include -Exclude $Exclude -First $First"
 	$Path = Remove-Suffix -String $Path -Remove "\"
 	if (Test-Path $Path)
 	{

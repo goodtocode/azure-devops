@@ -16,9 +16,9 @@ param
 	[String] $Minor='-1',
 	[String] $Revision='-1',
 	[String] $Build='-1',
+	[String] $Patch='-1',
 	[String] $PreRelease='-1',
-	[String] $CommitHash='-1',
-	[String] $Type='Assembly'
+	[String] $CommitHash='-1'
 )
 
 # ***
@@ -29,12 +29,11 @@ $VerbosePreference = 'SilentlyContinue' #'Continue'
 [String]$ThisScript = $MyInvocation.MyCommand.Path
 [String]$ThisDir = Split-Path $ThisScript
 [DateTime]$Now = Get-Date
-Set-Location $ThisDir # Ensure our location is correct, so we can use relative paths
-Write-Host "*****************************"
-Write-Host "*** Starting: $ThisScript on $Now"
-Write-Host "*****************************"
+Write-Debug "*****************************"
+Write-Debug "*** Starting: $ThisScript on $Now"
+Write-Debug "*****************************"
 # Imports
-Import-Module "./System.psm1"
+Import-Module "$ThisDir/System.psm1"
 
 # ***
 # *** Validate and cleanse
@@ -64,24 +63,20 @@ $FileVersion = "$Major.$Minor.$Revision.$Build" # Ref: https://learn.microsoft.c
 $AssemblyVersion = "$Major.$Minor.0.0"
 $InformationalVersion = "$Major.$Minor.$Revision$PreRelease$CommitHash"
 $SemanticVersion = "$Major.$Minor.$Patch$PreRelease"
-Write-Host "FileVersion: $FileVersion SemanticVersion: $SemanticVersion"
-
+Write-Debug "FileVersion: $FileVersion SemanticVersion: $SemanticVersion AssemblyVersion: $AssemblyVersion InformationalVersion: $InformationalVersion"
 
 # Package.json version
 Update-LineByContains -Path $Path -Contains 'version' -Line """version"": ""$FileVersion""," -Include package.json
-
 # OpenApiConfigurationOptions.cs version
 Update-LineByContains -Path $Path -Contains 'Version' -Line "Version = ""$AssemblyVersion""," -Include OpenApiConfigurationOptions.cs
-
 # *.csproj C# Project files
 Update-ContentsByTag -Path $Path -Value $FileVersion -Open '<Version>' -Close '</Version>' -Include *.csproj
-
 # *.nuspec NuGet packages
 Update-ContentsByTag -Path $Path -Value $SemanticVersion -Open '<version>' -Close '</version>' -Include *.nuspec
-
 # Assembly.cs C# assembly manifest
 Update-LineByContains -Path $Path -Contains "FileVersion(" -Line "[assembly: FileVersion(""$FileVersion"")]" -Include AssemblyInfo.cs
 Update-LineByContains -Path $Path -Contains "AssemblyVersion(" -Line "[assembly: AssemblyVersion(""$AssemblyVersion"")]" -Include AssemblyInfo.cs
-
 # *.vsixmanifest VSIX Visual Studio Templates
 Update-TextByContains -Path $Path -Contains "<Identity Id" -Old $VersionToReplace -New $FileVersion -Include *.vsixmanifest
+
+Write-Output $FileVersion
