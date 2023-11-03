@@ -7,6 +7,8 @@ variables:
     value: 'archive.zip'
   - name: armPath
     value: '$(System.DefaultWorkingDirectory)/.azure'
+  - name: dotnetVersion
+    value: "7.x"
   - name: scriptsPath
     value: '$(System.DefaultWorkingDirectory)/.azure-devops/scripts'
   - name: srcPath
