@@ -31,8 +31,29 @@ variables:
 
 stages:
   - stage: development
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
     variables:
       - template: ../variables/development.yml
+
+    jobs:    
+      - job: deploy_ef_migration
+        steps:
+          - template: ../steps/ef-deploy-steps.yml
+            parameters:
+              artifactsPath: '$(artifactsPath)'
+              buildConfiguration: '$(buildConfiguration)'
+              sqldbName: '$(sqldbName)'
+              sqlName: '$(sqlName)'
+              sqlUser: '${{ parameters.sqlUser }}'
+              sqlPassword: '${{ parameters.sqlPassword }}'
+              srcPath: '$(srcPath)'
+              srcProject: '$(srcProject)'
+              subscriptionService: '${{ parameters.subscriptionService }}'
+
+  - stage: production
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    variables:
+      - template: ../variables/production.yml    
 
     jobs:    
       - job: deploy_ef_migration
