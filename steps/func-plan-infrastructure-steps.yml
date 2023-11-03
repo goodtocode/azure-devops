@@ -44,9 +44,6 @@ parameters:
   - name: stName
     type: string 
     default: "stPRODUCTENVIRONMENT001"
-  - name: workName
-    type: string 
-    default: "work-PRODUCT-ENVIRONMENT-001"
 
 steps:  
   - task: AzureResourceManagerTemplateDeployment@3
