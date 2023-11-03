@@ -17,6 +17,10 @@ variables:
     value: '$(System.DefaultWorkingDirectory)/tests'
   - name: funcPath
     value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.Functions'
+  - name: funcRuntime
+    value: "dotnet-isolated"
+  - name: funcVersion
+    value: "4"
   - name: webjobPath
     value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.WebJob'
   - name: logicPath
