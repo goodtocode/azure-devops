@@ -4,68 +4,30 @@ parameters:
     default: "."
   - name: subscriptionId
     type: string 
-    default: "00000000-0000-0000-0000-000000000000"
   - name: subscriptionService
     type: string 
-    default: 'COMPANY-PRODUCT-001'
   - name: rgName
     type: string 
-    default: 'rg-PRODUCT-001'
   - name: rgLocation
     type: string 
-    default: "West US 3"
   - name: appiName
     type: string 
-    default: "appi-PRODUCT-ENVIRONMENT-001"
   - name: kvName
     type: string 
-    default: "kv-PRODUCT-ENVIRONMENT-001"
   - name: stName
     type: string 
-    default: "stPRODUCTENVIRONMENT001"
   - name: workLocation
     type: string 
-    default: ""
   - name: workName
     type: string 
-    default: "work-PRODUCT-ENVIRONMENT-001"
   - name: workResourceGroupName
     type: string 
-    default: ''
   - name: workSubscriptionId
     type: string 
-    default: ''
 
 steps:
-  - ${{ if eq(parameters.workSubscriptionId, '') }}:
-    - script: echo 'Replacing workSubscriptionId with subscriptionId'
-      env:
-        workSubId: ${{ parameters.subscriptionId }}
-  - ${{ else }}:
-    - script: echo 'Using workSubscriptionId'
-      env:
-        workSubId: ${{ parameters.workSubscriptionId }}
-
-  - ${{ if eq(parameters.workResourceGroupName, '') }}:
-    - script: echo 'Replacing workResourceGroupName with rgName'
-      env:
-        workRgName: ${{ parameters.rgName }}
-  - ${{ else }}:
-    - script: echo 'Using workResourceGroupName'
-      env:
-        workRgName: ${{ parameters.workResourceGroupName }}
-
-  - ${{ if eq(parameters.workLocation, '') }}:
-    - script: echo 'Replacing workLocation with rgLocation'
-      env:
-        workLoc: ${{ parameters.rgLocation }}
-  - ${{ else }}:
-    - script: echo 'Using workLocation'
-      env:
-        workLoc: ${{ parameters.workLocation }}
-        
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Validate ${{ parameters.stName }}"
+    displayName: "Validate ${{ parameters.stName  }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
@@ -77,10 +39,10 @@ steps:
         csmFile: "${{ parameters.armPath }}/st-storageaccount.json"
         csmParametersFile: "${{ parameters.armPath }}/st-storageaccount.parameters.json"
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.stName }}"
+        overrideParameters: -name "${{ parameters.stName  }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Deploy ${{ parameters.stName }}"
+    displayName: "Deploy ${{ parameters.stName  }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
@@ -92,37 +54,37 @@ steps:
         csmFile: "${{ parameters.armPath }}/st-storageaccount.json"
         csmParametersFile: "${{ parameters.armPath }}/st-storageaccount.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.stName }}"
+        overrideParameters: -name "${{ parameters.stName  }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Validate ${{ parameters.workName }}"
+    displayName: "Validate ${{ parameters.workName  }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
-        subscriptionId: "${{ variables.workSubId }}"
+        subscriptionId: "${{ parameters.workSubscriptionId }}"
         action: "Create Or Update Resource Group"
-        resourceGroupName: "${{ variables.workRgName }}"
-        location: "${{ variables.workLoc }}"
+        resourceGroupName: "${{ parameters.workResourceGroupName }}"
+        location: "${{ parameters.workLocation }}"
         templateLocation: "Linked artifact"
         csmFile: "${{ parameters.armPath }}/work-loganalyticsworkspace.json"
         csmParametersFile: "${{ parameters.armPath }}/work-loganalyticsworkspace.parameters.json"
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.workName }}"
+        overrideParameters: -name "${{ parameters.workName  }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Deploy ${{ parameters.workName }}"
+    displayName: "Deploy ${{ parameters.workName  }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
-        subscriptionId: "${{ variables.workSubId }}"
+        subscriptionId: "${{ parameters.workSubscriptionId }}"
         action: "Create Or Update Resource Group"
-        resourceGroupName: "${{ variables.workRgName }}"
-        location: "${{ variables.workLoc }}"
+        resourceGroupName: "${{ parameters.workResourceGroupName }}"
+        location: "${{ parameters.workLocation }}"
         templateLocation: "Linked artifact"
         csmFile: "${{ parameters.armPath }}/work-loganalyticsworkspace.json"
         csmParametersFile: "${{ parameters.armPath }}/work-loganalyticsworkspace.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.workName }}"
+        overrideParameters: -name "${{ parameters.workName  }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Validate ${{ parameters.appiName }}"
@@ -155,7 +117,7 @@ steps:
         overrideParameters: -name "${{ parameters.appiName }}" -workName "${{ parameters.workName }}" -workResourceGroupName "${{ parameters.workResourceGroupName }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Validate ${{ parameters.kvName }}"
+    displayName: "Validate ${{ parameters.kvName  }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
@@ -167,10 +129,10 @@ steps:
         csmFile: "${{ parameters.armPath }}/kv-keyvault.json"
         csmParametersFile: "${{ parameters.armPath }}/kv-keyvault.parameters.json"
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.kvName }}"
+        overrideParameters: -name "${{ parameters.kvName  }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
-    displayName: "Deploy ${{ parameters.kvName }}"
+    displayName: "Deploy ${{ parameters.kvName  }}"
     inputs:
         deploymentScope: "Resource Group"
         azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
@@ -182,4 +144,4 @@ steps:
         csmFile: "${{ parameters.armPath }}/kv-keyvault.json"
         csmParametersFile: "${{ parameters.armPath }}/kv-keyvault.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.kvName }}"
+        overrideParameters: -name "${{ parameters.kvName  }}"
