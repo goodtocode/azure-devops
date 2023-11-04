@@ -116,6 +116,7 @@ stages:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
+              dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(srcPath)'
 
       - job: test_unit
@@ -123,6 +124,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
+              dotnetVersion: '$(dotnetVersion)'
               testPath: '$(unitPath)'
               testProject: '$(unitProject)'
               restorePath: '$(srcPath)'
@@ -136,6 +138,7 @@ stages:
           - template: ../steps/dotnet-publish-steps.yml
             parameters:
               artifactsPath: '$(artifactspath)'
+              dotnetVersion: '$(dotnetVersion)'
               restorePath: '$(srcpath)'
               scriptsPath: '$(scriptspath)'
               srcPath: '$(apipath)'

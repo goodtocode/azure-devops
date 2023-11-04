@@ -33,6 +33,7 @@ stages:
         steps:
           - template: ../steps/integration-test-steps.yml
             parameters:
+              dotnetVersion: '$(dotnetVersion)'
               integrationPath: '$(integrationPath)'
               appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
               appcsConnection: '$(appcsConnection)'

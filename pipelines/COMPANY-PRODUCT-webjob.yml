@@ -58,6 +58,7 @@ stages:
             parameters:
               artifactsPath: '$(artifactsPath)'
               archiveFile: '$(archiveFile)'
+              dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(webjobPath)'
               webjobName: '$(webjobName)'
               cronSchedule: '$(webjobSchedule)'
@@ -67,6 +68,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
+              dotnetVersion: '$(dotnetVersion)'
               unitPath: $(webjobPath)
               rgEnvironment: '$(rgEnvironment)'
               appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
@@ -107,6 +109,7 @@ stages:
             parameters:
               artifactsPath: '$(artifactsPath)'
               archiveFile: '$(archiveFile)'
+              dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(webjobPath)'
               webjobName: '$(webjobName)'
               cronSchedule: '$(webjobSchedule)'
@@ -116,6 +119,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
+              dotnetVersion: '$(dotnetVersion)'
               unitPath: $(webjobPath)
               rgEnvironment: '$(rgEnvironment)'
               appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'

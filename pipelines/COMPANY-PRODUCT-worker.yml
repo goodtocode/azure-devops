@@ -41,6 +41,7 @@ stages:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
+              dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(srcPath)'
 
       - job: test_src
@@ -48,6 +49,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
+              dotnetVersion: '$(dotnetVersion)'
               testPath: '$(srcPath)'
               appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
               appcsConnection: '$(appcsConnection)'
@@ -59,6 +61,7 @@ stages:
           - template: ../steps/func-build-steps.yml
             parameters:
               archiveFile: '$(funcArchiveFile)'
+              dotnetVersion: '$(dotnetVersion)'
               funcPath: '$(funcPath)'
               tempPath: '$(tempPath)'
 
@@ -81,6 +84,7 @@ stages:
             parameters:
               artifactsPath: '$(artifactsPath)'
               archiveFile: '$(webjobArchiveFile)'
+              dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(srcPath)'
               webjobProject: '$(webjobProject)'
               webjobName: '$(webjobName)'
@@ -109,6 +113,7 @@ stages:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
+              dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(srcPath)'
 
       - job: test_src
@@ -116,6 +121,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
+              dotnetVersion: '$(dotnetVersion)'
               testPath: '$(srcPath)'
               appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
               appcsConnection: '$(appcsConnection)'
@@ -128,6 +134,7 @@ stages:
             parameters:
               artifactsPath: '$(artifactsPath)'
               archiveFile: '$(funcArchiveFile)'
+              dotnetVersion: '$(dotnetVersion)'
               funcPath: '$(funcPath)'
               tempPath: '$(tempPath)'
 
@@ -150,6 +157,7 @@ stages:
             parameters:
               artifactsPath: '$(artifactsPath)'
               archiveFile: '$(webjobArchiveFile)'
+              dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(srcPath)'
               webjobProject: '$(webjobProject)'
               webjobName: '$(webjobName)'
