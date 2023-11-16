@@ -52,6 +52,13 @@ stages:
               kvName: '$(kvName)'
               stName: '$(stName)'
               workName: '$(workName)'
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: '${{ parameters.subscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az keyvault set-policy --name '$(kvName)' --object-id $(objectId) --secret-permissions get list
 
       - job: deploy_appcs_infrastructure
         dependsOn: deploy_landing_zone
@@ -65,6 +72,13 @@ stages:
               rgLocation: '$(rgLocation)'
               appcsName: '$(appcsName)'
               appcsSku: '$(appcsSku)'
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: '${{ parameters.subscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az keyvault set-policy --name '$(kvName)' --object-id $(objectId) --secret-permissions get list
 
       - job: deploy_appcs_settings
         dependsOn: deploy_appcs_infrastructure
@@ -98,4 +112,11 @@ stages:
               kvName: '$(kvName)'
               stName: '$(stName)'
               workName: '$(workName)'
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: '${{ parameters.subscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az keyvault set-policy --name '$(kvName)' --object-id $(objectId) --secret-permissions get list
 

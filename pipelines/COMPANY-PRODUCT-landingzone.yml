@@ -46,6 +46,13 @@ stages:
               workName: '$(workName)'
               workResourceGroupName: '$(workResourceGroupName)'
               workSubscriptionId: '$(subscriptionId)'
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: '${{ parameters.subscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az keyvault set-policy --name '$(kvName)' --object-id $(objectId) --secret-permissions get list
 
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -69,3 +76,10 @@ stages:
               workName: '$(workName)'
               workResourceGroupName: '$(workResourceGroupName)'
               workSubscriptionId: '$(subscriptionId)'
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: '${{ parameters.subscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az keyvault set-policy --name '$(kvName)' --object-id $(objectId) --secret-permissions get list
