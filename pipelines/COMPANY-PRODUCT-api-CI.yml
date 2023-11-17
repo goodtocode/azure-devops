@@ -35,20 +35,6 @@ stages:
               dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(srcPath)'
 
-      - task: replacetokens@3
-        displayName: 'ReplaceTokens with Variables'
-        inputs:
-          rootDirectory: '$(apiPath)'
-          targetFiles: '**/appsettings.$(rgEnvironment).json'
-          encoding: 'auto'
-          writeBOM: true
-          actionOnMissing: 'warn'
-          keepToken: true
-          tokenPrefix: '__'
-          tokenSuffix: '__'
-          useLegacyPattern: false
-          enableTelemetry: false              
-
       - job: test_api
         dependsOn: build_api      
         steps:
@@ -65,6 +51,13 @@ stages:
       - job: package_api
         dependsOn: test_api
         steps:
+          - task: FileTransform@1
+            displayName: 'Variable transformation'
+            inputs:
+              folderPath: '$(apiPath)/**/'
+              fileType: 'json'
+              targetFiles: 'appsettings.$(rgEnvironment).json'
+
           - template: ../steps/dotnet-publish-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
