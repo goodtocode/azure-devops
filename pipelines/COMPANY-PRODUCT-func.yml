@@ -2,13 +2,14 @@ trigger:
   batch: true
   branches:
     include:
-    - '*'
+    - 'develop'
+    - 'main'
   paths:
     include:
     - src/Core/*
     - src/Infrastructure/*
     - src/Specs/*
-    - src/Presentation/Functions/*
+    - src/Presentation/Function/*
 
 pr:
   branches:
@@ -19,12 +20,6 @@ pool:
   vmImage: 'ubuntu-latest'
 
 parameters:
-  - name: appcsEnvironmentVariable
-    type: string 
-    default: "AZURE_APPCS_CONNECTION_STRING_ENV_VAR"
-  - name: appcsConnection
-    type: string 
-    default: "$(appcsConnection)" # from secrets (library)
   - name: subscriptionService
     type: string 
     default: "AZURE_DEVOPS_SERVICE_CONNECTION_NAME"
@@ -53,7 +48,7 @@ variables:
 
 stages:
   - stage: development
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+    condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/feature/x'), ne(variables['Build.Reason'], 'PullRequest'))
     variables:
       - template: ../variables/development.yml
 
@@ -63,6 +58,7 @@ stages:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
+              dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(srcPath)'
 
       - job: test_unit
@@ -70,6 +66,7 @@ stages:
         steps:
           - template: ../steps/dotnet-test-steps.yml
             parameters:
+              dotnetVersion: '$(dotnetVersion)'
               testPath: '$(unitPath)'
               testProject: '$(unitProject)'
               restorePath: '$(srcPath)'
@@ -83,6 +80,7 @@ stages:
           - template: ../steps/func-build-steps.yml
             parameters:
               archiveFile: '$(archiveFileFunc)'
+              dotnetVersion: '$(dotnetVersion)'
               scriptsPath: '$(scriptspath)'
               funcPath: '$(funcPath)'
               tempPath: '$(tempPath)'
@@ -109,9 +107,9 @@ stages:
               subscriptionService: '${{ parameters.subscriptionService }}'
  
   - stage: production
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+    condition: and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))
     variables:
-      - template: ../variables/production.yml    
+      - template: ../variables/production.yml
 
     jobs:
       - job: build_src

@@ -1,0 +1,70 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - '*'
+  paths:
+    include:
+    - src/Core/*
+    - src/Infrastructure/*
+    - src/Specs/*
+    - src/Presentation/*
+
+pr:
+  branches:
+    exclude:
+    - '*'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - template: ../variables/common.yml
+  - name: ConnectionStrings.DefaultConnection # For transformations: appsettings.ENV.json key
+    value: '$(defaultConnection)' # Value from key vault
+
+stages:
+  - stage: build
+    variables:
+      - template: ../variables/development.yml
+      
+    jobs:    
+      - job: build_api
+        steps:
+          - template: ../steps/dotnet-build-steps.yml
+            parameters:
+              artifactsPath: '$(artifactsPath)'
+              dotnetVersion: '$(dotnetVersion)'
+              srcPath: '$(srcPath)'
+
+      - job: test_api
+        dependsOn: build_api      
+        steps:
+          - template: ../steps/dotnet-test-steps.yml
+            parameters:
+              dotnetVersion: '$(dotnetVersion)'
+              testPath: '$(unitPath)'
+              testProject: '$(unitProject)'
+              restorePath: '$(srcPath)'
+              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
+              appcsConnection: '$(appcsConnection)'
+              rgEnvironment: '$(rgEnvironment)'
+
+      - job: package_api
+        dependsOn: test_api
+        steps:
+          - task: FileTransform@1
+            displayName: 'Variable transformation'
+            inputs:
+              folderPath: '$(apiPath)/**/'
+              fileType: 'json'
+              targetFiles: 'appsettings.$(rgEnvironment).json'
+
+          - template: ../steps/dotnet-publish-steps.yml
+            parameters:
+              artifactsPath: '$(artifactsPath)'
+              dotnetVersion: '$(dotnetVersion)'
+              restorePath: '$(srcPath)'
+              scriptsPath: '$(scriptsPath)'
+              srcPath: '$(apiPath)'
+              srcProject: '$(apiProject)'
