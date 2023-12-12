@@ -82,7 +82,7 @@ stages:
                 inputs:
                   IISDeploymentType: 'IISWebApplication'
                   ParentWebsiteNameForApplication: '$(siteDNS)'
-                  VirtualPathForApplication: '/EventContent'
+                  VirtualPathForApplication: '/$(productName)'
                   PhysicalPathForApplication: '%SystemDrive%\sites\$(siteDNS)\$(productName)'
                   CreateOrUpdateAppPoolForApplication: true
                   AppPoolNameForApplication: '$(siteDNS)-$(productName)'
