@@ -27,3 +27,5 @@ variables:
     value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.WebJob'
   - name: logicPath
     value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.LogicApps.NAME'
+  - name: headlessPort
+    value: '30001'

@@ -31,4 +31,5 @@ steps:
         subscriptionName: ${{ parameters.subscriptionId }}
         appType: 'webApp'
         WebAppName: '${{ parameters.funcName }}'
+        RemoveAdditionalFilesFlag: true
         packageForLinux: '${{ parameters.artifactsPath }}/**/${{ parameters.archiveFile }}'
