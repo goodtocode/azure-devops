@@ -8,7 +8,7 @@ trigger:
     - src/Core/*
     - src/Infrastructure/*
     - src/Specs/*
-    - src/Presentation/*
+    - src/Presentation/WebApi/*
 
 pr:
   branches:
@@ -20,14 +20,11 @@ pool:
 
 variables:
   - template: ../variables/common.yml
-  - name: ConnectionStrings.DefaultConnection # For transformations: appsettings.ENV.json key
-    value: '$(defaultConnection)' # Value from key vault
+  - name: ConnectionStrings.DefaultConnection
+    value: '$(sqlConnection)'
 
 stages:
   - stage: build
-    variables:
-      - template: ../variables/development.yml
-      
     jobs:    
       - job: build_api
         steps:
@@ -53,13 +50,6 @@ stages:
       - job: package_api
         dependsOn: test_api
         steps:
-          - task: FileTransform@1
-            displayName: 'Variable transformation'
-            inputs:
-              folderPath: '$(apiPath)/**/'
-              fileType: 'json'
-              targetFiles: 'appsettings.$(rgEnvironment).json'
-
           - template: ../steps/dotnet-publish-steps.yml
             parameters:
               artifactsPath: '$(artifactsPath)'
@@ -68,3 +58,80 @@ stages:
               scriptsPath: '$(scriptsPath)'
               srcPath: '$(apiPath)'
               srcProject: '$(apiProject)'
+
+  - stage: deploy_dev
+    dependsOn: build
+    condition: and(eq(variables['Build.SourceBranch'], 'refs/heads/develop'), ne(variables['Build.Reason'], 'PullRequest'))
+    variables:
+      - template: ../variables/development.yml
+      
+    jobs:    
+      - deployment: DeployAPI
+        environment:
+          name: Development
+          resourceName: AZURE_DEVOPS_ENVIRONMENT_VM_NAME # Must be hard-coded. Variables not supported
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: CmdLine@2
+                  displayName: Remove HTTPS Bindings 
+                  condition: false
+                  inputs:
+                      script: |
+                        netsh http delete sslcert ipport=0.0.0.0:443
+                        netsh http delete sslcert ipport=0.0.0.0:$(headlessPort)
+                        setx ASPNETCORE_ENVIRONMENT $(rgEnvironment) /M
+
+                - task: IISWebAppManagementOnMachineGroup@0
+                  displayName: IIS Web App Create - $(siteDNS)
+                  condition: false
+                  inputs:
+                    EnableIIS: true
+                    IISDeploymentType: 'IISWebsite'
+                    ActionIISWebsite: 'CreateOrUpdateWebsite'
+                    WebsiteName: '$(siteDNS)'
+                    WebsitePhysicalPath: '%SystemDrive%\sites\$(siteDNS)'
+                    WebsitePhysicalPathAuth: 'WebsiteUserPassThrough'
+                    AddBinding: true
+                    Bindings: '{"bindings":[{"protocol":"https","ipAddress":"All Unassigned","port":"$(headlessPort)","hostname":"","sslThumbprint":"$(thumbprint)","sniFlag":false},{"protocol":"https","ipAddress":"All Unassigned","port":"443","hostname":"$(siteDNS)","sslThumbprint":"$(thumbprint)","sniFlag":false},{"protocol":"http","ipAddress":"All Unassigned","port":"80","hostname":"$(siteDNS)","sslThumbprint":"","sniFlag":false}]}'
+                    CreateOrUpdateAppPoolForWebsite: true
+                    ConfigureAuthenticationForWebsite: true
+                    AnonymousAuthenticationForWebsite: false
+                    WindowsAuthenticationForWebsite: true
+                    AppPoolNameForWebsite: '$(siteDNS)'
+                    DotNetVersionForWebsite: 'v4.0'
+                    PipeLineModeForWebsite: 'Integrated'
+                    AppPoolIdentityForWebsite: 'SpecificUser'
+                    AppPoolUsernameForWebsite: '$(appPoolUser)'
+                    AppPoolPasswordForWebsite: '$(appPoolPassword)'
+
+                - task: IISWebAppManagementOnMachineGroup@0
+                  displayName: IIS App Pool - $(siteDNS)\$(productName)
+                  inputs:
+                    IISDeploymentType: 'IISWebApplication'
+                    ParentWebsiteNameForApplication: '$(siteDNS)'
+                    VirtualPathForApplication: '/$(productName)'
+                    PhysicalPathForApplication: '%SystemDrive%\sites\$(siteDNS)\$(productName)'
+                    CreateOrUpdateAppPoolForApplication: true
+                    AppPoolNameForApplication: '$(siteDNS)-$(productName)'
+                    DotNetVersionForApplication: 'v4.0'
+                    PipeLineModeForApplication: 'Integrated'
+                    AppPoolIdentityForApplication: 'SpecificUser'
+                    AppPoolUsernameForApplication: '$(appPoolUser)'
+                    AppPoolPasswordForApplication: '$(appPoolPassword)'
+
+                - task: FileTransform@1
+                  displayName: 'Variable transformation'
+                  inputs:
+                    folderPath: '$(artifactsPath)\drop\WebApi.zip'
+                    fileType: 'json'
+                    targetFiles: 'appsettings.$(rgEnvironment).json'
+
+                - task: IISWebAppDeploymentOnMachineGroup@0
+                  displayName: Deploy IIS Website/App - $(siteDNS)\$(productName)
+                  inputs:
+                    WebSiteName: '$(siteDNS)'
+                    VirtualApplication: '$(productName)'
+                    Package: '$(artifactsPath)\drop\WebApi.zip'
+                    TakeAppOfflineFlag: true
