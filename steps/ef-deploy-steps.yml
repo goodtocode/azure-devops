@@ -5,9 +5,9 @@ parameters:
   - name: buildConfiguration
     type: string 
     default: "Release"
-  - name: dbContext
+  - name: dbContext 
     type: string 
-  - name: dotnetVersion
+  - name: dotnetVersion 
     type: string 
     default: "6.x"
   - name: nugetPathFile
@@ -19,7 +19,7 @@ parameters:
   - name: srcProjectMask
     type: string 
     default: "*.csproj"
-  - name: scriptsPath
+  - name: scriptsPath 
     type: string 
     default: "../scripts"
   - name: sqldbFile

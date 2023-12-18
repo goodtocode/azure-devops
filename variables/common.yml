@@ -29,3 +29,9 @@ variables:
     value: '$(System.DefaultWorkingDirectory)/src/PRODUCT.LogicApps.NAME'
   - name: headlessPort
     value: '30001'
+  - name: efStartupPath
+    value: '$(System.DefaultWorkingDirectory)/src/Presentation'
+  - name: efTargetPath
+    value: '$(System.DefaultWorkingDirectory)/src/Infrastructure'
+  - name: dbContext
+    value: 'My.Infrastructure.Context'
