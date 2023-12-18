@@ -18,6 +18,11 @@ pr:
 pool:
   vmImage: 'ubuntu-latest'
 
+parameters:
+  - name: CreateRootIis
+    type: boolean
+    default: false
+
 variables:
   - template: ../variables/common.yml
   - name: ConnectionStrings.DefaultConnection
@@ -76,7 +81,7 @@ stages:
               steps:
                 - task: CmdLine@2
                   displayName: Remove HTTPS Bindings 
-                  condition: false
+                  condition: '${{ parameters.CreateRootIis }}'
                   inputs:
                       script: |
                         netsh http delete sslcert ipport=0.0.0.0:443
@@ -85,7 +90,7 @@ stages:
 
                 - task: IISWebAppManagementOnMachineGroup@0
                   displayName: IIS Web App Create - $(siteDNS)
-                  condition: false
+                  condition: '${{ parameters.CreateRootIis }}'
                   inputs:
                     EnableIIS: true
                     IISDeploymentType: 'IISWebsite'
