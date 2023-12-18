@@ -34,7 +34,7 @@ parameters:
     default: ""
   - name: dotnetVersion
     type: string 
-    default: "6.x"
+    default: "7.x"
   - name: continueOnFail
     type: boolean
     default: false

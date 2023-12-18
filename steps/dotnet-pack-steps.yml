@@ -22,7 +22,7 @@ parameters:
     default: "1.0.0"
   - name: dotnetVersion
     type: string 
-    default: "6.x"
+    default: "7.x"
 
 steps:
   - task: UseDotNet@2
