@@ -10,6 +10,9 @@ parameters:
   - name: dotnetVersion 
     type: string 
     default: "7.x"
+  - name: dotnetEfVersion
+    type: string 
+    default: "7.0.14"
   - name: nugetPathFile
     type: string 
     default: ".nuget/NuGet.config"
@@ -76,7 +79,7 @@ steps:
     inputs:
       command: custom
       custom: tool
-      arguments: 'install --global dotnet-ef'
+      arguments: 'install --global dotnet-ef --version ${{ parameters.dotnetEfVersion }}'
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet ef migrations script'
