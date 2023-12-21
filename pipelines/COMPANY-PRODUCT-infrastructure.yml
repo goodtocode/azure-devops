@@ -18,23 +18,14 @@ pool:
 parameters:
   - name: subscriptionService
     type: string 
-    default: "AZURE_DEVOPS_SERVICE_CONNECTION"
-  - name: appcsConnection
-    type: string 
-    default: "$(appcsConnection)"
-  - name: appcsKeys
-    type: object
-    default: [ "Shared:Sentinel", "ConnectionStrings:StorageTables" ]
-  - name: appcsValues
-    type: object
-    default: [ "1", "$(stConnection)" ]
+    default: "SERVICE_CONNECTION_NAME"
 
 variables:
   - template: ../variables/common.yml
       
 stages:
   - stage: development
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+    condition: and(eq(variables['Build.SourceBranch'], 'refs/heads/develop'), ne(variables['Build.Reason'], 'PullRequest'))
     variables:
       - template: ../variables/development.yml
 
@@ -51,72 +42,252 @@ stages:
               appiName: '$(appiName)'
               kvName: '$(kvName)'
               stName: '$(stName)'
+              workSubscriptionId: '$(subscriptionId)'
               workName: '$(workName)'
+              workResourceGroupName: '$(workResourceGroupName)'
+              workLocation: '$(workLocation)'
+
           - task: AzureCLI@2
             inputs:
               azureSubscription: '${{ parameters.subscriptionService }}'
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                az keyvault set-policy --name '$(kvName)' --object-id $(objectId) --secret-permissions get list
+                az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionObjectId1) --secret-permissions get list
+                az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionObjectId2) --secret-permissions get list
 
-      - job: deploy_appcs_infrastructure
-        dependsOn: deploy_landing_zone
-        steps:
-          - template: ../steps/appcs-infrastructure-steps.yml
-            parameters:
-              armPath: '$(armPath)'
-              subscriptionId: '$(subscriptionId)'
-              subscriptionService: '${{ parameters.subscriptionService }}'
-              rgName: '$(rgName)'
-              rgLocation: '$(rgLocation)'
-              appcsName: '$(appcsName)'
-              appcsSku: '$(appcsSku)'
-          - task: AzureCLI@2
+          - task: AzureResourceManagerTemplateDeployment@3
+            displayName: "Validate $(sqlName)"
             inputs:
-              azureSubscription: '${{ parameters.subscriptionService }}'
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                az keyvault set-policy --name '$(kvName)' --object-id $(objectId) --secret-permissions get list
+                deploymentScope: "Resource Group"
+                azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
+                subscriptionId: "$(subscriptionId)"
+                action: "Create Or Update Resource Group"
+                resourceGroupName: "$(rgName)"
+                location: "$(rgLocation)"
+                templateLocation: "Linked artifact"
+                csmFile: "$(armPath)/sqldb-sqldatabase.json"
+                csmParametersFile: "$(armPath)/sqldb-sqldatabase.parameters.json"
+                deploymentMode: "Validation"
+                overrideParameters: -name "$(sqldbName)" -sqlName "$(sqlName)" -adminLogin "$(sqlUser)" -adminPassword "$(sqlPassword)"
 
-      - job: deploy_appcs_settings
-        dependsOn: deploy_appcs_infrastructure
-        steps:
-          - template: ../steps/appcs-settings-steps.yml
-            parameters:
-              armPath: '$(armPath)'
-              subscriptionId: '$(subscriptionId)'
-              subscriptionService: '${{ parameters.subscriptionService }}'
-              rgName: '$(rgName)'
-              appcsName: '$(appcsName)'
-              appcsKeys: '${{ parameters.appcsKeys }}'
-              appcsValues: '${{ parameters.appcsValues }}'
+          - task: AzureResourceManagerTemplateDeployment@3
+            displayName: "Deploy $(sqlName)"
+            inputs:
+                deploymentScope: "Resource Group"
+                azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
+                subscriptionId: "$(subscriptionId)"
+                action: "Create Or Update Resource Group"
+                resourceGroupName: "$(rgName)"
+                location: "$(rgLocation)"
+                templateLocation: "Linked artifact"
+                csmFile: "$(armPath)/sqldb-sqldatabase.json"
+                csmParametersFile: "$(armPath)/sqldb-sqldatabase.parameters.json"
+                deploymentMode: "Incremental"
+                overrideParameters: -name "$(sqldbName)" -sqlName "$(sqlName)" -adminLogin "$(sqlUser)" -adminPassword "$(sqlPassword)"
 
-  - stage: production
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+  - stage: qa
+    condition: and(eq(variables['Build.SourceBranch'], 'refs/heads/develop'), ne(variables['Build.Reason'], 'PullRequest'))
+    dependsOn: development
+    variables:
+      - template: ../variables/qa.yml
+
+    jobs:
+      - deployment: DeployQA
+        displayName: deploy_landing_zone
+        environment:
+          name: QA
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: ../steps/landingzone-infrastructure-steps.yml
+                  parameters:
+                    armPath: '$(armPath)'
+                    subscriptionId: '$(subscriptionId)'
+                    subscriptionService: '${{ parameters.subscriptionService }}'
+                    rgName: '$(rgName)'
+                    rgLocation: '$(rgLocation)'
+                    appiName: '$(appiName)'
+                    kvName: '$(kvName)'
+                    stName: '$(stName)'
+                    workSubscriptionId: '$(subscriptionId)'
+                    workName: '$(workName)'
+                    workResourceGroupName: '$(workResourceGroupName)'
+                    workLocation: '$(workLocation)'
+
+                - task: AzureCLI@2
+                  inputs:
+                    azureSubscription: '${{ parameters.subscriptionService }}'
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionObjectId1) --secret-permissions get list
+                      az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionObjectId2) --secret-permissions get list
+
+                - task: AzureResourceManagerTemplateDeployment@3
+                  displayName: "Validate $(sqlName)"
+                  inputs:
+                      deploymentScope: "Resource Group"
+                      azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
+                      subscriptionId: "$(subscriptionId)"
+                      action: "Create Or Update Resource Group"
+                      resourceGroupName: "$(rgName)"
+                      location: "$(rgLocation)"
+                      templateLocation: "Linked artifact"
+                      csmFile: "$(armPath)/sqldb-sqldatabase.json"
+                      csmParametersFile: "$(armPath)/sqldb-sqldatabase.parameters.json"
+                      deploymentMode: "Validation"
+                      overrideParameters: -name "$(sqldbName)" -sqlName "$(sqlName)" -adminLogin "$(sqlUser)" -adminPassword "$(sqlPassword)"
+
+                - task: AzureResourceManagerTemplateDeployment@3
+                  displayName: "Deploy $(sqlName)"
+                  inputs:
+                      deploymentScope: "Resource Group"
+                      azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
+                      subscriptionId: "$(subscriptionId)"
+                      action: "Create Or Update Resource Group"
+                      resourceGroupName: "$(rgName)"
+                      location: "$(rgLocation)"
+                      templateLocation: "Linked artifact"
+                      csmFile: "$(armPath)/sqldb-sqldatabase.json"
+                      csmParametersFile: "$(armPath)/sqldb-sqldatabase.parameters.json"
+                      deploymentMode: "Incremental"
+                      overrideParameters: -name "$(sqldbName)" -sqlName "$(sqlName)" -adminLogin "$(sqlUser)" -adminPassword "$(sqlPassword)"
+
+  - stage: staging
+    condition: and(eq(variables['Build.SourceBranch'], 'refs/heads/develop'), ne(variables['Build.Reason'], 'PullRequest'))
+    dependsOn: qa
+    variables:
+      - template: ../variables/staging.yml
+
+    jobs:
+      - deployment: DeployStaging
+        displayName: deploy_landing_zone
+        environment:
+          name: Staging
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - template: ../steps/landingzone-infrastructure-steps.yml
+                  parameters:
+                    armPath: '$(armPath)'
+                    subscriptionId: '$(subscriptionId)'
+                    subscriptionService: '${{ parameters.subscriptionService }}'
+                    rgName: '$(rgName)'
+                    rgLocation: '$(rgLocation)'
+                    appiName: '$(appiName)'
+                    kvName: '$(kvName)'
+                    stName: '$(stName)'
+                    workSubscriptionId: '$(subscriptionId)'
+                    workName: '$(workName)'
+                    workResourceGroupName: '$(workResourceGroupName)'
+                    workLocation: '$(workLocation)'
+
+                - task: AzureCLI@2
+                  inputs:
+                    azureSubscription: '${{ parameters.subscriptionService }}'
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionObjectId1) --secret-permissions get list
+                      az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionObjectId2) --secret-permissions get list
+
+                - task: AzureResourceManagerTemplateDeployment@3
+                  displayName: "Validate $(sqlName)"
+                  inputs:
+                      deploymentScope: "Resource Group"
+                      azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
+                      subscriptionId: "$(subscriptionId)"
+                      action: "Create Or Update Resource Group"
+                      resourceGroupName: "$(rgName)"
+                      location: "$(rgLocation)"
+                      templateLocation: "Linked artifact"
+                      csmFile: "$(armPath)/sqldb-sqldatabase.json"
+                      csmParametersFile: "$(armPath)/sqldb-sqldatabase.parameters.json"
+                      deploymentMode: "Validation"
+                      overrideParameters: -name "$(sqldbName)" -sqlName "$(sqlName)" -adminLogin "$(sqlUser)" -adminPassword "$(sqlPassword)"
+
+                - task: AzureResourceManagerTemplateDeployment@3
+                  displayName: "Deploy $(sqlName)"
+                  inputs:
+                      deploymentScope: "Resource Group"
+                      azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
+                      subscriptionId: "$(subscriptionId)"
+                      action: "Create Or Update Resource Group"
+                      resourceGroupName: "$(rgName)"
+                      location: "$(rgLocation)"
+                      templateLocation: "Linked artifact"
+                      csmFile: "$(armPath)/sqldb-sqldatabase.json"
+                      csmParametersFile: "$(armPath)/sqldb-sqldatabase.parameters.json"
+                      deploymentMode: "Incremental"
+                      overrideParameters: -name "$(sqldbName)" -sqlName "$(sqlName)" -adminLogin "$(sqlUser)" -adminPassword "$(sqlPassword)"
+
+  - stage: prod
+    condition: and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))
     variables:
       - template: ../variables/production.yml
 
     jobs:
-      - job: deploy_landing_zone
-        steps:
-          - template: ../steps/landingzone-infrastructure-steps.yml
-            parameters:
-              armPath: '$(armPath)'
-              subscriptionId: '$(subscriptionId)'
-              subscriptionService: '${{ parameters.subscriptionService }}'
-              rgName: '$(rgName)'
-              rgLocation: '$(rgLocation)'
-              appiName: '$(appiName)'
-              kvName: '$(kvName)'
-              stName: '$(stName)'
-              workName: '$(workName)'
-          - task: AzureCLI@2
-            inputs:
-              azureSubscription: '${{ parameters.subscriptionService }}'
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                az keyvault set-policy --name '$(kvName)' --object-id $(objectId) --secret-permissions get list
+      - deployment: DeployProduction
+        displayName: deploy_landing_zone
+        environment:
+          name: Production
+        strategy:
+          runOnce:
+            deploy:
+              steps:          
+                - template: ../steps/landingzone-infrastructure-steps.yml
+                  parameters:
+                    armPath: '$(armPath)'
+                    subscriptionId: '$(subscriptionId)'
+                    subscriptionService: '${{ parameters.subscriptionService }}'
+                    rgName: '$(rgName)'
+                    rgLocation: '$(rgLocation)'
+                    appiName: '$(appiName)'
+                    kvName: '$(kvName)'
+                    stName: '$(stName)'
+                    workSubscriptionId: '$(subscriptionId)'
+                    workName: '$(workName)'
+                    workResourceGroupName: '$(workResourceGroupName)'
+                    workLocation: '$(workLocation)'
 
+                - task: AzureCLI@2
+                  inputs:
+                    azureSubscription: '${{ parameters.subscriptionService }}'
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionObjectId1) --secret-permissions get list
+                      az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionObjectId2) --secret-permissions get list
+
+                - task: AzureResourceManagerTemplateDeployment@3
+                  displayName: "Validate $(sqlName)"
+                  inputs:
+                      deploymentScope: "Resource Group"
+                      azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
+                      subscriptionId: "$(subscriptionId)"
+                      action: "Create Or Update Resource Group"
+                      resourceGroupName: "$(rgName)"
+                      location: "$(rgLocation)"
+                      templateLocation: "Linked artifact"
+                      csmFile: "$(armPath)/sqldb-sqldatabase.json"
+                      csmParametersFile: "$(armPath)/sqldb-sqldatabase.parameters.json"
+                      deploymentMode: "Validation"
+                      overrideParameters: -name "$(sqldbName)" -sqlName "$(sqlName)" -adminLogin "$(sqlUser)" -adminPassword "$(sqlPassword)"
+
+                - task: AzureResourceManagerTemplateDeployment@3
+                  displayName: "Deploy $(sqlName)"
+                  inputs:
+                      deploymentScope: "Resource Group"
+                      azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
+                      subscriptionId: "$(subscriptionId)"
+                      action: "Create Or Update Resource Group"
+                      resourceGroupName: "$(rgName)"
+                      location: "$(rgLocation)"
+                      templateLocation: "Linked artifact"
+                      csmFile: "$(armPath)/sqldb-sqldatabase.json"
+                      csmParametersFile: "$(armPath)/sqldb-sqldatabase.parameters.json"
+                      deploymentMode: "Incremental"
+                      overrideParameters: -name "$(sqldbName)" -sqlName "$(sqlName)" -adminLogin "$(sqlUser)" -adminPassword "$(sqlPassword)"
