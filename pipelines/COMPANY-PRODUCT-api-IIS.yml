@@ -112,6 +112,12 @@ stages:
                     AppPoolPasswordForWebsite: '$(appPoolPassword)'
 
                 - task: IISWebAppManagementOnMachineGroup@0
+                  inputs:
+                    IISDeploymentType: 'IISApplicationPool'
+                    ActionIISApplicationPool: 'StartAppPool'
+                    StartStopRecycleAppPoolName: '$(siteDNS)'
+
+                - task: IISWebAppManagementOnMachineGroup@0
                   displayName: IIS App Pool - $(siteDNS)\$(productName)
                   inputs:
                     IISDeploymentType: 'IISWebApplication'
@@ -123,8 +129,14 @@ stages:
                     DotNetVersionForApplication: 'v4.0'
                     PipeLineModeForApplication: 'Integrated'
                     AppPoolIdentityForApplication: 'SpecificUser'
-                    AppPoolUsernameForApplication: '$(appPoolUser)'
-                    AppPoolPasswordForApplication: '$(appPoolPassword)'
+                    AppPoolUsernameForApplication: '$(netforumUser)'
+                    AppPoolPasswordForApplication: '$(netforumPassword)'
+
+                - task: IISWebAppManagementOnMachineGroup@0
+                  inputs:
+                    IISDeploymentType: 'IISApplicationPool'
+                    ActionIISApplicationPool: 'StartAppPool'
+                    StartStopRecycleAppPoolName: '$(siteDNS)-$(productName)'
 
                 - task: FileTransform@1
                   displayName: 'Variable transformation'
