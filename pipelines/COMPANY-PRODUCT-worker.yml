@@ -40,7 +40,6 @@ stages:
         steps:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
-              artifactsPath: '$(artifactsPath)'
               dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(srcPath)'
 
@@ -112,7 +111,6 @@ stages:
         steps:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
-              artifactsPath: '$(artifactsPath)'
               dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(srcPath)'
 

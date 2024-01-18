@@ -1,7 +1,4 @@
 parameters:
-  - name: artifactsPath
-    type: string 
-    default: "."
   - name: srcPath
     type: string 
     default: "."
