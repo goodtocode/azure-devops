@@ -1,6 +1,8 @@
 variables:
   - name: artifactsPath
     value: '$(Build.ArtifactStagingDirectory)'
+  - name: pipelinePath
+    value: '$(Pipeline.Workspace)'
   - name: buildConfiguration
     value: 'Release'
   - name: archiveFile
