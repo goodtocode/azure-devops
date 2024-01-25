@@ -2,6 +2,9 @@ parameters:
   - name: artifactsPath
     type: string 
     default: "."
+  - name: artifactName
+    type: string 
+    default: "drop"
   - name: nugetPathFile
     type: string 
     default: ".nuget/NuGet.config"
@@ -62,7 +65,7 @@ steps:
       arguments: '--output ${{ parameters.artifactsPath }}'
 
   - task: PublishBuildArtifacts@1
-    displayName: 'Publish Artifact: drop'
+    displayName: 'Publish Artifact: ${{ parameters.artifactName }}'
     inputs:
       pathToPublish: '${{ parameters.artifactsPath }}'
-      artifactName: drop
+      artifactName: '${{ parameters.artifactName }}'
