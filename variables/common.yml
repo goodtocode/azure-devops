@@ -1,6 +1,8 @@
 variables:
   - name: artifactsPath
-    value: '$(Build.ArtifactStagingDirectory)'
+    value: '$(Pipeline.Workspace)'
+  - name: artifactName
+    value: 'drop'
   - name: pipelinePath
     value: '$(Pipeline.Workspace)'
   - name: buildConfiguration
@@ -37,3 +39,7 @@ variables:
     value: '$(System.DefaultWorkingDirectory)/src/Infrastructure'
   - name: dbContext
     value: 'My.Infrastructure.Context'
+  - name: deployApprovers
+    value: 'approver@goodtocode.com;'
+  - name: deployMessage
+    value: '<p>Team: $(System.TeamProject)<br/>Repo: $(Build.Repository.Name)<br/>Requested by: $(Build.RequestedFor)<br/>Date: $(Build.StartTime)<br/>Build: $(Build.BuildNumber)<br/>Url: $(Build.BuildUri)</p><p>A new deployment has been requested. Please approve or reject the deployment.</p>'
