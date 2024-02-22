@@ -1,0 +1,76 @@
+parameters:
+  - name: armPath
+    type: string 
+    default: "."
+  - name: subscriptionId
+    type: string 
+  - name: subscriptionService
+    type: string 
+  - name: rgName
+    type: string 
+  - name: rgLocation
+    type: string 
+    default: "West US 3"
+  - name: rgEnvironment
+    type: string 
+    default: 'Development'
+  - name: appiKey
+    type: string 
+  - name: appiConnection
+    type: string 
+  - name: funcName
+    type: string 
+  - name: funcRuntime
+    type: string 
+    default: "dotnet-isolated"
+  - name: funcVersion
+    type: "number"
+    default: 4
+  - name: planSku
+    type: string
+    default: "Y1"
+  - name: planCapacity
+    type: string
+    default: "0"
+  - name: planTier
+    type: string
+    default: "dynamic"
+  - name: stName
+    type: string
+  - name: vnetResourceGroupName
+    type: string 
+  - name: vnetName
+    type: string 
+  - name: snetName
+    type: string 
+
+steps:  
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Validate ${{ parameters.funcName }}"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
+        subscriptionId: "${{ parameters.subscriptionId }}"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "${{ parameters.rgName }}"
+        location: "${{ parameters.rgLocation }}"
+        templateLocation: "Linked artifact"
+        csmFile: "${{ parameters.armPath }}/func-functionsappplanvnet.json"        
+        csmParametersFile: "${{ parameters.armPath }}/func-functionsappplanvnet.parameters.json"        
+        deploymentMode: "Validation"
+        overrideParameters: -name "${{ parameters.funcName }}" -funcVersion "${{ parameters.funcVersion }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "${{ parameters.funcRuntime }}" -rgEnvironment "${{ parameters.rgEnvironment }}" -sku "${{ parameters.planSku }}" -vnetResourceGroupName "${{ parameters.vnetResourceGroupName }}" -vnetName "${{ parameters.vnetName }}" -subnetName "${{ parameters.snetName }}"
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Deploy ${{ parameters.funcName }}"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
+        subscriptionId: "${{ parameters.subscriptionId }}"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "${{ parameters.rgName }}"
+        location: "${{ parameters.rgLocation }}"
+        templateLocation: "Linked artifact"
+        csmFile: "${{ parameters.armPath }}/func-functionsappplanvnet.json"
+        csmParametersFile: "${{ parameters.armPath }}/func-functionsappplanvnet.parameters.json"
+        deploymentMode: "Incremental"
+        overrideParameters: -name "${{ parameters.funcName }}" -funcVersion "${{ parameters.funcVersion }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "${{ parameters.funcRuntime }}" -rgEnvironment "${{ parameters.rgEnvironment }}" -sku "${{ parameters.planSku }}" -vnetResourceGroupName "${{ parameters.vnetResourceGroupName }}" -vnetName "${{ parameters.vnetName }}" -subnetName "${{ parameters.snetName }}"
