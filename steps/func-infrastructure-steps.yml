@@ -30,6 +30,9 @@ parameters:
   - name: funcRuntime
     type: string 
     default: "dotnet-isolated"
+  - name: alwaysOn
+    type: boolean
+    default: false
   - name: planName
     type: string 
     default: "plan-func-PRODUCT-ENVIRONMENT-001"
