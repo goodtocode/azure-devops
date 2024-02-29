@@ -27,8 +27,8 @@ parameters:
     type: "number"
     default: 4
   - name: alwaysOn
-    type: boolean
-    default: false
+    type: string
+    default: "false"
   - name: planSku
     type: string
     default: "Y1"

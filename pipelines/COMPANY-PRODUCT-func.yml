@@ -54,7 +54,7 @@ variables:
 
 stages:
   - stage: development
-    condition: and(ne(variables['Build.SourceBranch'], 'refs/heads/feature/x'), ne(variables['Build.Reason'], 'PullRequest'))
+    condition: and(or(eq(variables['Build.SourceBranch'], 'refs/heads/develop'), eq(variables['Build.SourceBranch'], 'refs/heads/main')), ne(variables['Build.Reason'], 'PullRequest'))
     variables:
       - template: ../variables/development.yml
 
@@ -65,6 +65,8 @@ stages:
             parameters:
               dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(srcPath)'
+              srcProject: '$(apiProject)'
+
 
       - job: test_unit
         dependsOn: build_src
@@ -117,12 +119,24 @@ stages:
       - template: ../variables/production.yml
 
     jobs:
+      - job: deploy_approval
+        pool: server
+        timeoutInMinutes: 4320
+        steps:
+        - task: ManualValidation@0
+          inputs:
+           notifyUsers: $(deployApprovers)
+           instructions: "Team: $(System.TeamProject)\r\nRepo: $(Build.Repository.Name)\r\nRequested by: $(Build.RequestedFor)\r\nBuild: $(Build.BuildNumber)\r\nUrl: $(Build.BuildUri)\r\nA new deployment has been requested. Please approve or reject the deployment."
+           onTimeout: reject
+
       - job: build_src
         steps:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
               dotnetVersion: '$(dotnetVersion)'
               srcPath: '$(srcPath)'
+              srcProject: '$(apiProject)'
+
 
       - job: test_unit
         dependsOn: build_src
