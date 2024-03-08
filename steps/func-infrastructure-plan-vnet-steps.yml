@@ -4,10 +4,13 @@ parameters:
     default: "."
   - name: subscriptionId
     type: string 
+    default: "00000000-0000-0000-0000-000000000000"
   - name: subscriptionService
     type: string 
+    default: 'COMPANY-PRODUCT-001'
   - name: rgName
     type: string 
+    default: 'rg-PRODUCT-001'
   - name: rgLocation
     type: string 
     default: "West US 3"
@@ -20,34 +23,72 @@ parameters:
     type: string 
   - name: funcName
     type: string 
-  - name: funcRuntime
-    type: string 
-    default: "dotnet-isolated"
+    default: "func-PRODUCT-ENVIRONMENT-001"
   - name: funcVersion
     type: "number"
     default: 4
+  - name: funcRuntime
+    type: string 
+    default: "dotnet-isolated"
   - name: alwaysOn
-    type: string
-    default: "false"
+    type: boolean
+    default: false
+  - name: planName
+    type: string 
+    default: "plan-func-PRODUCT-ENVIRONMENT-001"
   - name: planSku
     type: string
-    default: "Y1"
   - name: planCapacity
     type: string
-    default: "0"
-  - name: planTier
-    type: string
-    default: "dynamic"
+    default: "1"
+  - name: planResourceGroupSubscriptionId
+    type: string 
+  - name: planResourceGroupName
+    type: string 
+  - name: planResourceGroupLocation
+    type: string 
   - name: stName
-    type: string
+    type: string 
+    default: "stPRODUCTENVIRONMENT001"
   - name: vnetResourceGroupName
     type: string 
+    default: "rg-REGION-SUBSCRIPTION-ENVIRONMENT"
   - name: vnetName
     type: string 
   - name: snetName
     type: string 
 
 steps:  
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Validate ${{ parameters.planName }}"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
+        subscriptionId: "${{ parameters.planResourceGroupSubscriptionId }}"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "${{ parameters.planResourceGroupName }}"
+        location: "${{ parameters.rgLocation }}"
+        templateLocation: "Linked artifact"
+        csmFile: "${{ parameters.armPath }}/plan-appplan.json"        
+        csmParametersFile: "${{ parameters.armPath }}/plan-appplan.parameters.json"        
+        deploymentMode: "Validation"
+        overrideParameters: -name "${{ parameters.planName }}" -sku "${{ parameters.planSku }}" -location "${{ parameters.rgLocation }}" -skuCapacity "${{ parameters.planCapacity }}"
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: "Deploy ${{ parameters.planName }}"
+    inputs:
+        deploymentScope: "Resource Group"
+        azureResourceManagerConnection: "${{ parameters.subscriptionService }}"
+        subscriptionId: "${{ parameters.planResourceGroupSubscriptionId }}"
+        action: "Create Or Update Resource Group"
+        resourceGroupName: "${{ parameters.planResourceGroupName }}"
+        location: "${{ parameters.rgLocation }}"
+        templateLocation: "Linked artifact"
+        csmFile: "${{ parameters.armPath }}/plan-appplan.json"
+        csmParametersFile: "${{ parameters.armPath }}/plan-appplan.parameters.json"
+        deploymentMode: "Incremental"
+        overrideParameters: -name "${{ parameters.planName }}" -sku "${{ parameters.planSku }}" -location "${{ parameters.rgLocation }}" -skuCapacity "${{ parameters.planCapacity }}"
+
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Validate ${{ parameters.funcName }}"
     inputs:
@@ -58,10 +99,10 @@ steps:
         resourceGroupName: "${{ parameters.rgName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "${{ parameters.armPath }}/func-functionsappplanvnet.json"        
-        csmParametersFile: "${{ parameters.armPath }}/func-functionsappplanvnet.parameters.json"        
+        csmFile: "${{ parameters.armPath }}/func-functionsappvnet.json"        
+        csmParametersFile: "${{ parameters.armPath }}/func-functionsappvnet.parameters.json"        
         deploymentMode: "Validation"
-        overrideParameters: -name "${{ parameters.funcName }}" -funcVersion "${{ parameters.funcVersion }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "${{ parameters.funcRuntime }}" -rgEnvironment "${{ parameters.rgEnvironment }}" -sku "${{ parameters.planSku }}" -vnetResourceGroupName "${{ parameters.vnetResourceGroupName }}" -vnetName "${{ parameters.vnetName }}" -subnetName "${{ parameters.snetName }}" -alwaysOn "${{ parameters.alwaysOn }}"
+        overrideParameters: -name "${{ parameters.funcName }}" -location "${{ parameters.rgLocation }}" -funcVersion "${{ parameters.funcVersion }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "${{ parameters.funcRuntime }}" -rgEnvironment "${{ parameters.rgEnvironment }}" -planName "${{ parameters.planName }}" -planResourceGroupSubscriptionId "${{ parameters.planResourceGroupSubscriptionId }}" -planResourceGroupName "${{ parameters.planResourceGroupName }}" -vnetResourceGroupName "${{ parameters.vnetResourceGroupName }}" -vnetName "${{ parameters.vnetName }}" -subnetName "${{ parameters.snetName }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: "Deploy ${{ parameters.funcName }}"
@@ -73,7 +114,7 @@ steps:
         resourceGroupName: "${{ parameters.rgName }}"
         location: "${{ parameters.rgLocation }}"
         templateLocation: "Linked artifact"
-        csmFile: "${{ parameters.armPath }}/func-functionsappplanvnet.json"
-        csmParametersFile: "${{ parameters.armPath }}/func-functionsappplanvnet.parameters.json"
+        csmFile: "${{ parameters.armPath }}/func-functionsappvnet.json"
+        csmParametersFile: "${{ parameters.armPath }}/func-functionsappvnet.parameters.json"
         deploymentMode: "Incremental"
-        overrideParameters: -name "${{ parameters.funcName }}" -funcVersion "${{ parameters.funcVersion }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "${{ parameters.funcRuntime }}" -rgEnvironment "${{ parameters.rgEnvironment }}" -sku "${{ parameters.planSku }}" -vnetResourceGroupName "${{ parameters.vnetResourceGroupName }}" -vnetName "${{ parameters.vnetName }}" -subnetName "${{ parameters.snetName }}" -alwaysOn "${{ parameters.alwaysOn }}"
+        overrideParameters: -name "${{ parameters.funcName }}" -location "${{ parameters.rgLocation }}" -funcVersion "${{ parameters.funcVersion }}" -stName "${{ parameters.stName }}" -appiKey "${{ parameters.appiKey }}" -appiConnection "${{ parameters.appiConnection }}" -funcRuntime "${{ parameters.funcRuntime }}" -rgEnvironment "${{ parameters.rgEnvironment }}" -planName "${{ parameters.planName }}" -planResourceGroupSubscriptionId "${{ parameters.planResourceGroupSubscriptionId }}" -planResourceGroupName "${{ parameters.planResourceGroupName }}" -vnetResourceGroupName "${{ parameters.vnetResourceGroupName }}" -vnetName "${{ parameters.vnetName }}" -subnetName "${{ parameters.snetName }}"
