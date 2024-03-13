@@ -23,6 +23,7 @@ variables:
 
 stages:
   - stage: build
+    condition: ne(variables['Build.Reason'], 'PullRequest')
     jobs:    
       - job: build_api
         steps:
