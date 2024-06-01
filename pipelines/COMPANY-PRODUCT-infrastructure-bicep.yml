@@ -18,27 +18,21 @@ pool:
   vmImage: 'ubuntu-latest'
 
 parameters:
-  - name: DevDeployOverride
+  - name: ForceDeployDev
     type: boolean
     default: false
-  - name: ProdDeployOverride
+  - name: ForceDeployProd
     type: boolean
     default: false
   - name: SubscriptionService
     type: string
     default: 'AZURE-DEVOPS-SERVICE-CONNECTION-NAME'
 
-variables:
-  sharedTemplate: '.azure/templates/landingzone-shared.bicep'
-  landingZoneTemplate: '.azure/templates/landingzone-appservice.bicep'
-
 stages:
   - stage: development
-    condition: or(eq(lower(${{ parameters.DevDeployOverride }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest')))
+    condition: or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest')))
     variables:
-      - template: .azure-devops/pipelines/variables/development-infrastructure.yml
-      - sharedParameters: '.azure/variables/development.shared.bicepparam'
-      - landingZoneParameters: '.azure/variables/development.landingzone.bicepparam'
+      - template: ../variables/development.yml
 
     jobs:
       - job: deploy_approval
@@ -75,8 +69,8 @@ stages:
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                az deployment group what-if --resource-group $(rgSharedName) --template-file $(sharedTemplate) --parameters @$(sharedParameters)
-                az deployment group what-if --resource-group $(rgName) --template-file $(landingZoneTemplate) --parameters @$(landingZoneParameters)
+                az deployment group what-if --resource-group $(rgSharedName) --template-file $(sharedTemplate) --parameters $(sharedParameters)
+                az deployment group what-if --resource-group $(rgName) --template-file $(landingZoneTemplate) --parameters $(landingZoneParameters)
 
       - job: deploy_landingzone
         dependsOn: validate_landingzone
@@ -88,16 +82,14 @@ stages:
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                az deployment group create --resource-group $(rgSharedName) --template-file $(sharedTemplate) --parameters @$(sharedParameters)
-                az deployment group create --resource-group $(rgName) --template-file $(landingZoneTemplate) --parameters @$(landingZoneParameters)
+                az deployment group create --resource-group $(rgSharedName) --template-file $(sharedTemplate) --parameters $(sharedParameters)
+                az deployment group create --resource-group $(rgName) --template-file $(landingZoneTemplate) --parameters $(landingZoneParameters)
                 az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionIdentityObjectId) --secret-permissions get list
 
   - stage: production
-    condition: or(eq(lower(${{ parameters.ProdDeployOverride }}), 'true'), and(and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
+    condition: or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), and(and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main')), ne(variables['Build.Reason'], 'PullRequest')))
     variables:
-      - template: .azure-devops/pipelines/variables/production-infrastructure.yml
-      - sharedParameters: '.azure/variables/production-shared.bicepparam'
-      - landingZoneParameters: '.azure/variables/production-landingzone.bicepparam'
+      - template: ../variables/production.yml
 
     jobs:
       - job: deploy_approval
@@ -134,8 +126,8 @@ stages:
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                az deployment group what-if --resource-group $(rgSharedName) --template-file $(sharedTemplate) --parameters @$(sharedParameters)
-                az deployment group what-if --resource-group $(rgName) --template-file $(landingZoneTemplate) --parameters @$(landingZoneParameters)
+                az deployment group what-if --resource-group $(rgSharedName) --template-file $(sharedTemplate) --parameters $(sharedParameters)
+                az deployment group what-if --resource-group $(rgName) --template-file $(landingZoneTemplate) --parameters $(landingZoneParameters)
 
       - job: deploy_landingzone
         dependsOn: validate_landingzone
@@ -147,6 +139,6 @@ stages:
               scriptType: 'bash'
               scriptLocation: 'inlineScript'
               inlineScript: |
-                az deployment group create --resource-group $(rgSharedName) --template-file $(sharedTemplate) --parameters @$(sharedParameters)
-                az deployment group create --resource-group $(rgName) --template-file $(landingZoneTemplate) --parameters @$(landingZoneParameters)
+                az deployment group create --resource-group $(rgSharedName) --template-file $(sharedTemplate) --parameters $(sharedParameters)
+                az deployment group create --resource-group $(rgName) --template-file $(landingZoneTemplate) --parameters $(landingZoneParameters)
                 az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionIdentityObjectId) --secret-permissions get list

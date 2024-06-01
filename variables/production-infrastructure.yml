@@ -15,3 +15,11 @@ variables:
     value: ''
   - name: deployApprovers
     value: 'approver.email@goodtocode.com;'
+  - name: sharedTemplate
+    value: '.azure/templates/landingzone-shared.bicep'
+  - name: sharedParameters
+    value: '.azure/variables/landingzone-shared-production.bicepparam'
+  - name: landingZoneTemplate
+    value: '.azure/templates/landingzone-appservice.bicep'
+  - name: landingZoneParameters
+    value: '.azure/variables/landingzone-appservice-production.bicepparam'
