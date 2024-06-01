@@ -2,13 +2,13 @@ trigger:
   batch: true
   branches:
     include:
-    - '*'
+    - 'main'
   paths:
     include:
-    - src/Core/*
-    - src/Infrastructure/*
-    - src/Specs/*
-    - src/Presentation/Api/*
+    - src/Core/**
+    - src/Infrastructure/**
+    - src/Specs/**
+    - src/Presentation/Api/**
 
 pr:
   branches:

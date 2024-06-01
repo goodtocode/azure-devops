@@ -1,19 +1,20 @@
 trigger:
-  batch: true
+  batch: false
   branches:
     include:
-    - '*'
+    - 'main'
   paths:
     include:
-    - src/Core/*
-    - src/Infrastructure/*
-    - src/Specs/*
-    - src/Presentation/*
+    - .azure-devops/pipelines/COMPANY-PRODUCT-api-IIS.yml
+    - src/Core/**
+    - src/Infrastructure/**
+    - src/Presentation/WebApi/**
+    - tests/**
 
 pr:
   branches:
-    exclude:
-    - '*'
+    include:
+    - 'main'
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -22,11 +23,17 @@ parameters:
   - name: CreateIis
     type: boolean
     default: false
+  - name: DevOverrideDeploy
+    type: boolean
+    default: false
+  - name: ProdOverrideDeploy
+    type: boolean
+    default: false
 
 variables:
   - template: ../variables/common.yml
   - name: ConnectionStrings.DefaultConnection
-    value: '$(sqlConnection)'
+    value: '$(defaultConnection)'
 
 stages:
   - stage: build
@@ -67,7 +74,7 @@ stages:
 
   - stage: deploy_dev
     dependsOn: build
-    condition: and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest')))
+    condition: and(succeeded(), or(eq(lower(${{ parameters.DevDeployOverride }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
     variables:
       - template: ../variables/development.yml
       
@@ -75,7 +82,7 @@ stages:
       - deployment: DeployAPI
         environment:
           name: Development
-          resourceName: VM-MICRO-DEV-03
+          resourceName: VM-MICRO-DEV-01
         strategy:
           runOnce:
             deploy:
@@ -146,7 +153,7 @@ stages:
                 - task: FileTransform@1
                   displayName: 'Variable transformation'
                   inputs:
-                    folderPath: '$(artifactsPath)\$(artifactName)\$(archiveFile)'
+                    folderPath: '$(artifactsPath)\$(artifactName)\WebApi.zip'
                     fileType: 'json'
                     targetFiles: 'appsettings.$(rgEnvironment).json'
 
@@ -155,203 +162,28 @@ stages:
                   inputs:
                     WebSiteName: '$(siteDNS)'
                     VirtualApplication: '$(productName)'
-                    Package: '$(artifactsPath)\$(artifactName)\$(archiveFile)'
-                    TakeAppOfflineFlag: true
-
-  - stage: deploy_qa
-    dependsOn: deploy_dev
-    condition: and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest')))
-    variables:
-      - template: ../variables/qa.yml
-      
-    jobs:
-      - deployment: DeployAPI
-        environment:
-          name: QA
-          resourceName: VM-MICRO-QA-01
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - task: CmdLine@2
-                  displayName: Remove HTTPS Bindings 
-                  condition: ${{ parameters.CreateIis }}
-                  inputs:
-                      script: |
-                        netsh http delete sslcert ipport=0.0.0.0:443
-                        netsh http delete sslcert ipport=0.0.0.0:$(headlessPort)
-                        setx ASPNETCORE_ENVIRONMENT $(rgEnvironment) /M
-
-                - task: IISWebAppManagementOnMachineGroup@0
-                  displayName: IIS Web App Create - $(siteDNS)
-                  condition: ${{ parameters.CreateIis }}
-                  inputs:
-                    EnableIIS: true
-                    IISDeploymentType: 'IISWebsite'
-                    ActionIISWebsite: 'CreateOrUpdateWebsite'
-                    WebsiteName: '$(siteDNS)'
-                    WebsitePhysicalPath: '%SystemDrive%\sites\$(siteDNS)'
-                    WebsitePhysicalPathAuth: 'WebsiteUserPassThrough'
-                    AddBinding: true
-                    Bindings: '{"bindings":[{"protocol":"https","ipAddress":"All Unassigned","port":"$(headlessPort)","hostname":"","sslThumbprint":"$(thumbprint)","sniFlag":false},{"protocol":"https","ipAddress":"All Unassigned","port":"443","hostname":"$(siteDNS)","sslThumbprint":"$(thumbprint)","sniFlag":false},{"protocol":"http","ipAddress":"All Unassigned","port":"80","hostname":"$(siteDNS)","sslThumbprint":"","sniFlag":false}]}'
-                    CreateOrUpdateAppPoolForWebsite: true
-                    ConfigureAuthenticationForWebsite: true
-                    AnonymousAuthenticationForWebsite: true
-                    WindowsAuthenticationForWebsite: false
-                    AppPoolNameForWebsite: '$(siteDNS)'
-                    DotNetVersionForWebsite: 'v4.0'
-                    PipeLineModeForWebsite: 'Integrated'
-                    AppPoolIdentityForWebsite: 'SpecificUser'
-                    AppPoolUsernameForWebsite: '$(netforumUser)'
-                    AppPoolPasswordForWebsite: '$(netforumPassword)'
-
-                - task: IISWebAppManagementOnMachineGroup@0
-                  condition: ${{ parameters.CreateIis }}
-                  continueOnError: true                  
-                  inputs:
-                    IISDeploymentType: 'IISApplicationPool'
-                    ActionIISApplicationPool: 'StopAppPool'
-                    StartStopRecycleAppPoolName: '$(siteDNS)-$(productName)'                    
-
-                - task: IISWebAppManagementOnMachineGroup@0                
-                  displayName: IIS App Pool - $(siteDNS)\$(productName)
-                  condition: ${{ parameters.CreateIis }}
-                  inputs:
-                    IISDeploymentType: 'IISWebApplication'
-                    ParentWebsiteNameForApplication: '$(siteDNS)'
-                    VirtualPathForApplication: '/$(productName)'
-                    PhysicalPathForApplication: '%SystemDrive%\sites\$(siteDNS)\$(productName)'
-                    CreateOrUpdateAppPoolForApplication: true
-                    AppPoolNameForApplication: '$(siteDNS)-$(productName)'
-                    DotNetVersionForApplication: 'v4.0'
-                    PipeLineModeForApplication: 'Integrated'
-                    AppPoolIdentityForApplication: 'SpecificUser'
-                    AppPoolUsernameForApplication: '$(netforumUser)'
-                    AppPoolPasswordForApplication: '$(netforumPassword)'
-
-                - task: IISWebAppManagementOnMachineGroup@0
-                  condition: ${{ parameters.CreateIis }}
-                  inputs:
-                    IISDeploymentType: 'IISApplicationPool'
-                    ActionIISApplicationPool: 'StartAppPool'
-                    StartStopRecycleAppPoolName: '$(siteDNS)-$(productName)'
-
-                - task: FileTransform@1
-                  displayName: 'Variable transformation'
-                  inputs:
-                    folderPath: '$(artifactsPath)\$(artifactName)\$(archiveFile)'
-                    fileType: 'json'
-                    targetFiles: 'appsettings.$(rgEnvironment).json'
-
-                - task: IISWebAppDeploymentOnMachineGroup@0
-                  displayName: Deploy IIS Website/App - $(siteDNS)\$(productName)
-                  inputs:
-                    WebSiteName: '$(siteDNS)'
-                    VirtualApplication: '$(productName)'
-                    Package: '$(artifactsPath)\$(artifactName)\$(archiveFile)'
-                    TakeAppOfflineFlag: true
-
-  - stage: deploy_staging
-    dependsOn: deploy_qa
-    condition: and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest')))
-    variables:
-      - template: ../variables/staging.yml
-      
-    jobs:
-      - deployment: DeployAPI
-        environment:
-          name: Staging
-          resourceName: VM-MICRO-STG-01
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - task: CmdLine@2
-                  displayName: Remove HTTPS Bindings 
-                  condition: ${{ parameters.CreateIis }}
-                  inputs:
-                      script: |
-                        netsh http delete sslcert ipport=0.0.0.0:443
-                        netsh http delete sslcert ipport=0.0.0.0:$(headlessPort)
-                        setx ASPNETCORE_ENVIRONMENT $(rgEnvironment) /M
-
-                - task: IISWebAppManagementOnMachineGroup@0
-                  displayName: IIS Web App Create - $(siteDNS)
-                  condition: ${{ parameters.CreateIis }}
-                  inputs:
-                    EnableIIS: true
-                    IISDeploymentType: 'IISWebsite'
-                    ActionIISWebsite: 'CreateOrUpdateWebsite'
-                    WebsiteName: '$(siteDNS)'
-                    WebsitePhysicalPath: '%SystemDrive%\sites\$(siteDNS)'
-                    WebsitePhysicalPathAuth: 'WebsiteUserPassThrough'
-                    AddBinding: true
-                    Bindings: '{"bindings":[{"protocol":"https","ipAddress":"All Unassigned","port":"$(headlessPort)","hostname":"","sslThumbprint":"$(thumbprint)","sniFlag":false},{"protocol":"https","ipAddress":"All Unassigned","port":"443","hostname":"$(siteDNS)","sslThumbprint":"$(thumbprint)","sniFlag":false},{"protocol":"http","ipAddress":"All Unassigned","port":"80","hostname":"$(siteDNS)","sslThumbprint":"","sniFlag":false}]}'
-                    CreateOrUpdateAppPoolForWebsite: true
-                    ConfigureAuthenticationForWebsite: true
-                    AnonymousAuthenticationForWebsite: true
-                    WindowsAuthenticationForWebsite: false
-                    AppPoolNameForWebsite: '$(siteDNS)'
-                    DotNetVersionForWebsite: 'v4.0'
-                    PipeLineModeForWebsite: 'Integrated'
-                    AppPoolIdentityForWebsite: 'SpecificUser'
-                    AppPoolUsernameForWebsite: '$(netforumUser)'
-                    AppPoolPasswordForWebsite: '$(netforumPassword)'
-
-                - task: IISWebAppManagementOnMachineGroup@0
-                  condition: ${{ parameters.CreateIis }}
-                  continueOnError: true                  
-                  inputs:
-                    IISDeploymentType: 'IISApplicationPool'
-                    ActionIISApplicationPool: 'StopAppPool'
-                    StartStopRecycleAppPoolName: '$(siteDNS)-$(productName)'                    
-
-                - task: IISWebAppManagementOnMachineGroup@0                
-                  displayName: IIS App Pool - $(siteDNS)\$(productName)
-                  condition: ${{ parameters.CreateIis }}
-                  inputs:
-                    IISDeploymentType: 'IISWebApplication'
-                    ParentWebsiteNameForApplication: '$(siteDNS)'
-                    VirtualPathForApplication: '/$(productName)'
-                    PhysicalPathForApplication: '%SystemDrive%\sites\$(siteDNS)\$(productName)'
-                    CreateOrUpdateAppPoolForApplication: true
-                    AppPoolNameForApplication: '$(siteDNS)-$(productName)'
-                    DotNetVersionForApplication: 'v4.0'
-                    PipeLineModeForApplication: 'Integrated'
-                    AppPoolIdentityForApplication: 'SpecificUser'
-                    AppPoolUsernameForApplication: '$(netforumUser)'
-                    AppPoolPasswordForApplication: '$(netforumPassword)'
-
-                - task: IISWebAppManagementOnMachineGroup@0
-                  condition: ${{ parameters.CreateIis }}
-                  inputs:
-                    IISDeploymentType: 'IISApplicationPool'
-                    ActionIISApplicationPool: 'StartAppPool'
-                    StartStopRecycleAppPoolName: '$(siteDNS)-$(productName)'
-
-                - task: FileTransform@1
-                  displayName: 'Variable transformation'
-                  inputs:
-                    folderPath: '$(artifactsPath)\$(artifactName)\$(archiveFile)'
-                    fileType: 'json'
-                    targetFiles: 'appsettings.$(rgEnvironment).json'
-
-                - task: IISWebAppDeploymentOnMachineGroup@0
-                  displayName: Deploy IIS Website/App - $(siteDNS)\$(productName)
-                  inputs:
-                    WebSiteName: '$(siteDNS)'
-                    VirtualApplication: '$(productName)'
-                    Package: '$(artifactsPath)\$(artifactName)\$(archiveFile)'
+                    Package: '$(artifactsPath)\$(artifactName)\WebApi.zip'
                     TakeAppOfflineFlag: true
 
   - stage: deploy_prod
-    dependsOn: deploy_staging
-    condition: and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest')))
+    dependsOn: deploy_dev
+    condition: or(eq(lower(${{ parameters.ProdDeployOverride }}), 'true'), and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
     variables:
       - template: ../variables/production.yml
-      
+
     jobs:
+      - job: deploy_approval
+        pool: server
+        timeoutInMinutes: 4320
+        steps:
+        - task: ManualValidation@0
+          inputs:
+           notifyUsers: $(deployApprovers)
+           instructions: "Team: $(System.TeamProject)\r\nRepo: $(Build.Repository.Name)\r\nRequested by: $(Build.RequestedFor)\r\nBuild: $(Build.BuildNumber)\r\nUrl: $(Build.BuildUri)\r\nA new deployment has been requested. Please approve or reject the deployment."
+           onTimeout: reject
+
       - deployment: DeployAPI
+        dependsOn: deploy_approval
         environment:
           name: Production
           resourceName: VM-MICRO-PRD-01
@@ -428,7 +260,7 @@ stages:
                 - task: FileTransform@1
                   displayName: 'Variable transformation'
                   inputs:
-                    folderPath: '$(artifactsPath)\$(artifactName)\$(archiveFile)'
+                    folderPath: '$(artifactsPath)\$(artifactName)\WebApi.zip'
                     fileType: 'json'
                     targetFiles: 'appsettings.$(rgEnvironment).json'
 
@@ -437,5 +269,5 @@ stages:
                   inputs:
                     WebSiteName: '$(siteDNS)'
                     VirtualApplication: '$(productName)'
-                    Package: '$(artifactsPath)\$(artifactName)\$(archiveFile)'
+                    Package: '$(artifactsPath)\$(artifactName)\WebApi.zip'
                     TakeAppOfflineFlag: true

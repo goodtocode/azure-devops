@@ -1,0 +1,17 @@
+variables:
+  - name: rgEnvironment
+    value: 'Development'
+  - name: rgName  
+    value: 'rg-PRODUCT-dev-001'
+  - name: rgLocation
+    value: 'westus2'
+  - name: rgSharedName
+    value: 'rg-SHARED-dev-001'
+  - name: rgSharedLocation
+    value: 'westus2'
+  - name: kvName
+    value: 'kv-PRODUCT-dev-001'
+  - name: serviceConnectionIdentityObjectId
+    value: ''
+  - name: deployApprovers
+    value: 'approver.email@goodtocode.com;'

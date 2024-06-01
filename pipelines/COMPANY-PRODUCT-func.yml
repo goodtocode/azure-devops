@@ -130,6 +130,7 @@ stages:
            onTimeout: reject
 
       - job: build_src
+        dependsOn: deploy_approval
         steps:
           - template: ../steps/dotnet-build-steps.yml
             parameters:
