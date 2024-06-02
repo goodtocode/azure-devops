@@ -180,7 +180,7 @@ stages:
                 - task: FileTransform@1
                   displayName: 'Variable transformation'
                   inputs:
-                    folderPath: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+                    folderPath: '$(Pipeline.Workspace)/**/*.zip'
                     fileType: 'json'
                     targetFiles: 'appsettings.$(rgEnvironment).json'
 
@@ -189,7 +189,7 @@ stages:
                   inputs:
                     WebSiteName: '$(siteDNS)'
                     VirtualApplication: '$(productName)'
-                    Package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+                    Package: '$(Pipeline.Workspace)/**/*.zip'
                     TakeAppOfflineFlag: true
 
   - stage: deploy_prod
@@ -283,7 +283,7 @@ stages:
                 - task: FileTransform@1
                   displayName: 'Variable transformation'
                   inputs:
-                    folderPath: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+                    folderPath: '$(Pipeline.Workspace)/**/*.zip'
                     fileType: 'json'
                     targetFiles: 'appsettings.$(rgEnvironment).json'
 
@@ -292,5 +292,5 @@ stages:
                   inputs:
                     WebSiteName: '$(siteDNS)'
                     VirtualApplication: '$(productName)'
-                    Package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+                    Package: '$(Pipeline.Workspace)/**/*.zip'
                     TakeAppOfflineFlag: true
