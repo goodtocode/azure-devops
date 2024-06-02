@@ -5,7 +5,7 @@ trigger:
     - 'main'
   paths:
     include:
-    - .azure-devops/pipelines/COMPANY-PRODUCT-api-IIS.yml
+    - .azure-devops/pipelines/aacn-eventeval-api-ci-cd-IIS.yml
     - src/Core/**
     - src/Infrastructure/**
     - src/Presentation/WebApi/**
@@ -23,66 +23,94 @@ parameters:
   - name: CreateIis
     type: boolean
     default: false
-  - name: DevOverrideDeploy
+  - name: ForceDeployDev
     type: boolean
     default: false
-  - name: ProdOverrideDeploy
+  - name: ForceDeployProd
     type: boolean
     default: false
 
 variables:
-  - template: ../variables/common.yml
-  - name: ConnectionStrings.DefaultConnection
-    value: '$(defaultConnection)'
+  - name: ConnectionStrings.Default
+    value: '$(sqlConnection)'
 
 stages:
   - stage: build
-    jobs:    
-      - job: build_api
+    variables:
+      - template: ../variables/common-ci.yml
+    jobs:
+      - job: build_src
         steps:
-          - template: ../steps/dotnet-build-steps.yml
-            parameters:
-              dotnetVersion: '$(dotnetVersion)'
-              srcPath: '$(srcPath)'
-              srcProject: '$(apiProject)'
+          - task: PowerShell@2
+            displayName: 'Set-Version.ps1'
+            inputs:
+              filePath: '$(scriptsPath)/Set-Version.ps1'
+              arguments: '-Path $(srcPath) -VersionToReplace 1.0.0 -Major 1 -Minor 0 -Revision 0 -CommitHash $(Build.SourceVersion) -Build $(Build.BuildNumber)'
+              workingDirectory: '$(scriptsPath)'
 
-      - job: test_api
-        dependsOn: build_api      
-        steps:
-          - template: ../steps/dotnet-test-steps.yml
-            parameters:
-              dotnetVersion: '$(dotnetVersion)'
-              testPath: '$(unitPath)'
-              testProject: '$(unitProject)'
-              restorePath: '$(srcPath)'
-              appcsEnvironmentVariable: '$(appcsEnvironmentVariable)'
-              appcsConnection: '$(appcsConnection)'
-              rgEnvironment: '$(rgEnvironment)'
+          - task: UseDotNet@2
+            displayName: UseSDKVersion
+            inputs:
+              packageType: 'sdk'
+              version: $(dotnetVersion)
+              includePreviewVersions: true
 
-      - job: package_api
-        dependsOn: test_api
+          - task: DotNetCoreCLI@2
+            displayName: dotnetrestore
+            inputs:
+              command: 'restore'
+              projects: "$(srcSolution)"
+              feedsToUse: 'config'
+              nugetConfigPath: "$(nugetConfig)"
+
+          - task: DotNetCoreCLI@2
+            displayName: dotnet build
+            inputs:
+              command: 'build'
+              projects: "$(srcProject)"
+              arguments: "--configuration $(buildConfiguration)"
+
+      - job: test_src
+        dependsOn: build_src
         steps:
-          - template: ../steps/dotnet-publish-steps.yml
-            parameters:
-              artifactsPath: '$(artifactsPath)'
-              artifactName: '$(artifactName)'
-              dotnetVersion: '$(dotnetVersion)'
-              restorePath: '$(srcPath)'
-              scriptsPath: '$(scriptsPath)'
-              srcPath: '$(apiPath)'
-              srcProject: '$(apiProject)'
+          - task: DotNetCoreCLI@2
+            displayName: dotnet test
+            inputs:
+              command: 'test'
+              projects: "$(testProject)"
+              arguments: "--configuration $(buildConfiguration)"
+              publishTestResults: true
+
+      - job: publish_src
+        dependsOn: test_src
+        steps:
+          - task: DotNetCoreCLI@2
+            displayName: dotnet publish
+            inputs:
+              command: 'publish'
+              publishWebProjects: false
+              projects: "$(srcProject)"
+              arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)"
+              zipAfterPublish: true
+
+          - task: PublishBuildArtifacts@1
+            displayName: Publishbuildartifacts
+            inputs:
+              PathtoPublish: "$(Build.ArtifactStagingDirectory)"
+              ArtifactName: 'drop'
+              publishLocation: "Container"
 
   - stage: deploy_dev
     dependsOn: build
-    condition: and(succeeded(), or(eq(lower(${{ parameters.DevDeployOverride }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
+    condition: and(succeeded(), or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
     variables:
-      - template: ../variables/development.yml
+      - template: ../variables/development-cd.yml
       
     jobs:
       - deployment: DeployAPI
         environment:
           name: Development
-          resourceName: VM-MICRO-DEV-01
+          resourceName: ILSCWEB01-HWE
         strategy:
           runOnce:
             deploy:
@@ -93,7 +121,6 @@ stages:
                   inputs:
                       script: |
                         netsh http delete sslcert ipport=0.0.0.0:443
-                        netsh http delete sslcert ipport=0.0.0.0:$(headlessPort)
                         setx ASPNETCORE_ENVIRONMENT $(rgEnvironment) /M
 
                 - task: IISWebAppManagementOnMachineGroup@0
@@ -107,7 +134,7 @@ stages:
                     WebsitePhysicalPath: '%SystemDrive%\sites\$(siteDNS)'
                     WebsitePhysicalPathAuth: 'WebsiteUserPassThrough'
                     AddBinding: true
-                    Bindings: '{"bindings":[{"protocol":"https","ipAddress":"All Unassigned","port":"$(headlessPort)","hostname":"","sslThumbprint":"$(thumbprint)","sniFlag":false},{"protocol":"https","ipAddress":"All Unassigned","port":"443","hostname":"$(siteDNS)","sslThumbprint":"$(thumbprint)","sniFlag":false},{"protocol":"http","ipAddress":"All Unassigned","port":"80","hostname":"$(siteDNS)","sslThumbprint":"","sniFlag":false}]}'
+                    Bindings: '{"bindings":[{"protocol":"https","ipAddress":"All Unassigned","port":"443","hostname":"$(siteDNS)","sslThumbprint":"$(thumbprint)","sniFlag":false}, {"protocol":"http","ipAddress":"All Unassigned","port":"80","hostname":"$(siteDNS)","sslThumbprint":"","sniFlag":false}]}'
                     CreateOrUpdateAppPoolForWebsite: true
                     ConfigureAuthenticationForWebsite: true
                     AnonymousAuthenticationForWebsite: true
@@ -116,8 +143,8 @@ stages:
                     DotNetVersionForWebsite: 'v4.0'
                     PipeLineModeForWebsite: 'Integrated'
                     AppPoolIdentityForWebsite: 'SpecificUser'
-                    AppPoolUsernameForWebsite: '$(netforumUser)'
-                    AppPoolPasswordForWebsite: '$(netforumPassword)'
+                    AppPoolUsernameForWebsite: '$(sqlUser)'
+                    AppPoolPasswordForWebsite: '$(sqlPassword)'
 
                 - task: IISWebAppManagementOnMachineGroup@0
                   condition: ${{ parameters.CreateIis }}
@@ -140,8 +167,8 @@ stages:
                     DotNetVersionForApplication: 'v4.0'
                     PipeLineModeForApplication: 'Integrated'
                     AppPoolIdentityForApplication: 'SpecificUser'
-                    AppPoolUsernameForApplication: '$(netforumUser)'
-                    AppPoolPasswordForApplication: '$(netforumPassword)'
+                    AppPoolUsernameForApplication: '$(sqlUser)'
+                    AppPoolPasswordForApplication: '$(sqlPassword)'
 
                 - task: IISWebAppManagementOnMachineGroup@0
                   condition: ${{ parameters.CreateIis }}
@@ -153,7 +180,7 @@ stages:
                 - task: FileTransform@1
                   displayName: 'Variable transformation'
                   inputs:
-                    folderPath: '$(artifactsPath)\$(artifactName)\WebApi.zip'
+                    folderPath: '$(Build.ArtifactStagingDirectory)/**/*.zip'
                     fileType: 'json'
                     targetFiles: 'appsettings.$(rgEnvironment).json'
 
@@ -162,14 +189,14 @@ stages:
                   inputs:
                     WebSiteName: '$(siteDNS)'
                     VirtualApplication: '$(productName)'
-                    Package: '$(artifactsPath)\$(artifactName)\WebApi.zip'
+                    Package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
                     TakeAppOfflineFlag: true
 
   - stage: deploy_prod
     dependsOn: deploy_dev
-    condition: or(eq(lower(${{ parameters.ProdDeployOverride }}), 'true'), and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
+    condition: or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
     variables:
-      - template: ../variables/production.yml
+      - template: ../variables/production-cd.yml
 
     jobs:
       - job: deploy_approval
@@ -186,7 +213,7 @@ stages:
         dependsOn: deploy_approval
         environment:
           name: Production
-          resourceName: VM-MICRO-PRD-01
+          resourceName: ILSCWEB01-HWE
         strategy:
           runOnce:
             deploy:
@@ -197,7 +224,6 @@ stages:
                   inputs:
                       script: |
                         netsh http delete sslcert ipport=0.0.0.0:443
-                        netsh http delete sslcert ipport=0.0.0.0:$(headlessPort)
                         setx ASPNETCORE_ENVIRONMENT $(rgEnvironment) /M
 
                 - task: IISWebAppManagementOnMachineGroup@0
@@ -211,7 +237,7 @@ stages:
                     WebsitePhysicalPath: '%SystemDrive%\sites\$(siteDNS)'
                     WebsitePhysicalPathAuth: 'WebsiteUserPassThrough'
                     AddBinding: true
-                    Bindings: '{"bindings":[{"protocol":"https","ipAddress":"All Unassigned","port":"$(headlessPort)","hostname":"","sslThumbprint":"$(thumbprint)","sniFlag":false},{"protocol":"https","ipAddress":"All Unassigned","port":"443","hostname":"$(siteDNS)","sslThumbprint":"$(thumbprint)","sniFlag":false},{"protocol":"http","ipAddress":"All Unassigned","port":"80","hostname":"$(siteDNS)","sslThumbprint":"","sniFlag":false}]}'
+                    Bindings: '{"bindings":[{"protocol":"https","ipAddress":"All Unassigned","port":"443","hostname":"$(siteDNS)","sslThumbprint":"$(thumbprint)","sniFlag":false}, {"protocol":"http","ipAddress":"All Unassigned","port":"80","hostname":"$(siteDNS)","sslThumbprint":"","sniFlag":false}]}'
                     CreateOrUpdateAppPoolForWebsite: true
                     ConfigureAuthenticationForWebsite: true
                     AnonymousAuthenticationForWebsite: true
@@ -220,20 +246,19 @@ stages:
                     DotNetVersionForWebsite: 'v4.0'
                     PipeLineModeForWebsite: 'Integrated'
                     AppPoolIdentityForWebsite: 'SpecificUser'
-                    AppPoolUsernameForWebsite: '$(netforumUser)'
-                    AppPoolPasswordForWebsite: '$(netforumPassword)'
+                    AppPoolUsernameForWebsite: '$(sqlUser)'
+                    AppPoolPasswordForWebsite: '$(sqlPassword)'
 
                 - task: IISWebAppManagementOnMachineGroup@0
-                  displayName: 'IIS App Pool Stop - $(siteDNS)-$(productName)'
                   condition: ${{ parameters.CreateIis }}
-                  continueOnError: true
+                  continueOnError: true                  
                   inputs:
                     IISDeploymentType: 'IISApplicationPool'
                     ActionIISApplicationPool: 'StopAppPool'
                     StartStopRecycleAppPoolName: '$(siteDNS)-$(productName)'                    
 
                 - task: IISWebAppManagementOnMachineGroup@0                
-                  displayName: 'IIS App Pool and Site Create - $(siteDNS)-$(productName)'
+                  displayName: IIS App Pool - $(siteDNS)\$(productName)
                   condition: ${{ parameters.CreateIis }}
                   inputs:
                     IISDeploymentType: 'IISWebApplication'
@@ -245,13 +270,11 @@ stages:
                     DotNetVersionForApplication: 'v4.0'
                     PipeLineModeForApplication: 'Integrated'
                     AppPoolIdentityForApplication: 'SpecificUser'
-                    AppPoolUsernameForApplication: '$(netforumUser)'
-                    AppPoolPasswordForApplication: '$(netforumPassword)'
+                    AppPoolUsernameForApplication: '$(sqlUser)'
+                    AppPoolPasswordForApplication: '$(sqlPassword)'
 
                 - task: IISWebAppManagementOnMachineGroup@0
-                  displayName: 'IIS App Pool Start - $(siteDNS)-$(productName)'
                   condition: ${{ parameters.CreateIis }}
-                  continueOnError: true
                   inputs:
                     IISDeploymentType: 'IISApplicationPool'
                     ActionIISApplicationPool: 'StartAppPool'
@@ -260,7 +283,7 @@ stages:
                 - task: FileTransform@1
                   displayName: 'Variable transformation'
                   inputs:
-                    folderPath: '$(artifactsPath)\$(artifactName)\WebApi.zip'
+                    folderPath: '$(Build.ArtifactStagingDirectory)/**/*.zip'
                     fileType: 'json'
                     targetFiles: 'appsettings.$(rgEnvironment).json'
 
@@ -269,5 +292,5 @@ stages:
                   inputs:
                     WebSiteName: '$(siteDNS)'
                     VirtualApplication: '$(productName)'
-                    Package: '$(artifactsPath)\$(artifactName)\WebApi.zip'
+                    Package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
                     TakeAppOfflineFlag: true

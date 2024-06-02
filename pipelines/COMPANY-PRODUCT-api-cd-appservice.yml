@@ -47,7 +47,7 @@ stages:
         - task: ManualValidation@0
           inputs:
            notifyUsers: $(deployApprovers)
-           instructions: $(deployMessage)
+           instructions: "Team: $(System.TeamProject)\r\nRepo: $(Build.Repository.Name)\r\nRequested by: $(Build.RequestedFor)\r\nBuild: $(Build.BuildNumber)\r\nUrl: $(Build.BuildUri)\r\nA new deployment has been requested. Please approve or reject the deployment."
            onTimeout: reject
       - job: Deploy_src
         dependsOn: deploy_approval
