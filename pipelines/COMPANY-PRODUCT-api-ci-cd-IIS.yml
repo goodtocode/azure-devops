@@ -37,7 +37,7 @@ variables:
 stages:
   - stage: build
     variables:
-      - template: ../variables/common-ci.yml
+      - template: ../variables/ci-common.yml
     jobs:
       - job: build_src
         steps:
@@ -104,7 +104,7 @@ stages:
     dependsOn: build
     condition: and(succeeded(), or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
     variables:
-      - template: ../variables/development-cd.yml
+      - template: ../variables/cd-development.yml
       
     jobs:
       - deployment: DeployAPI
@@ -196,7 +196,7 @@ stages:
     dependsOn: deploy_dev
     condition: or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
     variables:
-      - template: ../variables/production-cd.yml
+      - template: ../variables/cd-production.yml
 
     jobs:
       - job: deploy_approval

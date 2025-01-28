@@ -16,7 +16,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  - template: ../variables/development.yml
+  - template: ../variables/cd-development.yml
   - name: buildPlatform
     value: 'Any CPU'
   - name: buildConfiguration
@@ -26,7 +26,7 @@ stages:
   - stage: development
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
     variables:
-      - template: ../variables/development.yml
+      - template: ../variables/cd-development.yml
       
     jobs:
       - job: test_integration

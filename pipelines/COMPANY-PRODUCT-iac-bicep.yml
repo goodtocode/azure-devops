@@ -32,7 +32,7 @@ stages:
   - stage: development
     condition: or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest')))
     variables:
-      - template: ../variables/development-infrastructure.yml
+      - template: ../variables/iac-development.yml
 
     jobs:
       - job: deploy_approval
@@ -89,7 +89,7 @@ stages:
   - stage: production
     condition: or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), and(and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main')), ne(variables['Build.Reason'], 'PullRequest')))
     variables:
-      - template: ../variables/production-infrastructure.yml
+      - template: ../variables/iac-production.yml
 
     jobs:
       - job: deploy_approval

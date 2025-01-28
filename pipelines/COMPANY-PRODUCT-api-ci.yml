@@ -23,7 +23,7 @@ pool:
 stages:
   - stage: build
     variables:
-      - template: ../variables/common-ci.yml
+      - template: ../variables/ci-common.yml
     jobs:
       - job: build_src
         steps:

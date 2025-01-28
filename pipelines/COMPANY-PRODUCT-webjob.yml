@@ -39,7 +39,7 @@ parameters:
         slotSetting: false
 
 variables:
-  - template: ../variables/development.yml
+  - template: ../variables/ci-common.yml
   - name: buildPlatform
     value: 'Any CPU'
   - name: buildConfiguration
@@ -49,7 +49,7 @@ stages:
   - stage: development
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
     variables:
-      - template: ../variables/development.yml
+      - template: ../variables/cd-development.yml
       
     jobs:    
       - job: build_webjob
@@ -100,7 +100,7 @@ stages:
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
     variables:
-      - template: ../variables/production.yml    
+      - template: ../variables/cd-production.yml    
 
     jobs:    
       - job: build_webjob

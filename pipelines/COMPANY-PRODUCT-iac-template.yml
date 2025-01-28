@@ -35,13 +35,13 @@ parameters:
     default: "AZURE-DEVOPS-SERVICE-CONNECTION-NAME"
 
 variables:
-  - template: ../variables/common.yml
+  - template: ../variables/ci-common.yml
       
 stages:
   - stage: development
     condition: or(eq(lower(${{ parameters.releaseToDev }}), 'true'), and(or(eq(variables['Build.SourceBranch'], 'refs/heads/develop'), eq(variables['Build.SourceBranch'], 'refs/heads/main')), ne(variables['Build.Reason'], 'PullRequest')))
     variables:
-      - template: ../variables/development.yml
+      - template: ../variables/iac-development.yml
 
     jobs:
       - job: deploy_landing_zone
@@ -93,7 +93,7 @@ stages:
   - stage: production
     condition: or(eq(lower(${{ parameters.releaseToProd }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest')))
     variables:
-      - template: ../variables/production.yml
+      - template: ../variables/iac-production.yml
 
     jobs:
       - job: deploy_approval

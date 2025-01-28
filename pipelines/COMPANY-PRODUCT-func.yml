@@ -50,13 +50,13 @@ parameters:
         slotSetting: false
 
 variables:
-  - template: ../variables/common.yml
+  - template: ../variables/ci-common.yml
 
 stages:
   - stage: development
     condition: and(or(eq(variables['Build.SourceBranch'], 'refs/heads/develop'), eq(variables['Build.SourceBranch'], 'refs/heads/main')), ne(variables['Build.Reason'], 'PullRequest'))
     variables:
-      - template: ../variables/development.yml
+      - template: ../variables/cd-development.yml
 
     jobs:
       - job: build_src
@@ -116,7 +116,7 @@ stages:
   - stage: production
     condition: and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))
     variables:
-      - template: ../variables/production.yml
+      - template: ../variables/cd-production.yml
 
     jobs:
       - job: deploy_approval

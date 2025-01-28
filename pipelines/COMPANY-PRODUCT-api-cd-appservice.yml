@@ -10,12 +10,12 @@ parameters:
    default: 'AZURE-DEVOPS-SERVICE-CONNECTION-NAME'
 
 variables:
-  - template: ../variables/common.yml
+  - template: ../variables/ci-common.yml
   
 stages:
   - stage: Development 
     variables:
-       - template: ../variables/development.yml
+       - template: ../variables/cd-development.yml
     jobs:
       - job: Deploy_src
         steps:
@@ -38,7 +38,7 @@ stages:
 
   - stage: Production
     variables:
-      - template: ../variables/production.yml
+      - template: ../variables/cd-production.yml
     jobs:
       - job: deploy_approval
         pool: server

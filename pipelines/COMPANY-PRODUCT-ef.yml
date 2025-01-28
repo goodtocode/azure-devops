@@ -33,13 +33,13 @@ parameters:
     default: "AZURE_DEVOPS_SERVICE_CONNECTION_NAME"
 
 variables:
-  - template: ../variables/common.yml
+  - template: ../variables/ci-common.yml
 
 stages:
   - stage: development
     condition: and(eq(lower(${{ parameters.releaseToDev }}), 'true'), and(ne(variables['Build.SourceBranch'], 'refs/heads/develop'), not(eq(variables['Build.Reason'], 'PullRequest'))))
     variables:
-      - template: ../variables/development.yml
+      - template: ../variables/cd-development.yml
 
     jobs:
       - job: deploy_ef_migration
@@ -61,7 +61,7 @@ stages:
   - stage: qa
     condition: and(eq(lower(${{ parameters.releaseToQA }}), 'true'), and(ne(variables['Build.SourceBranch'], 'refs/heads/develop'), ne(variables['Build.Reason'], 'PullRequest')))
     variables:
-      - template: ../variables/qa.yml
+      - template: ../variables/cd-qa.yml
 
     jobs:
       - job: deploy_ef_migration
@@ -83,7 +83,7 @@ stages:
   - stage: staging
     condition: and(eq(lower(${{ parameters.releaseToStaging }}), 'true'), and(ne(variables['Build.SourceBranch'], 'refs/heads/develop'), ne(variables['Build.Reason'], 'PullRequest')))
     variables:
-      - template: ../variables/staging.yml
+      - template: ../variables/cd-staging.yml
 
     jobs:
       - job: deploy_ef_migration
@@ -105,7 +105,7 @@ stages:
   - stage: production
     condition: and(eq(lower(${{ parameters.releaseToProd }}), 'true'), and(ne(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest')))
     variables:
-      - template: ../variables/production.yml 
+      - template: ../variables/cd-production.yml 
 
     jobs:
       - job: deploy_ef_migration

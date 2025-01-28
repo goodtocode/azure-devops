@@ -27,13 +27,13 @@ parameters:
     default: "AZURE_DEVOPS_SERVICE_CONNECTION"
 
 variables:
-  - template: ../variables/common.yml
+  - template: ../variables/ci-common.yml
 
 stages:
   - stage: development
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
     variables:
-      - template: ../variables/development.yml
+      - template: ../variables/cd-development.yml
       
     jobs:    
       - job: build_src
@@ -104,7 +104,7 @@ stages:
   - stage: production
     condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
     variables:
-      - template: ../variables/production.yml    
+      - template: ../variables/cd-production.yml    
 
     jobs:
       - job: build_src
