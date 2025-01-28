@@ -22,11 +22,19 @@ stages:
         - task: DownloadPipelineArtifact@2
           inputs:
            buildType: 'specific'
-           project: '65294700-f5dd-4170-8192-4b8b63d2132c'
+           project: 'PROJECT GUID'
            definition: '24'
            buildVersionToDownload: 'latest'
            targetPath: '$(Pipeline.Workspace)'
            artifactName: 'drop'
+
+        - task: FileTransform@1
+          displayName: 'Variable transformation'
+          inputs:
+            folderPath: '$(Pipeline.Workspace)/**/*.zip'
+            fileType: 'json'
+            targetFiles: 'appsettings.$(environmentApp).json'
+
         - task: AzureWebApp@1
           displayName: Deploy to webapp
           inputs:
@@ -49,6 +57,7 @@ stages:
            notifyUsers: $(deployApprovers)
            instructions: "Team: $(System.TeamProject)\r\nRepo: $(Build.Repository.Name)\r\nRequested by: $(Build.RequestedFor)\r\nBuild: $(Build.BuildNumber)\r\nUrl: $(Build.BuildUri)\r\nA new deployment has been requested. Please approve or reject the deployment."
            onTimeout: reject
+
       - job: Deploy_src
         dependsOn: deploy_approval
         steps:
@@ -60,6 +69,14 @@ stages:
            buildVersionToDownload: 'latest'
            targetPath: '$(Pipeline.Workspace)'
            artifactName: 'drop'
+
+        - task: FileTransform@1
+          displayName: 'Variable transformation'
+          inputs:
+            folderPath: '$(Pipeline.Workspace)/**/*.zip'
+            fileType: 'json'
+            targetFiles: 'appsettings.$(environmentApp).json'
+
         - task: AzureWebApp@1
           displayName: Deploy to webapp
           inputs:
