@@ -2,23 +2,34 @@ trigger:
   batch: false
   branches:
     include:
-      - "*"
-    exclude:
-      - "main"
+    - 'main'
   paths:
     include:
-      - src/Core/**
-      - src/Infrastructure/**
-      - src/Presentation/**
-      - tests/**
+    - .azure-devops/pipelines/COMPANY-PRODUCT-api-ci-cd-appservice.yml
+    - src/Core/**
+    - src/Infrastructure/**
+    - src/Presentation/WebApi/**
+    - tests/**
 
 pr:
   branches:
     include:
-      - "main"
+    - 'main'
 
 pool:
-  vmImage: "ubuntu-latest"
+  vmImage: 'ubuntu-latest'
+
+parameters:
+  - name: ForceDeployDev
+    type: boolean
+    default: false
+  - name: ForceDeployProd
+    type: boolean
+    default: false
+
+variables:
+  - name: ConnectionStrings.Default
+    value: '$(sqlConnection)'
 
 stages:
   - stage: build
@@ -107,3 +118,80 @@ stages:
               PathtoPublish: "$(Build.ArtifactStagingDirectory)"
               ArtifactName: 'drop'
               publishLocation: "Container"
+
+  - stage: deploy_dev
+    dependsOn: build
+    condition: and(succeeded(), or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
+    variables:
+      - template: ../variables/cd-development.yml
+      
+    jobs:
+      - job: deploy_dev
+        steps:
+        - task: DownloadBuildArtifacts@0
+          displayName: 'Download build artifact'
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'drop'
+            downloadPath: '$(Pipeline.Workspace)'
+
+        - task: FileTransform@1
+          displayName: 'Variable transformation'
+          inputs:
+            folderPath: '$(Pipeline.Workspace)/drop/**/*.zip'
+            fileType: 'json'
+            targetFiles: 'appsettings.$(environmentApp).json'
+
+        - task: AzureWebApp@1
+          displayName: Deploy to webapp
+          inputs:
+            azureSubscription: '${{ parameters.subscriptionService }}'
+            appType: 'webApp'
+            appName: '$(appName)'
+            package: '$(Pipeline.Workspace)/drop/**/*.zip'
+            deploymentMethod: 'zipDeploy'
+
+  - stage: deploy_prod
+    dependsOn: deploy_dev
+    condition: or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
+    variables:
+      - template: ../variables/cd-production.yml
+
+    jobs:
+      - job: deploy_approval
+        pool: server
+        timeoutInMinutes: 4320
+        steps:
+        - task: ManualValidation@0
+          inputs:
+           notifyUsers: $(deployApprovers)
+           instructions: "Team: $(System.TeamProject)\r\nRepo: $(Build.Repository.Name)\r\nRequested by: $(Build.RequestedFor)\r\nBuild: $(Build.BuildNumber)\r\nUrl: $(Build.BuildUri)\r\nA new deployment has been requested. Please approve or reject the deployment."
+           onTimeout: reject
+      
+      - job: deploy_prod
+        dependsOn: deploy_approval
+        steps:
+        - task: DownloadBuildArtifacts@0
+          displayName: 'Download build artifact'
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'drop'
+            downloadPath: '$(Pipeline.Workspace)'
+
+        - task: FileTransform@1
+          displayName: 'Variable transformation'
+          inputs:
+            folderPath: '$(Pipeline.Workspace)/drop/**/*.zip'
+            fileType: 'json'
+            targetFiles: 'appsettings.$(environmentApp).json'
+
+        - task: AzureWebApp@1
+          displayName: Deploy to webapp
+          inputs:
+            azureSubscription: '${{ parameters.subscriptionService }}'
+            appType: 'webApp'
+            appName: '$(appName)'
+            package: '$(Pipeline.Workspace)/drop/**/*.zip'
+            deploymentMethod: 'zipDeploy'

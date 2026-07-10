@@ -9,7 +9,7 @@ parameters:
     type: string 
   - name: dotnetVersion 
     type: string 
-    default: "7.x"
+    default: "10.x"
   - name: dotnetEfVersion
     type: string 
     default: "7.0.14"

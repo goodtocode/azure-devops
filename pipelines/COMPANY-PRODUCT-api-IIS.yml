@@ -137,6 +137,14 @@ stages:
           runOnce:
             deploy:
               steps:
+                - task: DownloadBuildArtifacts@0
+                  displayName: 'Download build artifact'
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: 'drop'
+                    downloadPath: '$(Pipeline.Workspace)'
+
                 - task: CmdLine@2
                   displayName: Remove HTTPS Bindings 
                   condition: ${{ parameters.CreateIis }}
@@ -202,7 +210,7 @@ stages:
                 - task: FileTransform@1
                   displayName: 'Variable transformation'
                   inputs:
-                    folderPath: '$(Pipeline.Workspace)/**/*.zip'
+                    folderPath: '$(Pipeline.Workspace)/drop/**/*.zip'
                     fileType: 'json'
                     targetFiles: 'appsettings.$(environmentApp).json'
 
@@ -211,7 +219,7 @@ stages:
                   inputs:
                     WebSiteName: '$(siteDNS)'
                     VirtualApplication: '$(productName)'
-                    Package: '$(Pipeline.Workspace)/**/*.zip'
+                    Package: '$(Pipeline.Workspace)/drop/**/*.zip'
                     TakeAppOfflineFlag: true
 
   - stage: deploy_prod
@@ -240,6 +248,14 @@ stages:
           runOnce:
             deploy:
               steps:
+                - task: DownloadBuildArtifacts@0
+                  displayName: 'Download build artifact'
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: 'drop'
+                    downloadPath: '$(Pipeline.Workspace)'
+
                 - task: CmdLine@2
                   displayName: Remove HTTPS Bindings 
                   condition: ${{ parameters.CreateIis }}
@@ -305,7 +321,7 @@ stages:
                 - task: FileTransform@1
                   displayName: 'Variable transformation'
                   inputs:
-                    folderPath: '$(Pipeline.Workspace)/**/*.zip'
+                    folderPath: '$(Pipeline.Workspace)/drop/**/*.zip'
                     fileType: 'json'
                     targetFiles: 'appsettings.$(environmentApp).json'
 
@@ -314,5 +330,5 @@ stages:
                   inputs:
                     WebSiteName: '$(siteDNS)'
                     VirtualApplication: '$(productName)'
-                    Package: '$(Pipeline.Workspace)/**/*.zip'
+                    Package: '$(Pipeline.Workspace)/drop/**/*.zip'
                     TakeAppOfflineFlag: true

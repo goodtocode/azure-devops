@@ -33,7 +33,7 @@ parameters:
     default: '0 */5 * * * *'
   - name: dotnetVersion
     type: string 
-    default: "7.x"
+    default: "10.x"
 
 steps:
   - task: DeleteFiles@1

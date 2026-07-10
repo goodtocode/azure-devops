@@ -48,7 +48,7 @@ steps:
   - task: NodeTool@0
     displayName: Install Node.js
     inputs:
-      versionSpec: '17.x'
+      versionSpec: '110.x'
 
   - task: Npm@1
     displayName: 'npm install'
