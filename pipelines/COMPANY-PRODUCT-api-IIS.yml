@@ -5,7 +5,7 @@ trigger:
     - 'main'
   paths:
     include:
-    - .azure-devops/pipelines/aacn-eventeval-api-ci-cd-IIS.yml
+    - .azuredevops/pipelines/COMPANY-PRODUCT-api-IIS.yml
     - src/Core/**
     - src/Infrastructure/**
     - src/Presentation/WebApi/**
@@ -124,7 +124,7 @@ stages:
 
   - stage: deploy_dev
     dependsOn: build
-    condition: and(succeeded(), or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
     variables:
       - template: ../variables/cd-development.yml
       
@@ -224,7 +224,7 @@ stages:
 
   - stage: deploy_prod
     dependsOn: deploy_dev
-    condition: or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
     variables:
       - template: ../variables/cd-production.yml
 
