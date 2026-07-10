@@ -38,14 +38,36 @@ stages:
   - stage: build
     variables:
       - template: ../variables/ci-common.yml
+      - name: versionMajor
+        value: '1'
+      - name: versionMinor
+        value: '1'
     jobs:
       - job: build_src
         steps:
           - task: PowerShell@2
+            displayName: 'Get-Version.ps1'
+            inputs:
+              targetType: 'inline'
+              script: |
+                $json = & "$(scriptsPath)/Get-Version.ps1" -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)
+                $versionObj = $json | ConvertFrom-Json
+
+                Write-Host "SemanticVersion: $($versionObj.SemanticVersion)"
+                Write-Host "FileVersion: $($versionObj.FileVersion)"
+                Write-Host "AssemblyVersion: $($versionObj.AssemblyVersion)"
+                Write-Host "InformationalVersion: $($versionObj.InformationalVersion)"
+
+                Write-Host "##vso[task.setvariable variable=semanticVersion]$($versionObj.SemanticVersion)"
+                Write-Host "##vso[task.setvariable variable=fileVersion]$($versionObj.FileVersion)"
+                Write-Host "##vso[task.setvariable variable=assemblyVersion]$($versionObj.AssemblyVersion)"
+                Write-Host "##vso[task.setvariable variable=informationalVersion]$($versionObj.InformationalVersion)"
+
+          - task: PowerShell@2
             displayName: 'Set-Version.ps1'
             inputs:
               filePath: '$(scriptsPath)/Set-Version.ps1'
-              arguments: '-Path $(srcPath) -VersionToReplace 1.0.0 -Major 1 -Minor 0 -Revision 0 -CommitHash $(Build.SourceVersion) -Build $(Build.BuildNumber)'
+              arguments: '-Path $(srcPath) -VersionToReplace 1.0.0 -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)'
               workingDirectory: '$(scriptsPath)'
 
           - task: UseDotNet@2
@@ -68,7 +90,7 @@ stages:
             inputs:
               command: 'build'
               projects: "$(srcProject)"
-              arguments: "--configuration $(buildConfiguration)"
+              arguments: "--configuration $(buildConfiguration) /p:Version=$(semanticVersion) /p:FileVersion=$(fileVersion) /p:AssemblyVersion=$(assemblyVersion) /p:InformationalVersion=$(informationalVersion)"
 
       - job: test_src
         dependsOn: build_src
