@@ -13,8 +13,8 @@ trigger:
 
 pr:
   branches:
-    exclude:
-    - '*'
+    include:
+    - 'main'
 
 pool:
   vmImage: 'ubuntu-latest'

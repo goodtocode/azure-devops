@@ -9,7 +9,7 @@ trigger:
 
 pr:
   branches:
-    exclude:
+    include:
     - '*'
 
 pool:
@@ -36,6 +36,31 @@ variables:
   - template: ../variables/ci-common.yml
 
 stages:
+  - stage: validate
+    condition: eq(variables['Build.Reason'], 'PullRequest')
+    variables:
+      - template: ../variables/cd-development.yml
+
+    jobs:
+      - job: validate_ef_migration
+        steps:
+          - template: ../steps/ef-publish-steps.yml
+            parameters:
+              artifactsPath: '$(Build.ArtifactStagingDirectory)'
+              buildConfiguration: '$(buildConfiguration)'
+              dbContext: '$(dbContext)'
+              sqldbFile: '$(Build.ArtifactStagingDirectory)/migration.sql'
+              srcPath: '$(srcPath)'
+              efStartupPath: '$(efStartupPath)'
+              efTargetPath: '$(efTargetPath)'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish EF validation artifact'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'drop'
+              publishLocation: 'Container'
+
   - stage: development
     condition: and(eq(lower(${{ parameters.releaseToDev }}), 'true'), and(ne(variables['Build.SourceBranch'], 'refs/heads/develop'), not(eq(variables['Build.Reason'], 'PullRequest'))))
     variables:

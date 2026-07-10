@@ -130,7 +130,7 @@ stages:
 
   - stage: cd
     dependsOn: ci
-    condition: and(succeeded(), or(and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest')), eq(${{ parameters.RunCd }}, true)))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(${{ parameters.RunCd }}, true)))
     jobs:
       - job: publish_nuget
         steps:
