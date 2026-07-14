@@ -1,0 +1,232 @@
+trigger:
+  batch: false
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - pipelines/COMPANY-platform-spoke-iac.yml
+      - .azure/**/*.bicep
+      - .azure/**/*.bicepparam
+      - .azure/**/*.bicepparams
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - pipelines/COMPANY-platform-spoke-iac.yml
+      - .azure/**/*.bicep
+      - .azure/**/*.bicepparam
+      - .azure/**/*.bicepparams
+
+pool:
+  vmImage: ubuntu-latest
+
+parameters:
+  - name: ForceDeployDev
+    type: boolean
+    default: false
+  - name: ForceDeployProd
+    type: boolean
+    default: false
+  - name: SubscriptionService
+    type: string
+    default: AZURE-DEVOPS-SERVICE-CONNECTION-NAME
+
+variables:
+  - name: hubMgmtRgName
+    value: COMPANY-hub-mgmt-plat-wus2-001-rg
+  - name: spokeLocation
+    value: westus2
+
+  - name: spokeNetworkDevRgName
+    value: COMPANY-spoke-network-dev-wus2-001-rg
+  - name: spokeNetworkDevBicepTemplate
+    value: .azure/templates/platform-spoke-network-publicroute.bicep
+  - name: spokeNetworkDevBicepParameters
+    value: .azure/variables/platform-spoke-network-publicroute-dev.bicepparam
+
+  - name: spokeMgmtDevRgName
+    value: COMPANY-spoke-mgmt-dev-wus2-001-rg
+  - name: spokeMgmtDevBicepTemplate
+    value: .azure/templates/platform-spoke-mgmt.bicep
+  - name: spokeMgmtDevBicepParameters
+    value: .azure/variables/platform-spoke-mgmt-dev.bicepparam
+
+  - name: spokeNetworkProdRgName
+    value: COMPANY-spoke-network-prod-wus2-001-rg
+  - name: spokeNetworkProdBicepTemplate
+    value: .azure/templates/platform-spoke-network-publicroute.bicep
+  - name: spokeNetworkProdBicepParameters
+    value: .azure/variables/platform-spoke-network-publicroute-prod.bicepparam
+
+  - name: spokeMgmtProdRgName
+    value: COMPANY-spoke-mgmt-prod-wus2-001-rg
+  - name: spokeMgmtProdBicepTemplate
+    value: .azure/templates/platform-spoke-mgmt.bicep
+  - name: spokeMgmtProdBicepParameters
+    value: .azure/variables/platform-spoke-mgmt-prod.bicepparam
+
+  - name: hubMgmtSubscriptionId
+    value: $(PLATFORM_SUBSCRIPTION_ID)
+
+stages:
+  - stage: ci
+    displayName: Validate Spoke IaC
+    condition: or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
+
+    jobs:
+      - job: validate_spoke_iac_dev
+        displayName: Validate spoke IaC (Dev)
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(spokeNetworkDevRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(spokeNetworkDevRgName) --location $(spokeLocation)
+
+          - task: AzureCLI@2
+            displayName: Validate $(spokeNetworkDevRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group what-if --resource-group $(spokeNetworkDevRgName) --template-file $(spokeNetworkDevBicepTemplate) --parameters $(spokeNetworkDevBicepParameters)
+
+          - task: AzureCLI@2
+            displayName: Create $(spokeMgmtDevRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(spokeMgmtDevRgName) --location $(spokeLocation)
+
+          - task: AzureCLI@2
+            displayName: Validate $(spokeMgmtDevRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group what-if --resource-group $(spokeMgmtDevRgName) --template-file $(spokeMgmtDevBicepTemplate) --parameters $(spokeMgmtDevBicepParameters) --parameters hubMgmtSubscriptionId=$(hubMgmtSubscriptionId) hubMgmtResourceGroupName=$(hubMgmtRgName)
+
+  - stage: cd_dev
+    displayName: Deploy Spoke IaC (Dev)
+    dependsOn: ci
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(lower(${{ parameters.ForceDeployDev }}), 'true')))
+
+    jobs:
+      - job: deploy_spoke_iac_dev
+        displayName: Deploy spoke IaC (Dev)
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(spokeNetworkDevRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(spokeNetworkDevRgName) --location $(spokeLocation)
+
+          - task: AzureCLI@2
+            displayName: Deploy $(spokeNetworkDevRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group create --resource-group $(spokeNetworkDevRgName) --template-file $(spokeNetworkDevBicepTemplate) --parameters $(spokeNetworkDevBicepParameters)
+
+          - task: AzureCLI@2
+            displayName: Create $(spokeMgmtDevRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(spokeMgmtDevRgName) --location $(spokeLocation)
+
+          - task: AzureCLI@2
+            displayName: Deploy $(spokeMgmtDevRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group create --resource-group $(spokeMgmtDevRgName) --template-file $(spokeMgmtDevBicepTemplate) --parameters $(spokeMgmtDevBicepParameters) --parameters hubMgmtSubscriptionId=$(hubMgmtSubscriptionId) hubMgmtResourceGroupName=$(hubMgmtRgName)
+
+  - stage: prod_approval
+    displayName: Approve Prod Deployment
+    dependsOn: cd_dev
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(lower(${{ parameters.ForceDeployProd }}), 'true')))
+
+    jobs:
+      - job: manual_approval_prod
+        displayName: Manual approval for Prod
+        pool: server
+        timeoutInMinutes: 4320
+        steps:
+          - task: ManualValidation@0
+            displayName: Approve production deployment
+            inputs:
+              notifyUsers: ''
+              instructions: 'Approve deployment to spoke production resources.'
+              onTimeout: reject
+
+  - stage: cd_prod
+    displayName: Deploy Spoke IaC (Prod)
+    dependsOn: prod_approval
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+
+    jobs:
+      - job: deploy_spoke_iac_prod
+        displayName: Deploy spoke IaC (Prod)
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(spokeNetworkProdRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(spokeNetworkProdRgName) --location $(spokeLocation)
+
+          - task: AzureCLI@2
+            displayName: Deploy $(spokeNetworkProdRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group create --resource-group $(spokeNetworkProdRgName) --template-file $(spokeNetworkProdBicepTemplate) --parameters $(spokeNetworkProdBicepParameters)
+
+          - task: AzureCLI@2
+            displayName: Create $(spokeMgmtProdRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(spokeMgmtProdRgName) --location $(spokeLocation)
+
+          - task: AzureCLI@2
+            displayName: Deploy $(spokeMgmtProdRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group create --resource-group $(spokeMgmtProdRgName) --template-file $(spokeMgmtProdBicepTemplate) --parameters $(spokeMgmtProdBicepParameters) --parameters hubMgmtSubscriptionId=$(hubMgmtSubscriptionId) hubMgmtResourceGroupName=$(hubMgmtRgName)

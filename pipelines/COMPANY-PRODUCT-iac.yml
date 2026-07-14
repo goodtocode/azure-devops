@@ -29,8 +29,26 @@ parameters:
     default: 'AZURE-DEVOPS-SERVICE-CONNECTION-NAME'
 
 stages:
+  - stage: validate
+    condition: eq(variables['Build.Reason'], 'PullRequest')
+    variables:
+      - template: ../variables/iac-development.yml
+
+    jobs:
+      - job: validate_landingzone
+        steps:
+          - task: AzureCLI@2
+            displayName: Validate Landing Zone
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az deployment group what-if --resource-group $(rgSharedName) --template-file $(sharedTemplate) --parameters $(sharedParameters)
+                az deployment group what-if --resource-group $(rgName) --template-file $(landingZoneTemplate) --parameters $(landingZoneParameters)
+
   - stage: development
-    condition: or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest')))
+    condition: and(ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
     variables:
       - template: ../variables/iac-development.yml
 
@@ -87,7 +105,7 @@ stages:
                 az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionIdentityObjectId) --secret-permissions get list
 
   - stage: production
-    condition: or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), and(and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main')), ne(variables['Build.Reason'], 'PullRequest')))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
     variables:
       - template: ../variables/iac-production.yml
 

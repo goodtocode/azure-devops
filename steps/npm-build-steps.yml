@@ -17,19 +17,38 @@ parameters:
   - name: versionToReplace
     type: string 
     default: "1.0.0"
+  - name: versionMajor
+    type: string
+    default: "1"
+  - name: versionMinor
+    type: string
+    default: "1"
 
 steps:
+  - task: PowerShell@2
+    displayName: 'Get-Version.ps1'
+    inputs:
+      targetType: 'inline'
+      script: |
+        $json = & "${{ parameters.scriptsPath }}/Get-Version.ps1" -VersionToReplace "${{ parameters.versionToReplace }}" -Major ${{ parameters.versionMajor }} -Minor ${{ parameters.versionMinor }} -Patch $(Build.BuildId)
+        $versionObj = $json | ConvertFrom-Json
+
+        Write-Host "##vso[task.setvariable variable=semanticVersion]$($versionObj.SemanticVersion)"
+        Write-Host "##vso[task.setvariable variable=fileVersion]$($versionObj.FileVersion)"
+        Write-Host "##vso[task.setvariable variable=assemblyVersion]$($versionObj.AssemblyVersion)"
+        Write-Host "##vso[task.setvariable variable=informationalVersion]$($versionObj.InformationalVersion)"
+
   - task: PowerShell@2
     displayName: 'Set-Version.ps1'
     inputs:
       filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
-      arguments: '-Path ${{ parameters.srcPath }}  -VersionToReplace ${{ parameters.versionToReplace }}'
+      arguments: '-Path ${{ parameters.srcPath }} -VersionToReplace ${{ parameters.versionToReplace }} -Major ${{ parameters.versionMajor }} -Minor ${{ parameters.versionMinor }} -Patch $(Build.BuildId)'
       workingDirectory: '${{ parameters.scriptsPath }}'
 
   - task: NodeTool@0
     displayName: Install Node.js
     inputs:
-      versionSpec: '17.x'
+      versionSpec: '110.x'
 
   - task: Npm@1
     displayName: 'npm install'

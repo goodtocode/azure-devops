@@ -14,4 +14,4 @@ variables:
   - name:  nugetConfig
     value: '.nuget/NuGet.config'
   - name:  dotnetVersion
-    value: '7.x'
+    value: '10.x'

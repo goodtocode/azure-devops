@@ -1,115 +1,159 @@
 trigger:
-  batch: true
+  batch: false
   branches:
     include:
-    - '*'
+    - 'main'
   paths:
     include:
-    - src/*
+    - pipelines/COMPANY-PRODUCT-nuget.yml
+    - src/**
 
 pr:
   branches:
-    exclude:
-    - '*'
+    include:
+    - 'main'
+  paths:
+    include:
+    - pipelines/COMPANY-PRODUCT-nuget.yml
+    - src/**
 
 pool:
   vmImage: 'ubuntu-latest'
 
 parameters:
+  - name: RunCd
+    type: boolean
+    default: false
   - name: nugetService
     type: string 
     default: "COMPANY-nuget-001"
-  - name: nugetId
-    type: string 
-    default: "$(nugetId)"
   - name: versionToReplace
     type: string
     default: "1.0.0"
 
 variables:
-  - template: ../variables/ci-common.yml
+  - name: buildConfiguration
+    value: 'Release'
+  - name: dotnetVersion
+    value: '10.x'
+  - name: scriptsPath
+    value: '$(System.DefaultWorkingDirectory)/scripts/ci'
+  - name: srcPath
+    value: '$(System.DefaultWorkingDirectory)/src'
+  - name: srcSolution
+    value: 'COMPANY.PRODUCT.sln'
+  - name: packageProject
+    value: 'COMPANY.PRODUCT.csproj'
+  - name: testProject
+    value: 'COMPANY.PRODUCT.Tests.csproj'
+  - name: nugetConfig
+    value: '$(System.DefaultWorkingDirectory)/.nuget/NuGet.config'
+  - name: packageOutput
+    value: '$(Build.ArtifactStagingDirectory)/nupkg_output'
+  - name: artifactName
+    value: 'nuget-package'
+  - name: versionMajor
+    value: '1'
+  - name: versionMinor
+    value: '1'
 
 stages:
-  - stage: development
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
-    variables:
-      - template: ../variables/cd-development.yml
-      
+  - stage: ci
     jobs:
-      - job: build_src
+      - job: build_test_pack
         steps:
-          - template: ../steps/dotnet-build-steps.yml
-            parameters:
-              scriptsPath: '$(scriptsPath)'
-              srcPath: '$(srcPath)'
+          - task: PowerShell@2
+            displayName: 'Get-Version.ps1'
+            inputs:
+              targetType: 'inline'
+              script: |
+                $json = & "$(scriptsPath)/Get-Version.ps1" -VersionToReplace "${{ parameters.versionToReplace }}" -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)
+                $versionObj = $json | ConvertFrom-Json
 
-      - job: test_src
-        dependsOn: build_src
-        steps:
-          - template: ../steps/dotnet-test-steps.yml
-            parameters:
-              testPath: '$(srcPath)'
-              arguments: '--filter TestCategory!=Integration'
-              appcsEnvironmentVariable: '${{ parameters.appcsEnvironmentVariable }}'
-              appcsConnection: '${{ parameters.appcsConnection }}'
-              environmentApp: '$(environmentApp)'
+                Write-Host "##vso[task.setvariable variable=semanticVersion]$($versionObj.SemanticVersion)"
+                Write-Host "##vso[task.setvariable variable=fileVersion]$($versionObj.FileVersion)"
+                Write-Host "##vso[task.setvariable variable=assemblyVersion]$($versionObj.AssemblyVersion)"
+                Write-Host "##vso[task.setvariable variable=informationalVersion]$($versionObj.InformationalVersion)"
 
-      - job: pack_src
-        dependsOn: test_src
-        steps:
-          - template: ../steps/dotnet-pack-steps.yml
-            parameters:
-              artifactsPath: '$(artifactsPath)'
-              scriptsPath: '$(scriptsPath)'
-              srcPath: '$(srcPath)'
-              versionToReplace: '${{ parameters.versionToReplace }}'
+          - task: PowerShell@2
+            displayName: 'Set-Version.ps1'
+            inputs:
+              filePath: '$(scriptsPath)/Set-Version.ps1'
+              arguments: '-Path $(srcPath) -VersionToReplace ${{ parameters.versionToReplace }} -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)'
+              workingDirectory: '$(scriptsPath)'
 
-      - job: deploy_nuget
-        dependsOn: pack_src
-        steps:
-          - template: ../steps/nuget-deploy-internal-steps.yml
-            parameters:              
-              artifactsPath: '$(artifactsPath)'
-              nugetId:  '${{ parameters.nugetId }}'
+          - task: UseDotNet@2
+            displayName: 'Use .NET SDK $(dotnetVersion)'
+            inputs:
+              packageType: 'sdk'
+              version: '$(dotnetVersion)'
+              includePreviewVersions: true
 
-  - stage: production
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
-    variables:
-      - template: ../cd-production.yml    
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet restore'
+            inputs:
+              command: 'restore'
+              projects: '$(srcPath)/**/$(srcSolution)'
+              feedsToUse: 'config'
+              nugetConfigPath: '$(nugetConfig)'
 
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet build'
+            inputs:
+              command: 'build'
+              projects: '$(srcPath)/**/$(srcSolution)'
+              arguments: '--configuration $(buildConfiguration) /p:Version=$(semanticVersion) /p:FileVersion=$(fileVersion) /p:AssemblyVersion=$(assemblyVersion) /p:InformationalVersion=$(informationalVersion)'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet test'
+            inputs:
+              command: 'test'
+              projects: '$(srcPath)/**/$(testProject)'
+              arguments: '--configuration $(buildConfiguration) --no-build'
+              publishTestResults: true
+
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet pack'
+            inputs:
+              command: 'pack'
+              packagesToPack: '$(srcPath)/**/$(packageProject)'
+              nobuild: true
+              versioningScheme: 'off'
+              arguments: '--configuration $(buildConfiguration) --output $(packageOutput) /p:Version=$(semanticVersion) /p:FileVersion=$(fileVersion) /p:AssemblyVersion=$(assemblyVersion) /p:InformationalVersion=$(informationalVersion)'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish NuGet package artifact'
+            inputs:
+              PathtoPublish: '$(packageOutput)'
+              ArtifactName: '$(artifactName)'
+              publishLocation: 'Container'
+
+  - stage: cd
+    dependsOn: ci
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(${{ parameters.RunCd }}, true)))
     jobs:
-      - job: build_src
+      - job: publish_nuget
         steps:
-          - template: ../steps/dotnet-build-steps.yml
-            parameters:
-              scriptsPath: '$(scriptsPath)'
-              srcPath: '$(srcPath)'
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download NuGet package artifact'
+            inputs:
+              buildType: 'current'
+              downloadType: 'single'
+              artifactName: '$(artifactName)'
+              downloadPath: '$(Pipeline.Workspace)'
 
-      - job: test_src
-        dependsOn: build_src
-        steps:
-          - template: ../steps/dotnet-test-steps.yml
-            parameters:
-              testPath: '$(srcPath)'
-              arguments: '--filter TestCategory!=Integration'
-              appcsEnvironmentVariable: '${{ parameters.appcsEnvironmentVariable }}'
-              appcsConnection: '${{ parameters.appcsConnection }}'
-              environmentApp: '$(environmentApp)'
+          - task: NuGetToolInstaller@1
+            displayName: 'Install NuGet'
+            inputs:
+              versionSpec: '*'
+              checkLatest: true
 
-      - job: pack_src
-        dependsOn: test_src
-        steps:
-          - template: ../steps/dotnet-pack-steps.yml
-            parameters:
-              artifactsPath: '$(artifactsPath)'
-              scriptsPath: '$(scriptsPath)'
-              srcPath: '$(srcPath)'
-              versionToReplace: '${{ parameters.versionToReplace }}'
-
-      - job: deploy_nuget
-        dependsOn: pack_src
-        steps:
-          - template: ../steps/nuget-deploy-external-steps.yml
-            parameters:              
-              artifactsPath: '$(artifactsPath)'
-              nugetService:  '${{ parameters.nugetService }}'
+          - task: NuGetCommand@2
+            displayName: 'Publish to NuGet.org'
+            inputs:
+              command: 'push'
+              feedsToUse: 'select'
+              nuGetFeedType: 'external'
+              includeNuGetOrg: true
+              publishFeedCredentials: '${{ parameters.nugetService }}'
+              packagesToPush: '$(Pipeline.Workspace)/$(artifactName)/**/*.nupkg'

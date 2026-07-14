@@ -16,7 +16,7 @@ parameters:
     default: "../scripts"
   - name: dotnetVersion
     type: string 
-    default: "7.x"
+    default: "10.x"
 
 steps:
   - task: UseDotNet@2

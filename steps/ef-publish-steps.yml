@@ -9,7 +9,7 @@ parameters:
     type: string
   - name: dotnetVersion
     type: string 
-    default: "7.x"
+    default: "10.x"
   - name: nugetPathFile
     type: string 
     default: ".nuget/NuGet.config"

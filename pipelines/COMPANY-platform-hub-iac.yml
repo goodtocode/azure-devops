@@ -1,0 +1,145 @@
+trigger:
+  batch: false
+  branches:
+    include:
+      - 'main'
+  paths:
+    include:
+      - pipelines/COMPANY-platform-hub-iac.yml
+      - .azure/**/*.bicep
+      - .azure/**/*.bicepparam
+      - .azure/**/*.bicepparams
+
+pr:
+  branches:
+    include:
+      - 'main'
+  paths:
+    include:
+      - pipelines/COMPANY-platform-hub-iac.yml
+      - .azure/**/*.bicep
+      - .azure/**/*.bicepparam
+      - .azure/**/*.bicepparams
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+parameters:
+  - name: ForceDeployDev
+    type: boolean
+    default: false
+  - name: ForceDeployProd
+    type: boolean
+    default: false
+  - name: SubscriptionService
+    type: string
+    default: 'AZURE-DEVOPS-SERVICE-CONNECTION-NAME'
+
+variables:
+  - name: DOTNET_SYSTEM_GLOBALIZATION_INVARIANT
+    value: 'true'
+  - name: hubLocation
+    value: 'westus2'
+  - name: hubNetworkRgName
+    value: 'COMPANY-hub-network-plat-wus2-001-rg'
+  - name: hubNetworkBicepTemplate
+    value: '.azure/templates/platform-hub-network-publicroute.bicep'
+  - name: hubNetworkBicepParameters
+    value: '.azure/variables/platform-hub-network-publicroute-plat.bicepparam'
+  - name: hubMgmtRgName
+    value: 'COMPANY-hub-mgmt-plat-wus2-001-rg'
+  - name: hubMgmtBicepTemplate
+    value: '.azure/templates/platform-hub-mgmt.bicep'
+  - name: hubMgmtBicepParameters
+    value: '.azure/variables/platform-hub-mgmt-plat.bicepparam'
+
+stages:
+  - stage: ci
+    displayName: Validate hub IaC
+    jobs:
+      - job: validate_hub_iac
+        displayName: Validate hub IaC
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(hubNetworkRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az group create --name $(hubNetworkRgName) --location $(hubLocation)
+
+          - task: AzureCLI@2
+            displayName: Validate $(hubNetworkRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az deployment group what-if --resource-group $(hubNetworkRgName) --template-file $(hubNetworkBicepTemplate) --parameters $(hubNetworkBicepParameters)
+
+          - task: AzureCLI@2
+            displayName: Create $(hubMgmtRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az group create --name $(hubMgmtRgName) --location $(hubLocation)
+
+          - task: AzureCLI@2
+            displayName: Validate $(hubMgmtRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az deployment group what-if --resource-group $(hubMgmtRgName) --template-file $(hubMgmtBicepTemplate) --parameters $(hubMgmtBicepParameters)
+
+  - stage: cd
+    displayName: Deploy landing zone IaC
+    dependsOn: ci
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(lower(${{ parameters.ForceDeployDev }}), 'true'), eq(lower(${{ parameters.ForceDeployProd }}), 'true')))
+    jobs:
+      - job: deploy_hub_iac
+        displayName: Deploy landing zone IaC
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(hubNetworkRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az group create --name $(hubNetworkRgName) --location $(hubLocation)
+
+          - task: AzureCLI@2
+            displayName: Deploy $(hubNetworkRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az deployment group create --resource-group $(hubNetworkRgName) --template-file $(hubNetworkBicepTemplate) --parameters $(hubNetworkBicepParameters)
+
+          - task: AzureCLI@2
+            displayName: Create $(hubMgmtRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az group create --name $(hubMgmtRgName) --location $(hubLocation)
+
+          - task: AzureCLI@2
+            displayName: Deploy $(hubMgmtRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az deployment group create --resource-group $(hubMgmtRgName) --template-file $(hubMgmtBicepTemplate) --parameters $(hubMgmtBicepParameters)

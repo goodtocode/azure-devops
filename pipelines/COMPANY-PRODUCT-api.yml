@@ -5,7 +5,7 @@ trigger:
     - 'main'
   paths:
     include:
-    - .azure-devops/pipelines/COMPANY-PRODUCT-api-ci-cd-appservice.yml
+    - .azuredevops/pipelines/COMPANY-PRODUCT-api.yml
     - src/Core/**
     - src/Infrastructure/**
     - src/Presentation/WebApi/**
@@ -35,14 +35,36 @@ stages:
   - stage: build
     variables:
       - template: ../variables/ci-common.yml
+      - name: versionMajor
+        value: '1'
+      - name: versionMinor
+        value: '1'
     jobs:
       - job: build_src
         steps:
           - task: PowerShell@2
+            displayName: 'Get-Version.ps1'
+            inputs:
+              targetType: 'inline'
+              script: |
+                $json = & "$(scriptsPath)/Get-Version.ps1" -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)
+                $versionObj = $json | ConvertFrom-Json
+
+                Write-Host "SemanticVersion: $($versionObj.SemanticVersion)"
+                Write-Host "FileVersion: $($versionObj.FileVersion)"
+                Write-Host "AssemblyVersion: $($versionObj.AssemblyVersion)"
+                Write-Host "InformationalVersion: $($versionObj.InformationalVersion)"
+
+                Write-Host "##vso[task.setvariable variable=semanticVersion]$($versionObj.SemanticVersion)"
+                Write-Host "##vso[task.setvariable variable=fileVersion]$($versionObj.FileVersion)"
+                Write-Host "##vso[task.setvariable variable=assemblyVersion]$($versionObj.AssemblyVersion)"
+                Write-Host "##vso[task.setvariable variable=informationalVersion]$($versionObj.InformationalVersion)"
+
+          - task: PowerShell@2
             displayName: 'Set-Version.ps1'
             inputs:
               filePath: '$(scriptsPath)/Set-Version.ps1'
-              arguments: '-Path $(srcPath) -VersionToReplace 1.0.0 -Major 1 -Minor 0 -Revision 0 -CommitHash $(Build.SourceVersion) -Build $(Build.BuildNumber)'
+              arguments: '-Path $(srcPath) -VersionToReplace 1.0.0 -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)'
               workingDirectory: '$(scriptsPath)'
 
           - task: UseDotNet@2
@@ -65,7 +87,7 @@ stages:
             inputs:
               command: 'build'
               projects: "$(srcProject)"
-              arguments: "--configuration $(buildConfiguration)"
+              arguments: "--configuration $(buildConfiguration) /p:Version=$(semanticVersion) /p:FileVersion=$(fileVersion) /p:AssemblyVersion=$(assemblyVersion) /p:InformationalVersion=$(informationalVersion)"
 
       - job: test_src
         dependsOn: build_src
@@ -99,19 +121,25 @@ stages:
 
   - stage: deploy_dev
     dependsOn: build
-    condition: and(succeeded(), or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
     variables:
       - template: ../variables/cd-development.yml
       
     jobs:
-      - job: deploy_approval
-        pool: server
-        timeoutInMinutes: 4320
+      - job: deploy_dev
         steps:
+        - task: DownloadBuildArtifacts@0
+          displayName: 'Download build artifact'
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'drop'
+            downloadPath: '$(Pipeline.Workspace)'
+
         - task: FileTransform@1
           displayName: 'Variable transformation'
           inputs:
-            folderPath: '$(Pipeline.Workspace)/**/*.zip'
+            folderPath: '$(Pipeline.Workspace)/drop/**/*.zip'
             fileType: 'json'
             targetFiles: 'appsettings.$(environmentApp).json'
 
@@ -121,12 +149,12 @@ stages:
             azureSubscription: '${{ parameters.subscriptionService }}'
             appType: 'webApp'
             appName: '$(appName)'
-            package: '$(Pipeline.Workspace)/**/*.zip'
+            package: '$(Pipeline.Workspace)/drop/**/*.zip'
             deploymentMethod: 'zipDeploy'
 
   - stage: deploy_prod
     dependsOn: deploy_dev
-    condition: or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
     variables:
       - template: ../variables/cd-production.yml
 
@@ -141,13 +169,21 @@ stages:
            instructions: "Team: $(System.TeamProject)\r\nRepo: $(Build.Repository.Name)\r\nRequested by: $(Build.RequestedFor)\r\nBuild: $(Build.BuildNumber)\r\nUrl: $(Build.BuildUri)\r\nA new deployment has been requested. Please approve or reject the deployment."
            onTimeout: reject
       
-      - job: deploy_approval
-        pool: server
+      - job: deploy_prod
+        dependsOn: deploy_approval
         steps:
+        - task: DownloadBuildArtifacts@0
+          displayName: 'Download build artifact'
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'drop'
+            downloadPath: '$(Pipeline.Workspace)'
+
         - task: FileTransform@1
           displayName: 'Variable transformation'
           inputs:
-            folderPath: '$(Pipeline.Workspace)/**/*.zip'
+            folderPath: '$(Pipeline.Workspace)/drop/**/*.zip'
             fileType: 'json'
             targetFiles: 'appsettings.$(environmentApp).json'
 
@@ -157,5 +193,5 @@ stages:
             azureSubscription: '${{ parameters.subscriptionService }}'
             appType: 'webApp'
             appName: '$(appName)'
-            package: '$(Pipeline.Workspace)/**/*.zip'
+            package: '$(Pipeline.Workspace)/drop/**/*.zip'
             deploymentMethod: 'zipDeploy'

@@ -22,7 +22,7 @@ parameters:
     default: "AZURE_STORAGE_CONNECTION"
   - name: dotnetVersion
     type: string 
-    default: "7.x"
+    default: "10.x"
 
 
 steps:

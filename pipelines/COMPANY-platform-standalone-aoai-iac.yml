@@ -1,0 +1,185 @@
+trigger:
+  batch: false
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - pipelines/COMPANY-platform-standalone-aoai-iac.yml
+      - .azure/**/*.bicep
+      - .azure/**/*.bicepparam
+      - .azure/**/*.bicepparams
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - pipelines/COMPANY-platform-standalone-aoai-iac.yml
+      - .azure/**/*.bicep
+      - .azure/**/*.bicepparam
+      - .azure/**/*.bicepparams
+
+pool:
+  vmImage: ubuntu-latest
+
+parameters:
+  - name: ForceDeployDev
+    type: boolean
+    default: false
+  - name: ForceDeployProd
+    type: boolean
+    default: false
+  - name: SubscriptionService
+    type: string
+    default: AZURE-DEVOPS-SERVICE-CONNECTION-NAME
+
+variables:
+  - name: spokeLocation
+    value: westus2
+
+  - name: spokeAiDevRgName
+    value: COMPANY-spoke-ai-dev-wus2-001-rg
+  - name: spokeAiDevBicepTemplate
+    value: .azure/templates/platform-standalone-ai-aoai.bicep
+  - name: spokeAiDevBicepParameters
+    value: .azure/variables/platform-standalone-ai-aoai-dev.bicepparam
+
+  - name: spokeAiProdRgName
+    value: COMPANY-spoke-ai-prod-wus2-001-rg
+  - name: spokeAiProdBicepTemplate
+    value: .azure/templates/platform-standalone-ai-aoai.bicep
+  - name: spokeAiProdBicepParameters
+    value: .azure/variables/platform-standalone-ai-aoai-prod.bicepparam
+
+  - name: spokeAiModelName
+    value: gpt-5.6-luna
+
+stages:
+  - stage: ci
+    displayName: Validate standalone AOAI IaC
+    condition: or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
+
+    jobs:
+      - job: validate_spoke_aoai_iac_dev
+        displayName: Validate standalone AOAI IaC (Dev)
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(spokeAiDevRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(spokeAiDevRgName) --location $(spokeLocation)
+
+          - task: AzureCLI@2
+            displayName: '[SPOKE_AI] Validate Azure OpenAI deployment in $(spokeAiDevRgName)'
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group what-if --resource-group $(spokeAiDevRgName) --template-file $(spokeAiDevBicepTemplate) --parameters $(spokeAiDevBicepParameters) --parameters modelName=$(spokeAiModelName)
+
+      - job: validate_spoke_aoai_iac_prod
+        displayName: Validate standalone AOAI IaC (Prod)
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(spokeAiProdRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(spokeAiProdRgName) --location $(spokeLocation)
+
+          - task: AzureCLI@2
+            displayName: '[SPOKE_AI] Validate Azure OpenAI deployment in $(spokeAiProdRgName)'
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group what-if --resource-group $(spokeAiProdRgName) --template-file $(spokeAiProdBicepTemplate) --parameters $(spokeAiProdBicepParameters) --parameters modelName=$(spokeAiModelName)
+
+  - stage: cd_dev
+    displayName: Deploy standalone AOAI IaC (Dev)
+    dependsOn: ci
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(lower(${{ parameters.ForceDeployDev }}), 'true')))
+
+    jobs:
+      - job: deploy_spoke_aoai_iac_dev
+        displayName: Deploy standalone AOAI IaC (Dev)
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(spokeAiDevRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(spokeAiDevRgName) --location $(spokeLocation)
+
+          - task: AzureCLI@2
+            displayName: '[SPOKE_AI] Deploy Azure OpenAI to $(spokeAiDevRgName)'
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group create --name spoke-ai-aoai --resource-group $(spokeAiDevRgName) --template-file $(spokeAiDevBicepTemplate) --parameters $(spokeAiDevBicepParameters) --parameters modelName=$(spokeAiModelName)
+
+  - stage: prod_approval
+    displayName: Approve Prod Deployment
+    dependsOn: cd_dev
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(lower(${{ parameters.ForceDeployProd }}), 'true')))
+
+    jobs:
+      - job: manual_approval_prod
+        displayName: Manual approval for Prod
+        pool: server
+        timeoutInMinutes: 4320
+        steps:
+          - task: ManualValidation@0
+            displayName: Approve production deployment
+            inputs:
+              notifyUsers: ''
+              instructions: 'Approve deployment to standalone AOAI production resources.'
+              onTimeout: reject
+
+  - stage: cd_prod
+    displayName: Deploy standalone AOAI IaC (Prod)
+    dependsOn: prod_approval
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+
+    jobs:
+      - job: deploy_spoke_aoai_iac_prod
+        displayName: Deploy standalone AOAI IaC (Prod)
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(spokeAiProdRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(spokeAiProdRgName) --location $(spokeLocation)
+
+          - task: AzureCLI@2
+            displayName: '[SPOKE_AI] Deploy Azure OpenAI to $(spokeAiProdRgName)'
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group create --name spoke-ai-aoai --resource-group $(spokeAiProdRgName) --template-file $(spokeAiProdBicepTemplate) --parameters $(spokeAiProdBicepParameters) --parameters modelName=$(spokeAiModelName)

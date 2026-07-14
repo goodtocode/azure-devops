@@ -5,7 +5,7 @@ trigger:
     - 'main'
   paths:
     include:
-    - .azure-devops/pipelines/aacn-eventeval-api-ci-cd-IIS.yml
+    - .azuredevops/pipelines/COMPANY-PRODUCT-api-IIS.yml
     - src/Core/**
     - src/Infrastructure/**
     - src/Presentation/WebApi/**
@@ -38,14 +38,36 @@ stages:
   - stage: build
     variables:
       - template: ../variables/ci-common.yml
+      - name: versionMajor
+        value: '1'
+      - name: versionMinor
+        value: '1'
     jobs:
       - job: build_src
         steps:
           - task: PowerShell@2
+            displayName: 'Get-Version.ps1'
+            inputs:
+              targetType: 'inline'
+              script: |
+                $json = & "$(scriptsPath)/Get-Version.ps1" -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)
+                $versionObj = $json | ConvertFrom-Json
+
+                Write-Host "SemanticVersion: $($versionObj.SemanticVersion)"
+                Write-Host "FileVersion: $($versionObj.FileVersion)"
+                Write-Host "AssemblyVersion: $($versionObj.AssemblyVersion)"
+                Write-Host "InformationalVersion: $($versionObj.InformationalVersion)"
+
+                Write-Host "##vso[task.setvariable variable=semanticVersion]$($versionObj.SemanticVersion)"
+                Write-Host "##vso[task.setvariable variable=fileVersion]$($versionObj.FileVersion)"
+                Write-Host "##vso[task.setvariable variable=assemblyVersion]$($versionObj.AssemblyVersion)"
+                Write-Host "##vso[task.setvariable variable=informationalVersion]$($versionObj.InformationalVersion)"
+
+          - task: PowerShell@2
             displayName: 'Set-Version.ps1'
             inputs:
               filePath: '$(scriptsPath)/Set-Version.ps1'
-              arguments: '-Path $(srcPath) -VersionToReplace 1.0.0 -Major 1 -Minor 0 -Revision 0 -CommitHash $(Build.SourceVersion) -Build $(Build.BuildNumber)'
+              arguments: '-Path $(srcPath) -VersionToReplace 1.0.0 -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)'
               workingDirectory: '$(scriptsPath)'
 
           - task: UseDotNet@2
@@ -68,7 +90,7 @@ stages:
             inputs:
               command: 'build'
               projects: "$(srcProject)"
-              arguments: "--configuration $(buildConfiguration)"
+              arguments: "--configuration $(buildConfiguration) /p:Version=$(semanticVersion) /p:FileVersion=$(fileVersion) /p:AssemblyVersion=$(assemblyVersion) /p:InformationalVersion=$(informationalVersion)"
 
       - job: test_src
         dependsOn: build_src
@@ -102,7 +124,7 @@ stages:
 
   - stage: deploy_dev
     dependsOn: build
-    condition: and(succeeded(), or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
     variables:
       - template: ../variables/cd-development.yml
       
@@ -115,6 +137,14 @@ stages:
           runOnce:
             deploy:
               steps:
+                - task: DownloadBuildArtifacts@0
+                  displayName: 'Download build artifact'
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: 'drop'
+                    downloadPath: '$(Pipeline.Workspace)'
+
                 - task: CmdLine@2
                   displayName: Remove HTTPS Bindings 
                   condition: ${{ parameters.CreateIis }}
@@ -180,7 +210,7 @@ stages:
                 - task: FileTransform@1
                   displayName: 'Variable transformation'
                   inputs:
-                    folderPath: '$(Pipeline.Workspace)/**/*.zip'
+                    folderPath: '$(Pipeline.Workspace)/drop/**/*.zip'
                     fileType: 'json'
                     targetFiles: 'appsettings.$(environmentApp).json'
 
@@ -189,12 +219,12 @@ stages:
                   inputs:
                     WebSiteName: '$(siteDNS)'
                     VirtualApplication: '$(productName)'
-                    Package: '$(Pipeline.Workspace)/**/*.zip'
+                    Package: '$(Pipeline.Workspace)/drop/**/*.zip'
                     TakeAppOfflineFlag: true
 
   - stage: deploy_prod
     dependsOn: deploy_dev
-    condition: or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), and(succeeded(), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['Build.Reason'], 'PullRequest'))))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
     variables:
       - template: ../variables/cd-production.yml
 
@@ -218,6 +248,14 @@ stages:
           runOnce:
             deploy:
               steps:
+                - task: DownloadBuildArtifacts@0
+                  displayName: 'Download build artifact'
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: 'drop'
+                    downloadPath: '$(Pipeline.Workspace)'
+
                 - task: CmdLine@2
                   displayName: Remove HTTPS Bindings 
                   condition: ${{ parameters.CreateIis }}
@@ -283,7 +321,7 @@ stages:
                 - task: FileTransform@1
                   displayName: 'Variable transformation'
                   inputs:
-                    folderPath: '$(Pipeline.Workspace)/**/*.zip'
+                    folderPath: '$(Pipeline.Workspace)/drop/**/*.zip'
                     fileType: 'json'
                     targetFiles: 'appsettings.$(environmentApp).json'
 
@@ -292,5 +330,5 @@ stages:
                   inputs:
                     WebSiteName: '$(siteDNS)'
                     VirtualApplication: '$(productName)'
-                    Package: '$(Pipeline.Workspace)/**/*.zip'
+                    Package: '$(Pipeline.Workspace)/drop/**/*.zip'
                     TakeAppOfflineFlag: true

@@ -26,9 +26,15 @@ parameters:
   - name: versionToReplace
     type: string 
     default: "1.0.0"
+  - name: versionMajor
+    type: string
+    default: "1"
+  - name: versionMinor
+    type: string
+    default: "1"
   - name: dotnetVersion
     type: string 
-    default: "7.x"
+    default: "10.x"
 
 steps:
   - task: UseDotNet@2
@@ -39,10 +45,23 @@ steps:
       includePreviewVersions: true  
 
   - task: PowerShell@2
+    displayName: 'Get-Version.ps1'
+    inputs:
+      targetType: 'inline'
+      script: |
+        $json = & "${{ parameters.scriptsPath }}/Get-Version.ps1" -VersionToReplace "${{ parameters.versionToReplace }}" -Major ${{ parameters.versionMajor }} -Minor ${{ parameters.versionMinor }} -Patch $(Build.BuildId)
+        $versionObj = $json | ConvertFrom-Json
+
+        Write-Host "##vso[task.setvariable variable=semanticVersion]$($versionObj.SemanticVersion)"
+        Write-Host "##vso[task.setvariable variable=fileVersion]$($versionObj.FileVersion)"
+        Write-Host "##vso[task.setvariable variable=assemblyVersion]$($versionObj.AssemblyVersion)"
+        Write-Host "##vso[task.setvariable variable=informationalVersion]$($versionObj.InformationalVersion)"
+
+  - task: PowerShell@2
     displayName: 'Set-Version.ps1'
     inputs:
       filePath: '${{ parameters.scriptsPath }}/Set-Version.ps1'
-      arguments: '-Path ${{ parameters.srcPath }}  -VersionToReplace ${{ parameters.versionToReplace }}'
+      arguments: '-Path ${{ parameters.srcPath }} -VersionToReplace ${{ parameters.versionToReplace }} -Major ${{ parameters.versionMajor }} -Minor ${{ parameters.versionMinor }} -Patch $(Build.BuildId)'
       workingDirectory: '${{ parameters.scriptsPath }}'
 
   - task: DotNetCoreCLI@2
@@ -60,7 +79,7 @@ steps:
       command: 'build'
       projects: |
         ${{ parameters.srcPath }}/**/${{ parameters.srcProject }}
-      arguments: --output ${{ parameters.outputPath }} --configuration ${{ parameters.buildConfiguration }}
+      arguments: '--output ${{ parameters.outputPath }} --configuration ${{ parameters.buildConfiguration }} /p:Version=$(semanticVersion) /p:FileVersion=$(fileVersion) /p:AssemblyVersion=$(assemblyVersion) /p:InformationalVersion=$(informationalVersion)'
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifact: drop'
