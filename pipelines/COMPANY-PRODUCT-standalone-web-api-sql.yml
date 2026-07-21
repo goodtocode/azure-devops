@@ -1,0 +1,415 @@
+trigger:
+  batch: false
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - pipelines/COMPANY-PRODUCT-standalone-web-api-sql.yml
+      - src/**
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - pipelines/COMPANY-PRODUCT-standalone-web-api-sql.yml
+      - src/**
+
+pool:
+  vmImage: ubuntu-latest
+
+parameters:
+  - name: Environment
+    displayName: Environment to run
+    type: string
+    default: development
+    values:
+      - development
+      - production
+  - name: RunCd
+    displayName: Run CD pipeline
+    type: boolean
+    default: false
+  - name: SubscriptionService
+    type: string
+    default: AZURE-DEVOPS-SERVICE-CONNECTION-NAME
+
+variables:
+  - name: API_ARTIFACT_OUTPUT
+    value: publish_output
+  - name: WEB_ARTIFACT_OUTPUT
+    value: publish_web_output
+  - name: API_ARTIFACT_NAME
+    value: api-artifact
+  - name: WEB_ARTIFACT_NAME
+    value: web-artifact
+  - name: MIGRATION_ARTIFACT_NAME
+    value: ef-migrations
+  - name: MIGRATION_ARTIFACT_FILE
+    value: ef-migrations.sql
+
+  - name: scriptsPath
+    value: $(System.DefaultWorkingDirectory)/scripts/ci
+  - name: srcPath
+    value: $(System.DefaultWorkingDirectory)/src
+  - name: srcSolution
+    value: $(srcPath)/Goodtocode.AgentFramework.Web.slnx
+  - name: apiPath
+    value: Presentation.Api
+  - name: apiProject
+    value: Presentation.Api.csproj
+  - name: testPath
+    value: Tests.Integration
+  - name: testProject
+    value: Tests.Integration.csproj
+  - name: webPath
+    value: Presentation.Web
+  - name: webProject
+    value: Presentation.Web.csproj
+  - name: infraPath
+    value: Infrastructure.SqlServer
+  - name: infraProject
+    value: Infrastructure.SqlServer.csproj
+  - name: infraDbContext
+    value: AgentFrameworkContext
+  - name: runtimeEnv
+    value: Development
+  - name: buildConfiguration
+    value: Release
+  - name: versionMajor
+    value: '2'
+  - name: versionMinor
+    value: '0'
+
+stages:
+  - stage: ci
+    displayName: Web, API and SQL CI
+    condition: or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
+    jobs:
+      - job: ci_build_test_package
+        displayName: Web, API and SQL CI
+        steps:
+          - checkout: self
+
+          - task: UseDotNet@2
+            displayName: Use .NET SDK 10.x
+            inputs:
+              packageType: sdk
+              version: 10.x
+              includePreviewVersions: true
+
+          - task: PowerShell@2
+            displayName: Get-Version.ps1
+            inputs:
+              targetType: inline
+              pwsh: true
+              script: |
+                $json = & "$(scriptsPath)/Get-Version.ps1" -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)
+                $versionObj = $json | ConvertFrom-Json
+
+                Write-Host "SemanticVersion: $($versionObj.SemanticVersion)"
+                Write-Host "FileVersion: $($versionObj.FileVersion)"
+                Write-Host "AssemblyVersion: $($versionObj.AssemblyVersion)"
+                Write-Host "InformationalVersion: $($versionObj.InformationalVersion)"
+
+                Write-Host "##vso[task.setvariable variable=semanticVersion]$($versionObj.SemanticVersion)"
+                Write-Host "##vso[task.setvariable variable=fileVersion]$($versionObj.FileVersion)"
+                Write-Host "##vso[task.setvariable variable=assemblyVersion]$($versionObj.AssemblyVersion)"
+                Write-Host "##vso[task.setvariable variable=informationalVersion]$($versionObj.InformationalVersion)"
+
+          - task: PowerShell@2
+            displayName: Set-Version.ps1
+            inputs:
+              filePath: $(scriptsPath)/Set-Version.ps1
+              arguments: -Path $(srcPath) -VersionToReplace 1.0.0 -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)
+              pwsh: true
+
+          - task: PowerShell@2
+            displayName: Pipeline environment configuration
+            inputs:
+              targetType: inline
+              pwsh: true
+              script: |
+                Write-Host "##vso[task.setvariable variable=ASPNETCORE_ENVIRONMENT]$(runtimeEnv)"
+
+          - task: PowerShell@2
+            displayName: App Settings Variable Substitution
+            inputs:
+              targetType: inline
+              pwsh: true
+              script: |
+                function Set-OpenAiApiKey([string]$filePath, [string]$apiKey) {
+                  if (-not (Test-Path $filePath)) {
+                    Write-Host "Skipping missing file: $filePath"
+                    return
+                  }
+
+                  $obj = Get-Content -Raw $filePath | ConvertFrom-Json
+                  if (-not $obj.OpenAI) {
+                    $obj | Add-Member -MemberType NoteProperty -Name OpenAI -Value ([pscustomobject]@{})
+                  }
+
+                  $obj.OpenAI.ApiKey = $apiKey
+                  $obj | ConvertTo-Json -Depth 50 | Set-Content -Path $filePath
+                  Write-Host "Updated OpenAI.ApiKey in: $filePath"
+                }
+
+                $apiKey = "$(OPENAI_APIKEY)"
+                Set-OpenAiApiKey -filePath "$(srcPath)/$(apiPath)/appsettings.json" -apiKey $apiKey
+                Set-OpenAiApiKey -filePath "$(srcPath)/$(apiPath)/appsettings.$(runtimeEnv).json" -apiKey $apiKey
+                Set-OpenAiApiKey -filePath "$(srcPath)/$(testPath)/appsettings.test.json" -apiKey $apiKey
+
+          - task: DotNetCoreCLI@2
+            displayName: dotnet restore
+            inputs:
+              command: restore
+              projects: $(srcSolution)
+
+          - task: DotNetCoreCLI@2
+            displayName: Build
+            inputs:
+              command: build
+              projects: $(srcSolution)
+              arguments: --configuration $(buildConfiguration) /p:Version=$(semanticVersion) /p:FileVersion=$(fileVersion) /p:AssemblyVersion=$(assemblyVersion) /p:InformationalVersion=$(informationalVersion)
+
+          - task: PowerShell@2
+            displayName: Install dotnet-ef
+            inputs:
+              targetType: inline
+              pwsh: true
+              script: |
+                dotnet tool install --global dotnet-ef
+                Write-Host "##vso[task.prependpath]$HOME/.dotnet/tools"
+
+          - task: PowerShell@2
+            displayName: Check for uncommitted EF Core model changes
+            inputs:
+              targetType: inline
+              pwsh: true
+              script: |
+                Write-Host "Working Directory: $(Get-Location)"
+                $tempDir = "$(srcPath)/$(infraPath)/.temp-migrations"
+
+                if (Test-Path $tempDir) {
+                  Remove-Item -Recurse -Force $tempDir
+                }
+
+                dotnet ef migrations add TempCheck --project "$(srcPath)/$(infraPath)/$(infraProject)" --startup-project "$(srcPath)/$(apiPath)/$(apiProject)" --context "$(infraDbContext)" --output-dir $tempDir --configuration "$(buildConfiguration)" --no-build
+
+                if ($LASTEXITCODE -ne 0) {
+                  Write-Error "dotnet ef migrations add failed."
+                  exit 1
+                }
+
+                if (Test-Path $tempDir) {
+                  $files = Get-ChildItem -Path $tempDir
+                  $files | ForEach-Object { Write-Host $_.FullName }
+                  if ($files.Count -gt 0) {
+                    Write-Error "Uncommitted model changes detected. Run dotnet ef migrations add locally and commit migration files."
+                    Remove-Item -Recurse -Force $tempDir
+                    exit 1
+                  }
+                  Remove-Item -Recurse -Force $tempDir
+                }
+
+          - task: PowerShell@2
+            displayName: Create SQL migration script
+            inputs:
+              targetType: inline
+              pwsh: true
+              script: |
+                dotnet ef migrations script --project "$(srcPath)/$(infraPath)/$(infraProject)" --startup-project "$(srcPath)/$(apiPath)/$(apiProject)" --context "$(infraDbContext)" --output "$(Build.ArtifactStagingDirectory)/$(MIGRATION_ARTIFACT_FILE)" --idempotent --configuration "$(buildConfiguration)" --no-build
+
+          - task: DotNetCoreCLI@2
+            displayName: Test
+            inputs:
+              command: test
+              projects: $(srcSolution)
+              arguments: --configuration $(buildConfiguration) --no-build
+              publishTestResults: true
+
+          - task: DotNetCoreCLI@2
+            displayName: Pack Web API artifact
+            inputs:
+              command: publish
+              publishWebProjects: false
+              projects: $(srcPath)/$(apiPath)/$(apiProject)
+              arguments: --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)/$(API_ARTIFACT_OUTPUT)
+              zipAfterPublish: false
+
+          - task: DotNetCoreCLI@2
+            displayName: Pack Blazor artifact
+            inputs:
+              command: publish
+              publishWebProjects: false
+              projects: $(srcPath)/$(webPath)/$(webProject)
+              arguments: --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)/$(WEB_ARTIFACT_OUTPUT)
+              zipAfterPublish: false
+
+          - task: PublishBuildArtifacts@1
+            displayName: Upload migration script
+            condition: and(succeeded(), or(and(or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')), eq(variables['Build.SourceBranch'], 'refs/heads/main')), eq(variables['Build.Reason'], 'Manual')))
+            inputs:
+              PathtoPublish: $(Build.ArtifactStagingDirectory)/$(MIGRATION_ARTIFACT_FILE)
+              ArtifactName: $(MIGRATION_ARTIFACT_NAME)
+              publishLocation: Container
+
+          - task: PublishBuildArtifacts@1
+            displayName: Upload Web API artifact
+            condition: and(succeeded(), or(and(or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')), eq(variables['Build.SourceBranch'], 'refs/heads/main')), eq(variables['Build.Reason'], 'Manual')))
+            inputs:
+              PathtoPublish: $(Build.ArtifactStagingDirectory)/$(API_ARTIFACT_OUTPUT)
+              ArtifactName: $(API_ARTIFACT_NAME)
+              publishLocation: Container
+
+          - task: PublishBuildArtifacts@1
+            displayName: Upload Blazor artifact
+            condition: and(succeeded(), or(and(or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')), eq(variables['Build.SourceBranch'], 'refs/heads/main')), eq(variables['Build.Reason'], 'Manual')))
+            inputs:
+              PathtoPublish: $(Build.ArtifactStagingDirectory)/$(WEB_ARTIFACT_OUTPUT)
+              ArtifactName: $(WEB_ARTIFACT_NAME)
+              publishLocation: Container
+
+  - stage: cd
+    displayName: Web, API and SQL CD
+    dependsOn: ci
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(and(or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')), eq(variables['Build.SourceBranch'], 'refs/heads/main')), and(eq(variables['Build.Reason'], 'Manual'), eq(lower('${{ parameters.RunCd }}'), 'true'), eq(lower('${{ parameters.Environment }}'), 'development'))))
+    variables:
+      - name: appiName
+        value: agent-dev-wus2-001-appi
+      - name: azureApiAppName
+        value: agent-dev-wus2-001-api
+      - name: azureWebAppName
+        value: agent-dev-wus2-001-web
+      - name: azureRgName
+        value: gtc-agent-dev-wus2-001-rg
+      - name: sqlName
+        value: agent-dev-wus2-001-sql
+      - name: sqlDbName
+        value: agent-dev-wus2-001-sqldb
+      - name: runtimeEnv
+        value: Development
+    jobs:
+      - job: deploy_web_api_sql
+        displayName: Web, API and SQL CD
+        steps:
+          - task: DownloadBuildArtifacts@0
+            displayName: Download Web API artifact
+            inputs:
+              buildType: current
+              downloadType: single
+              artifactName: $(API_ARTIFACT_NAME)
+              downloadPath: $(Pipeline.Workspace)
+
+          - task: DownloadBuildArtifacts@0
+            displayName: Download Web artifact
+            inputs:
+              buildType: current
+              downloadType: single
+              artifactName: $(WEB_ARTIFACT_NAME)
+              downloadPath: $(Pipeline.Workspace)
+
+          - task: DownloadBuildArtifacts@0
+            displayName: Download migration script
+            inputs:
+              buildType: current
+              downloadType: single
+              artifactName: $(MIGRATION_ARTIFACT_NAME)
+              downloadPath: $(Pipeline.Workspace)
+
+          - task: SqlAzureDacpacDeployment@1
+            displayName: Deploy SQL script
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              AuthenticationType: server
+              ServerName: $(sqlName).database.windows.net
+              DatabaseName: $(sqlDbName)
+              SqlUsername: $(SQL_ADMIN_USER)
+              SqlPassword: $(SQL_ADMIN_PASSWORD)
+              deployType: SqlTask
+              SqlFile: $(Pipeline.Workspace)/$(MIGRATION_ARTIFACT_NAME)/$(MIGRATION_ARTIFACT_FILE)
+              IpDetectionMethod: AutoDetect
+
+          - task: AzureWebApp@1
+            displayName: Deploy Web API to Azure App Service
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              appType: webApp
+              appName: $(azureApiAppName)
+              package: $(Pipeline.Workspace)/$(API_ARTIFACT_NAME)
+              deploymentMethod: zipDeploy
+
+          - task: AzureCLI@2
+            displayName: $(azureApiAppName) app settings
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: pscore
+              scriptLocation: inlineScript
+              inlineScript: |
+                az config set extension.use_dynamic_install=yes_without_prompt
+                $TEMP_JSON = az monitor app-insights component show -g $(azureRgName) --app $(appiName) | ConvertFrom-Json
+                $INSTR_KEY = $TEMP_JSON.instrumentationKey
+                $CONN_STR = $TEMP_JSON.connectionString
+
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$INSTR_KEY
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings APPLICATIONINSIGHTS_CONNECTION_STRING=$CONN_STR
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings ASPNETCORE_ENVIRONMENT=$(runtimeEnv)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:TenantId=$(EEID_TENANT_ID)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:ClientId=$(API_CLIENT_ID)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings OpenAI:ApiKey=$(OPENAI_APIKEY)
+
+          - task: AzureCLI@2
+            displayName: $(azureApiAppName) connection strings
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: pscore
+              scriptLocation: inlineScript
+              inlineScript: |
+                $TEMP_STR = az sql db show-connection-string --client ado.net --server $(sqlName) --name $(sqlDbName) -o tsv
+                $TEMP_STR = $TEMP_STR.Replace("<username>", "$(SQL_ADMIN_USER)")
+                $TEMP_STR = $TEMP_STR.Replace("<password>", "$(SQL_ADMIN_PASSWORD)")
+                az webapp config connection-string set -g $(azureRgName) -n $(azureApiAppName) -t SQLServer --settings DefaultConnection="$TEMP_STR"
+
+          - task: AzureWebApp@1
+            displayName: Deploy $(azureWebAppName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              appType: webApp
+              appName: $(azureWebAppName)
+              package: $(Pipeline.Workspace)/$(WEB_ARTIFACT_NAME)
+              deploymentMethod: zipDeploy
+
+          - task: AzureCLI@2
+            displayName: $(azureWebAppName) app settings
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: pscore
+              scriptLocation: inlineScript
+              inlineScript: |
+                az config set extension.use_dynamic_install=yes_without_prompt
+                $TEMP_JSON = az monitor app-insights component show -g $(azureRgName) --app $(appiName) | ConvertFrom-Json
+                $INSTR_KEY = $TEMP_JSON.instrumentationKey
+                $CONN_STR = $TEMP_JSON.connectionString
+
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$INSTR_KEY
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings APPLICATIONINSIGHTS_CONNECTION_STRING=$CONN_STR
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings ASPNETCORE_ENVIRONMENT=$(runtimeEnv)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:TenantId=$(EEID_TENANT_ID)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:ClientId=$(WEB_CLIENT_ID)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:ClientSecret=$(WEB_CLIENT_SECRET)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings BackendApi:BaseUrl="https://$(azureApiAppName).azurewebsites.net"
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings BackendApi:ClientId=$(API_CLIENT_ID)
+
+          - task: AzureCLI@2
+            displayName: Swap to production slot
+            condition: false
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: pscore
+              scriptLocation: inlineScript
+              inlineScript: |
+                az webapp deployment slot swap --resource-group $(azureRgName) --name $(azureApiAppName) --slot staging --target-slot production
+                $hostName = az webapp show --resource-group $(azureRgName) --name $(azureApiAppName) --query hostNames[0] -o tsv
+                Write-Host "Swap finished. App Service Application URL: https://$hostName"

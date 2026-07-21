@@ -1,0 +1,155 @@
+trigger:
+  batch: false
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - pipelines/COMPANY-platform-standalone-shared-web-api-sql-iac.yml
+      - .azure/**/*.bicep
+      - .azure/**/*.bicepparam
+      - .azure/**/*.bicepparams
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - pipelines/COMPANY-platform-standalone-shared-web-api-sql-iac.yml
+      - .azure/**/*.bicep
+      - .azure/**/*.bicepparam
+      - .azure/**/*.bicepparams
+
+pool:
+  vmImage: ubuntu-latest
+
+parameters:
+  - name: ForceDeployDev
+    type: boolean
+    default: false
+  - name: ForceDeployProd
+    type: boolean
+    default: false
+  - name: SubscriptionService
+    type: string
+    default: AZURE-DEVOPS-SERVICE-CONNECTION-NAME
+
+stages:
+  - stage: ci
+    displayName: Validate standalone-shared web-api-sql IaC
+    condition: or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
+    variables:
+      - template: ../variables/iac-development.yml
+
+    jobs:
+      - job: validate_landingzone
+        displayName: Validate standalone-shared web-api-sql IaC (Dev)
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Validate shared resource group ($(rgSharedName))
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(rgSharedName) --location $(rgSharedLocation)
+                az deployment group what-if --resource-group $(rgSharedName) --template-file $(sharedTemplate) --parameters $(sharedParameters)
+
+          - task: AzureCLI@2
+            displayName: Validate product resource group ($(rgName))
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(rgName) --location $(rgLocation)
+                az deployment group what-if --resource-group $(rgName) --template-file $(landingZoneTemplate) --parameters $(landingZoneParameters)
+
+  - stage: cd_dev
+    displayName: Deploy standalone-shared web-api-sql IaC (Dev)
+    dependsOn: ci
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(lower(${{ parameters.ForceDeployDev }}), 'true')))
+    variables:
+      - template: ../variables/iac-development.yml
+
+    jobs:
+      - job: deploy_landingzone_dev
+        displayName: Deploy standalone-shared web-api-sql IaC (Dev)
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Deploy shared resource group ($(rgSharedName))
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(rgSharedName) --location $(rgSharedLocation)
+                az deployment group create --resource-group $(rgSharedName) --template-file $(sharedTemplate) --parameters $(sharedParameters)
+
+          - task: AzureCLI@2
+            displayName: Deploy product resource group ($(rgName))
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(rgName) --location $(rgLocation)
+                az deployment group create --resource-group $(rgName) --template-file $(landingZoneTemplate) --parameters $(landingZoneParameters)
+                az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionIdentityObjectId) --secret-permissions get list
+
+  - stage: prod_approval
+    displayName: Approve Prod Deployment
+    dependsOn: cd_dev
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(lower(${{ parameters.ForceDeployProd }}), 'true')))
+
+    jobs:
+      - job: manual_approval_prod
+        displayName: Manual approval for Prod
+        pool: server
+        timeoutInMinutes: 4320
+        steps:
+          - task: ManualValidation@0
+            displayName: Approve production deployment
+            inputs:
+              notifyUsers: ''
+              instructions: 'Approve deployment to standalone-shared web-api-sql production resources.'
+              onTimeout: reject
+
+  - stage: cd_prod
+    displayName: Deploy standalone-shared web-api-sql IaC (Prod)
+    dependsOn: prod_approval
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    variables:
+      - template: ../variables/iac-production.yml
+
+    jobs:
+      - job: deploy_landingzone_prod
+        displayName: Deploy standalone-shared web-api-sql IaC (Prod)
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Deploy shared resource group ($(rgSharedName))
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(rgSharedName) --location $(rgSharedLocation)
+                az deployment group create --resource-group $(rgSharedName) --template-file $(sharedTemplate) --parameters $(sharedParameters)
+
+          - task: AzureCLI@2
+            displayName: Deploy product resource group ($(rgName))
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(rgName) --location $(rgLocation)
+                az deployment group create --resource-group $(rgName) --template-file $(landingZoneTemplate) --parameters $(landingZoneParameters)
+                az keyvault set-policy --name '$(kvName)' --object-id $(serviceConnectionIdentityObjectId) --secret-permissions get list
