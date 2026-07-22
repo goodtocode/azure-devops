@@ -55,7 +55,7 @@ variables:
   - name: srcPath
     value: $(System.DefaultWorkingDirectory)/src
   - name: srcSolution
-    value: $(srcPath)/Goodtocode.AgentFramework.Web.slnx
+    value: $(System.DefaultWorkingDirectory)/Goodtocode.AgentFramework.Web.slnx
   - name: apiPath
     value: Presentation.Api
   - name: apiProject
@@ -82,6 +82,8 @@ variables:
     value: '2'
   - name: versionMinor
     value: '0'
+  - name: hostedApiAppServiceName
+    value: agent-dev-wus2-001-api
 
 stages:
   - stage: ci
@@ -133,33 +135,6 @@ stages:
               pwsh: true
               script: |
                 Write-Host "##vso[task.setvariable variable=ASPNETCORE_ENVIRONMENT]$(runtimeEnv)"
-
-          - task: PowerShell@2
-            displayName: App Settings Variable Substitution
-            inputs:
-              targetType: inline
-              pwsh: true
-              script: |
-                function Set-OpenAiApiKey([string]$filePath, [string]$apiKey) {
-                  if (-not (Test-Path $filePath)) {
-                    Write-Host "Skipping missing file: $filePath"
-                    return
-                  }
-
-                  $obj = Get-Content -Raw $filePath | ConvertFrom-Json
-                  if (-not $obj.OpenAI) {
-                    $obj | Add-Member -MemberType NoteProperty -Name OpenAI -Value ([pscustomobject]@{})
-                  }
-
-                  $obj.OpenAI.ApiKey = $apiKey
-                  $obj | ConvertTo-Json -Depth 50 | Set-Content -Path $filePath
-                  Write-Host "Updated OpenAI.ApiKey in: $filePath"
-                }
-
-                $apiKey = "$(OPENAI_APIKEY)"
-                Set-OpenAiApiKey -filePath "$(srcPath)/$(apiPath)/appsettings.json" -apiKey $apiKey
-                Set-OpenAiApiKey -filePath "$(srcPath)/$(apiPath)/appsettings.$(runtimeEnv).json" -apiKey $apiKey
-                Set-OpenAiApiKey -filePath "$(srcPath)/$(testPath)/appsettings.test.json" -apiKey $apiKey
 
           - task: DotNetCoreCLI@2
             displayName: dotnet restore
@@ -229,6 +204,12 @@ stages:
               projects: $(srcSolution)
               arguments: --configuration $(buildConfiguration) --no-build
               publishTestResults: true
+            env:
+              ASPNETCORE_ENVIRONMENT: $(runtimeEnv)
+              OPENAI_APIKEY: $(OPENAI_APIKEY)
+              OpenAI__ApiKey: $(OPENAI_APIKEY)
+              HostedApi__AppServiceName: $(hostedApiAppServiceName)
+              HostedApi__BaseUrl: https://$(hostedApiAppServiceName).azurewebsites.net
 
           - task: DotNetCoreCLI@2
             displayName: Pack Web API artifact
