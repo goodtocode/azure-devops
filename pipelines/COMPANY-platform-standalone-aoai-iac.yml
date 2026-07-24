@@ -31,9 +31,12 @@ parameters:
   - name: ForceDeployProd
     type: boolean
     default: false
-  - name: SubscriptionService
+  - name: SubscriptionServiceDevtest
     type: string
-    default: AZURE-DEVOPS-SERVICE-CONNECTION-NAME
+    default: SERVICE_CONNECTION_DEVTEST
+  - name: SubscriptionServiceProd
+    type: string
+    default: SERVICE_CONNECTION_PROD
 
 variables:
   - name: spokeLocation
@@ -53,9 +56,6 @@ variables:
   - name: spokeAiProdBicepParameters
     value: .azure/variables/platform-standalone-ai-aoai-prod.bicepparam
 
-  - name: spokeAiModelName
-    value: gpt-5.6-luna
-
 stages:
   - stage: ci
     displayName: Validate standalone AOAI IaC
@@ -70,7 +70,7 @@ stages:
           - task: AzureCLI@2
             displayName: Create $(spokeAiDevRgName)
             inputs:
-              azureSubscription: '${{ parameters.SubscriptionService }}'
+              azureSubscription: '${{ parameters.SubscriptionServiceDevtest }}'
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -79,11 +79,11 @@ stages:
           - task: AzureCLI@2
             displayName: '[SPOKE_AI] Validate Azure OpenAI deployment in $(spokeAiDevRgName)'
             inputs:
-              azureSubscription: '${{ parameters.SubscriptionService }}'
+              azureSubscription: '${{ parameters.SubscriptionServiceDevtest }}'
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                az deployment group what-if --resource-group $(spokeAiDevRgName) --template-file $(spokeAiDevBicepTemplate) --parameters $(spokeAiDevBicepParameters) --parameters modelName=$(spokeAiModelName)
+                az deployment group what-if --resource-group $(spokeAiDevRgName) --template-file $(spokeAiDevBicepTemplate) --parameters $(spokeAiDevBicepParameters)
 
       - job: validate_spoke_aoai_iac_prod
         displayName: Validate standalone AOAI IaC (Prod)
@@ -93,7 +93,7 @@ stages:
           - task: AzureCLI@2
             displayName: Create $(spokeAiProdRgName)
             inputs:
-              azureSubscription: '${{ parameters.SubscriptionService }}'
+              azureSubscription: '${{ parameters.SubscriptionServiceProd }}'
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -102,11 +102,11 @@ stages:
           - task: AzureCLI@2
             displayName: '[SPOKE_AI] Validate Azure OpenAI deployment in $(spokeAiProdRgName)'
             inputs:
-              azureSubscription: '${{ parameters.SubscriptionService }}'
+              azureSubscription: '${{ parameters.SubscriptionServiceProd }}'
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                az deployment group what-if --resource-group $(spokeAiProdRgName) --template-file $(spokeAiProdBicepTemplate) --parameters $(spokeAiProdBicepParameters) --parameters modelName=$(spokeAiModelName)
+                az deployment group what-if --resource-group $(spokeAiProdRgName) --template-file $(spokeAiProdBicepTemplate) --parameters $(spokeAiProdBicepParameters)
 
   - stage: cd_dev
     displayName: Deploy standalone AOAI IaC (Dev)
@@ -122,7 +122,7 @@ stages:
           - task: AzureCLI@2
             displayName: Create $(spokeAiDevRgName)
             inputs:
-              azureSubscription: '${{ parameters.SubscriptionService }}'
+              azureSubscription: '${{ parameters.SubscriptionServiceDevtest }}'
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -130,12 +130,13 @@ stages:
 
           - task: AzureCLI@2
             displayName: '[SPOKE_AI] Deploy Azure OpenAI to $(spokeAiDevRgName)'
+            retryCountOnTaskFailure: 2
             inputs:
-              azureSubscription: '${{ parameters.SubscriptionService }}'
+              azureSubscription: '${{ parameters.SubscriptionServiceDevtest }}'
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                az deployment group create --name spoke-ai-aoai --resource-group $(spokeAiDevRgName) --template-file $(spokeAiDevBicepTemplate) --parameters $(spokeAiDevBicepParameters) --parameters modelName=$(spokeAiModelName)
+                az deployment group create --name spoke-ai-aoai --resource-group $(spokeAiDevRgName) --template-file $(spokeAiDevBicepTemplate) --parameters $(spokeAiDevBicepParameters)
 
   - stage: prod_approval
     displayName: Approve Prod Deployment
@@ -169,7 +170,7 @@ stages:
           - task: AzureCLI@2
             displayName: Create $(spokeAiProdRgName)
             inputs:
-              azureSubscription: '${{ parameters.SubscriptionService }}'
+              azureSubscription: '${{ parameters.SubscriptionServiceProd }}'
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -177,9 +178,10 @@ stages:
 
           - task: AzureCLI@2
             displayName: '[SPOKE_AI] Deploy Azure OpenAI to $(spokeAiProdRgName)'
+            retryCountOnTaskFailure: 2
             inputs:
-              azureSubscription: '${{ parameters.SubscriptionService }}'
+              azureSubscription: '${{ parameters.SubscriptionServiceProd }}'
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                az deployment group create --name spoke-ai-aoai --resource-group $(spokeAiProdRgName) --template-file $(spokeAiProdBicepTemplate) --parameters $(spokeAiProdBicepParameters) --parameters modelName=$(spokeAiModelName)
+                az deployment group create --name spoke-ai-aoai --resource-group $(spokeAiProdRgName) --template-file $(spokeAiProdBicepTemplate) --parameters $(spokeAiProdBicepParameters)
