@@ -343,6 +343,8 @@ stages:
     displayName: Web, API and SQL CD
     dependsOn: ci
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(and(or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')), eq(variables['Build.SourceBranch'], 'refs/heads/main')), and(eq(variables['Build.Reason'], 'Manual'), eq(lower('${{ parameters.RunCd }}'), 'true'), eq(lower('${{ parameters.Environment }}'), 'development'))))
+    pool:
+      vmImage: windows-latest
     jobs:
       - job: deploy_web_api_sql
         displayName: Web, API and SQL CD
