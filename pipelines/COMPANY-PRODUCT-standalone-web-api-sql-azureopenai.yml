@@ -37,6 +37,10 @@ parameters:
     default: AZURE-DEVOPS-SERVICE-CONNECTION-NAME
 
 variables:
+  - ${{ if eq(parameters.Environment, 'development') }}:
+      - group: COMPANY-PRODUCT-dev
+  - ${{ if eq(parameters.Environment, 'production') }}:
+      - group: COMPANY-PRODUCT-prod
   - name: API_ARTIFACT_OUTPUT
     value: publish_output
   - name: WEB_ARTIFACT_OUTPUT
@@ -51,11 +55,11 @@ variables:
     value: ef-migrations.sql
 
   - name: scriptsPath
-    value: $(System.DefaultWorkingDirectory)/scripts/ci
+    value: $(System.DefaultWorkingDirectory)/.azuredevops/scripts/ci
   - name: srcPath
     value: $(System.DefaultWorkingDirectory)/src
   - name: srcSolution
-    value: $(System.DefaultWorkingDirectory)/Goodtocode.AgentFramework.Web.slnx
+    value: $(System.DefaultWorkingDirectory)/COMPANY.PRODUCT.Web.slnx
   - name: apiPath
     value: Presentation.Api
   - name: apiProject
@@ -73,17 +77,21 @@ variables:
   - name: infraProject
     value: Infrastructure.SqlServer.csproj
   - name: infraDbContext
-    value: AgentFrameworkContext
+    value: PRODUCTContext
   - name: runtimeEnv
     value: Development
   - name: buildConfiguration
     value: Release
+  - name: agentProviderKind
+    value: AzureOpenAI
+  - name: azureOpenAiChatCompletionModelId
+    value: openai-fast
+  - name: entraExternalIdValidateAuthority
+    value: true
   - name: versionMajor
     value: '2'
   - name: versionMinor
     value: '0'
-  - name: hostedApiAppServiceName
-    value: agent-dev-wus2-001-api
 
 stages:
   - stage: ci
@@ -166,6 +174,15 @@ stages:
               script: |
                 Write-Host "Working Directory: $(Get-Location)"
                 $tempDir = "$(srcPath)/$(infraPath)/.temp-migrations"
+                $migrationsDir = "$(srcPath)/$(infraPath)/Migrations"
+
+                Write-Host "Expected committed migrations directory: $migrationsDir"
+                if (Test-Path $migrationsDir) {
+                  Write-Host "Committed migration files currently in repo:"
+                  Get-ChildItem -Path $migrationsDir -File | Sort-Object Name | ForEach-Object {
+                    Write-Host " - $($_.Name) [$([math]::Round($_.Length / 1KB, 2)) KB]"
+                  }
+                }
 
                 if (Test-Path $tempDir) {
                   Remove-Item -Recurse -Force $tempDir
@@ -179,9 +196,39 @@ stages:
                 }
 
                 if (Test-Path $tempDir) {
-                  $files = Get-ChildItem -Path $tempDir
-                  $files | ForEach-Object { Write-Host $_.FullName }
+                  $files = Get-ChildItem -Path $tempDir -File | Sort-Object Name
+                  Write-Host "Temp migration output directory: $tempDir"
+                  Write-Host "Temp migration file count: $($files.Count)"
+                  $files | ForEach-Object {
+                    Write-Host "Generated file: $($_.FullName) [$([math]::Round($_.Length / 1KB, 2)) KB]"
+                  }
+
                   if ($files.Count -gt 0) {
+                    Write-Host ""
+                    Write-Host "===== BEGIN TEMP MIGRATION FILE PREVIEW ====="
+                    foreach ($file in $files) {
+                      Write-Host "----- FILE: $($file.Name) -----"
+                      Get-Content -Path $file.FullName -TotalCount 250 | ForEach-Object { Write-Host $_ }
+                      Write-Host "----- END FILE: $($file.Name) -----"
+                    }
+                    Write-Host "===== END TEMP MIGRATION FILE PREVIEW ====="
+                    Write-Host ""
+
+                    Write-Host "Git status for migration-related files:"
+                    git status --short "$(srcPath)/$(infraPath)/Migrations" "$tempDir"
+
+                    Write-Host ""
+                    Write-Host "Git diff summary for migration-related files:"
+                    git --no-pager diff --stat -- "$(srcPath)/$(infraPath)/Migrations" "$tempDir"
+
+                    $snapshotFile = "$(srcPath)/$(infraPath)/Migrations/$(infraDbContext)ModelSnapshot.cs"
+                    if (Test-Path $snapshotFile) {
+                      Write-Host ""
+                      Write-Host "===== BEGIN SNAPSHOT DIFF: $snapshotFile ====="
+                      git --no-pager diff -- $snapshotFile
+                      Write-Host "===== END SNAPSHOT DIFF ====="
+                    }
+
                     Write-Error "Uncommitted model changes detected. Run dotnet ef migrations add locally and commit migration files."
                     Remove-Item -Recurse -Force $tempDir
                     exit 1
@@ -206,15 +253,10 @@ stages:
               publishTestResults: true
             env:
               ASPNETCORE_ENVIRONMENT: $(runtimeEnv)
-              AZURE_OPEN_AI_KEY: $(AZURE_OPEN_AI_KEY)
-              AZURE_OPEN_AI_ENDPOINT: $(AZURE_OPEN_AI_ENDPOINT)
-              OpenAI__Provider: AzureOpenAI
-              OpenAI__ApiKey: $(AZURE_OPEN_AI_KEY)
-              OpenAI__Endpoint: $(AZURE_OPEN_AI_ENDPOINT)
-              AzureOpenAI__ApiKey: $(AZURE_OPEN_AI_KEY)
-              AzureOpenAI__Endpoint: $(AZURE_OPEN_AI_ENDPOINT)
-              HostedApi__AppServiceName: $(hostedApiAppServiceName)
-              HostedApi__BaseUrl: https://$(hostedApiAppServiceName).azurewebsites.net
+              AgentProvider__Kind: $(agentProviderKind)
+              AzureOpenAI__ApiKey: $(azureOpenAiKey)
+              AzureOpenAI__Endpoint: $(azureOpenAiEndpoint)
+              AzureOpenAI__ChatCompletionModelId: $(azureOpenAiChatCompletionModelId)
 
           - task: DotNetCoreCLI@2
             displayName: Pack Web API artifact
@@ -264,17 +306,17 @@ stages:
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(and(or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')), eq(variables['Build.SourceBranch'], 'refs/heads/main')), and(eq(variables['Build.Reason'], 'Manual'), eq(lower('${{ parameters.RunCd }}'), 'true'), eq(lower('${{ parameters.Environment }}'), 'development'))))
     variables:
       - name: appiName
-        value: agent-dev-wus2-001-appi
+        value: PRODUCT-dev-wus2-001-appi
       - name: azureApiAppName
-        value: agent-dev-wus2-001-api
+        value: PRODUCT-dev-wus2-001-api
       - name: azureWebAppName
-        value: agent-dev-wus2-001-web
+        value: PRODUCT-dev-wus2-001-web
       - name: azureRgName
-        value: gtc-agent-dev-wus2-001-rg
+        value: COMPANY-PRODUCT-dev-wus2-001-rg
       - name: sqlName
-        value: agent-dev-wus2-001-sql
+        value: PRODUCT-dev-wus2-001-sql
       - name: sqlDbName
-        value: agent-dev-wus2-001-sqldb
+        value: PRODUCT-dev-wus2-001-sqldb
       - name: runtimeEnv
         value: Development
     jobs:
@@ -312,8 +354,8 @@ stages:
               AuthenticationType: server
               ServerName: $(sqlName).database.windows.net
               DatabaseName: $(sqlDbName)
-              SqlUsername: $(SQL_ADMIN_USER)
-              SqlPassword: $(SQL_ADMIN_PASSWORD)
+              SqlUsername: $(elevateSqlUser)
+              SqlPassword: $(elevateSqlPassword)
               deployType: SqlTask
               SqlFile: $(Pipeline.Workspace)/$(MIGRATION_ARTIFACT_NAME)/$(MIGRATION_ARTIFACT_FILE)
               IpDetectionMethod: AutoDetect
@@ -342,15 +384,14 @@ stages:
                 az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$INSTR_KEY
                 az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings APPLICATIONINSIGHTS_CONNECTION_STRING=$CONN_STR
                 az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings ASPNETCORE_ENVIRONMENT=$(runtimeEnv)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:ValidateAuthority=$(entraExternalIdValidateAuthority)
                 az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:TenantId=$(EEID_TENANT_ID)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:Instance=$(EEID_INSTANCE)
                 az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:ClientId=$(API_CLIENT_ID)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings AZURE_OPEN_AI_KEY=$(AZURE_OPEN_AI_KEY)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings AZURE_OPEN_AI_ENDPOINT=$(AZURE_OPEN_AI_ENDPOINT)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings OpenAI:Provider=AzureOpenAI
-                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings OpenAI:ApiKey=$(AZURE_OPEN_AI_KEY)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings OpenAI:Endpoint=$(AZURE_OPEN_AI_ENDPOINT)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings AzureOpenAI:ApiKey=$(AZURE_OPEN_AI_KEY)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings AzureOpenAI:Endpoint=$(AZURE_OPEN_AI_ENDPOINT)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings AgentProvider:Kind=$(agentProviderKind)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings AzureOpenAI:ApiKey=$(azureOpenAiKey)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings AzureOpenAI:Endpoint=$(azureOpenAiEndpoint)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings AzureOpenAI:ChatCompletionModelId=$(azureOpenAiChatCompletionModelId)
 
           - task: AzureCLI@2
             displayName: $(azureApiAppName) connection strings
@@ -360,8 +401,8 @@ stages:
               scriptLocation: inlineScript
               inlineScript: |
                 $TEMP_STR = az sql db show-connection-string --client ado.net --server $(sqlName) --name $(sqlDbName) -o tsv
-                $TEMP_STR = $TEMP_STR.Replace("<username>", "$(SQL_ADMIN_USER)")
-                $TEMP_STR = $TEMP_STR.Replace("<password>", "$(SQL_ADMIN_PASSWORD)")
+                $TEMP_STR = $TEMP_STR.Replace("<username>", "$(elevateSqlUser)")
+                $TEMP_STR = $TEMP_STR.Replace("<password>", "$(elevateSqlPassword)")
                 az webapp config connection-string set -g $(azureRgName) -n $(azureApiAppName) -t SQLServer --settings DefaultConnection="$TEMP_STR"
 
           - task: AzureWebApp@1
@@ -388,7 +429,9 @@ stages:
                 az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings APPINSIGHTS_INSTRUMENTATIONKEY=$INSTR_KEY
                 az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings APPLICATIONINSIGHTS_CONNECTION_STRING=$CONN_STR
                 az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings ASPNETCORE_ENVIRONMENT=$(runtimeEnv)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:ValidateAuthority=$(entraExternalIdValidateAuthority)
                 az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:TenantId=$(EEID_TENANT_ID)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:Instance=$(EEID_INSTANCE)
                 az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:ClientId=$(WEB_CLIENT_ID)
                 az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:ClientSecret=$(WEB_CLIENT_SECRET)
                 az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings BackendApi:BaseUrl="https://$(azureApiAppName).azurewebsites.net"
