@@ -5,7 +5,7 @@ trigger:
       - main
   paths:
     include:
-      - pipelines/COMPANY-PRODUCT-standalone-web-api-sql.yml
+      - pipelines/COMPANY-PRODUCT-standalone-web-api-sql-azureopenai.yml
       - src/**
 
 pr:
@@ -14,7 +14,7 @@ pr:
       - main
   paths:
     include:
-      - pipelines/COMPANY-PRODUCT-standalone-web-api-sql.yml
+      - pipelines/COMPANY-PRODUCT-standalone-web-api-sql-azureopenai.yml
       - src/**
 
 pool:
@@ -77,7 +77,7 @@ variables:
   - name: infraProject
     value: Infrastructure.SqlServer.csproj
   - name: infraDbContext
-    value: PRODUCTContext
+    value: ElevateContext
   - name: runtimeEnv
     value: Development
   - name: buildConfiguration
@@ -88,6 +88,19 @@ variables:
     value: openai-fast
   - name: entraExternalIdValidateAuthority
     value: true
+  # Manual environment resource mapping for CD (update if IaC names change)
+  - name: appiName
+    value: PRODUCT-dev-wus2-001-appi
+  - name: azureApiAppName
+    value: PRODUCT-dev-wus2-001-api
+  - name: azureWebAppName
+    value: PRODUCT-dev-wus2-001-web
+  - name: azureRgName
+    value: COMPANY-PRODUCT-dev-wus2-001-rg
+  - name: sqlName
+    value: PRODUCT-dev-wus2-001-sql
+  - name: sqlDbName
+    value: PRODUCT-dev-wus2-001-sqldb
   - name: versionMajor
     value: '2'
   - name: versionMinor
@@ -227,11 +240,37 @@ stages:
                       Write-Host "===== BEGIN SNAPSHOT DIFF: $snapshotFile ====="
                       git --no-pager diff -- $snapshotFile
                       Write-Host "===== END SNAPSHOT DIFF ====="
+
+                      Write-Host ""
+                      Write-Host "===== SNAPSHOT DIFF (IGNORE EOL/WHITESPACE) ====="
+                      git --no-pager diff --ignore-cr-at-eol --ignore-space-at-eol -- $snapshotFile
+                      Write-Host "===== END SNAPSHOT DIFF (IGNORE EOL/WHITESPACE) ====="
                     }
 
-                    Write-Error "Uncommitted model changes detected. Run dotnet ef migrations add locally and commit migration files."
-                    Remove-Item -Recurse -Force $tempDir
-                    exit 1
+                    Write-Host ""
+                    Write-Host "Git line-ending settings (for diagnosing LF/CRLF churn):"
+                    git config --get core.autocrlf
+                    git config --get core.eol
+
+                    Write-Host ""
+                    Write-Host "EF pending-model-changes command result (diagnostic only):"
+                    dotnet ef migrations has-pending-model-changes --project "$(srcPath)/$(infraPath)/$(infraProject)" --startup-project "$(srcPath)/$(apiPath)/$(apiProject)" --context "$(infraDbContext)" --configuration "$(buildConfiguration)" --no-build
+                    $hasPendingModelChangesExitCode = $LASTEXITCODE
+                    Write-Host "EF has-pending-model-changes exit code: $hasPendingModelChangesExitCode"
+
+                    if (Test-Path $snapshotFile) {
+                      Write-Host ""
+                      Write-Host "Snapshot file SHA256:"
+                      Get-FileHash -Path $snapshotFile -Algorithm SHA256 | Format-List
+                    }
+
+                    if ($hasPendingModelChangesExitCode -ne 0) {
+                      Write-Error "Uncommitted model changes detected. Run dotnet ef migrations add locally and commit migration files."
+                      Remove-Item -Recurse -Force $tempDir
+                      exit 1
+                    }
+
+                    Write-Warning "Temp migration files were generated, but EF reports no pending model changes. Continuing build (likely line-ending/tooling churn)."
                   }
                   Remove-Item -Recurse -Force $tempDir
                 }
@@ -304,21 +343,6 @@ stages:
     displayName: Web, API and SQL CD
     dependsOn: ci
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(and(or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')), eq(variables['Build.SourceBranch'], 'refs/heads/main')), and(eq(variables['Build.Reason'], 'Manual'), eq(lower('${{ parameters.RunCd }}'), 'true'), eq(lower('${{ parameters.Environment }}'), 'development'))))
-    variables:
-      - name: appiName
-        value: PRODUCT-dev-wus2-001-appi
-      - name: azureApiAppName
-        value: PRODUCT-dev-wus2-001-api
-      - name: azureWebAppName
-        value: PRODUCT-dev-wus2-001-web
-      - name: azureRgName
-        value: COMPANY-PRODUCT-dev-wus2-001-rg
-      - name: sqlName
-        value: PRODUCT-dev-wus2-001-sql
-      - name: sqlDbName
-        value: PRODUCT-dev-wus2-001-sqldb
-      - name: runtimeEnv
-        value: Development
     jobs:
       - job: deploy_web_api_sql
         displayName: Web, API and SQL CD
