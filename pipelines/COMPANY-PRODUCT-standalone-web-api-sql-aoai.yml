@@ -5,7 +5,7 @@ trigger:
       - main
   paths:
     include:
-      - pipelines/COMPANY-PRODUCT-standalone-web-api-sql-azureopenai.yml
+      - pipelines/COMPANY-PRODUCT-standalone-web-api-sql-aoai.yml
       - src/**
 
 pr:
@@ -14,7 +14,7 @@ pr:
       - main
   paths:
     include:
-      - pipelines/COMPANY-PRODUCT-standalone-web-api-sql-azureopenai.yml
+      - pipelines/COMPANY-PRODUCT-standalone-web-api-sql-aoai.yml
       - src/**
 
 pool:
@@ -37,6 +37,25 @@ parameters:
     default: AZURE-DEVOPS-SERVICE-CONNECTION-NAME
 
 variables:
+  # External values are expected from variable groups or pipeline variable overrides.
+  - name: apiClientId
+    value: ''
+  - name: webClientID
+    value: ''
+  - name: webClientSecret
+    value: ''
+  - name: entraExternalIdTenantId
+    value: ''
+  - name: entraExternalIdInstance
+    value: ''
+  - name: azureOpenAiKey
+    value: ''
+  - name: azureOpenAiEndpoint
+    value: ''
+  - name: sqlUser
+    value: ''
+  - name: sqlPassword
+    value: ''
   - ${{ if eq(parameters.Environment, 'development') }}:
       - group: COMPANY-PRODUCT-dev
   - ${{ if eq(parameters.Environment, 'production') }}:
@@ -76,8 +95,9 @@ variables:
     value: Infrastructure.SqlServer
   - name: infraProject
     value: Infrastructure.SqlServer.csproj
+  # Replace PRODUCTContext with your actual DbContext class name
   - name: infraDbContext
-    value: ElevateContext
+    value: PRODUCTContext
   - name: runtimeEnv
     value: Development
   - name: buildConfiguration
@@ -380,8 +400,8 @@ stages:
               AuthenticationType: server
               ServerName: $(sqlName).database.windows.net
               DatabaseName: $(sqlDbName)
-              SqlUsername: $(elevateSqlUser)
-              SqlPassword: $(elevateSqlPassword)
+              SqlUsername: $(sqlUser)
+              SqlPassword: $(sqlPassword)
               deployType: SqlTask
               SqlFile: $(Pipeline.Workspace)/$(MIGRATION_ARTIFACT_NAME)/$(MIGRATION_ARTIFACT_FILE)
               IpDetectionMethod: AutoDetect
@@ -411,9 +431,9 @@ stages:
                 az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings APPLICATIONINSIGHTS_CONNECTION_STRING=$CONN_STR
                 az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings ASPNETCORE_ENVIRONMENT=$(runtimeEnv)
                 az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:ValidateAuthority=$(entraExternalIdValidateAuthority)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:TenantId=$(EEID_TENANT_ID)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:Instance=$(EEID_INSTANCE)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:ClientId=$(API_CLIENT_ID)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:TenantId=$(entraExternalIdTenantId)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:Instance=$(entraExternalIdInstance)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings EntraExternalId:ClientId=$(apiClientId)
                 az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings AgentProvider:Kind=$(agentProviderKind)
                 az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings AzureOpenAI:ApiKey=$(azureOpenAiKey)
                 az webapp config appsettings set -g $(azureRgName) -n $(azureApiAppName) --settings AzureOpenAI:Endpoint=$(azureOpenAiEndpoint)
@@ -427,8 +447,8 @@ stages:
               scriptLocation: inlineScript
               inlineScript: |
                 $TEMP_STR = az sql db show-connection-string --client ado.net --server $(sqlName) --name $(sqlDbName) -o tsv
-                $TEMP_STR = $TEMP_STR.Replace("<username>", "$(elevateSqlUser)")
-                $TEMP_STR = $TEMP_STR.Replace("<password>", "$(elevateSqlPassword)")
+                $TEMP_STR = $TEMP_STR.Replace("<username>", "$(sqlUser)")
+                $TEMP_STR = $TEMP_STR.Replace("<password>", "$(sqlPassword)")
                 az webapp config connection-string set -g $(azureRgName) -n $(azureApiAppName) -t SQLServer --settings DefaultConnection="$TEMP_STR"
 
           - task: AzureWebApp@1
@@ -456,12 +476,12 @@ stages:
                 az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings APPLICATIONINSIGHTS_CONNECTION_STRING=$CONN_STR
                 az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings ASPNETCORE_ENVIRONMENT=$(runtimeEnv)
                 az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:ValidateAuthority=$(entraExternalIdValidateAuthority)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:TenantId=$(EEID_TENANT_ID)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:Instance=$(EEID_INSTANCE)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:ClientId=$(WEB_CLIENT_ID)
-                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:ClientSecret=$(WEB_CLIENT_SECRET)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:TenantId=$(entraExternalIdTenantId)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:Instance=$(entraExternalIdInstance)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:ClientId=$(webClientID)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings EntraExternalId:ClientSecret=$(webClientSecret)
                 az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings BackendApi:BaseUrl="https://$(azureApiAppName).azurewebsites.net"
-                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings BackendApi:ClientId=$(API_CLIENT_ID)
+                az webapp config appsettings set -g $(azureRgName) -n $(azureWebAppName) --settings BackendApi:ClientId=$(apiClientId)
 
           - task: AzureCLI@2
             displayName: Swap to production slot
