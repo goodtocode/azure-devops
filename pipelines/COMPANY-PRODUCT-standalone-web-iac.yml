@@ -5,7 +5,7 @@ trigger:
       - main
   paths:
     include:
-      - pipelines/COMPANY-platform-standalone-web-iac.yml
+      - pipelines/COMPANY-PRODUCT-standalone-web-iac.yml
       - .azure/**/*.bicep
       - .azure/**/*.bicepparam
       - .azure/**/*.bicepparams
@@ -16,7 +16,7 @@ pr:
       - main
   paths:
     include:
-      - pipelines/COMPANY-platform-standalone-web-iac.yml
+      - pipelines/COMPANY-PRODUCT-standalone-web-iac.yml
       - .azure/**/*.bicep
       - .azure/**/*.bicepparam
       - .azure/**/*.bicepparams
