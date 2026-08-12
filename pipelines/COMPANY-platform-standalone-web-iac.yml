@@ -1,0 +1,109 @@
+trigger:
+  batch: false
+  branches:
+    exclude:
+      - main
+  paths:
+    include:
+      - pipelines/COMPANY-platform-standalone-web-iac.yml
+      - .azure/**/*.bicep
+      - .azure/**/*.bicepparam
+      - .azure/**/*.bicepparams
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - pipelines/COMPANY-platform-standalone-web-iac.yml
+      - .azure/**/*.bicep
+      - .azure/**/*.bicepparam
+      - .azure/**/*.bicepparams
+
+pool:
+  vmImage: ubuntu-latest
+
+parameters:
+  - name: Environment
+    displayName: Environment to run
+    type: string
+    default: development
+    values:
+      - development
+      - production
+  - name: RunCd
+    displayName: Run CD pipeline
+    type: boolean
+    default: false
+  - name: SubscriptionService
+    type: string
+    default: AZURE-DEVOPS-SERVICE-CONNECTION-NAME
+
+variables:
+  - name: DOTNET_SYSTEM_GLOBALIZATION_INVARIANT
+    value: 'true'
+  - name: productRgName
+    value: gtc-agent-dev-wus2-001-rg
+  - name: productRgLocation
+    value: westus2
+  - name: productBicepTemplate
+    value: .azure/templates/landingzone-standalone-web.bicep
+  - name: productBicepParameters
+    value: .azure/variables/landingzone-standalone-web-dev.bicepparam
+
+stages:
+  - stage: ci
+    displayName: Validate landing zone IaC
+    condition: or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
+    jobs:
+      - job: validate_landing_zone_iac
+        displayName: Validate landing zone IaC
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(productRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(productRgName) --location $(productRgLocation)
+
+          - task: AzureCLI@2
+            displayName: Validate $(productRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group what-if --resource-group $(productRgName) --template-file $(productBicepTemplate) --parameters $(productBicepParameters)
+
+  - stage: cd
+    displayName: Deploy landing zone IaC
+    dependsOn: ci
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(and(or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')), eq(variables['Build.SourceBranch'], 'refs/heads/main')), and(eq(variables['Build.Reason'], 'Manual'), eq(lower('${{ parameters.RunCd }}'), 'true'))))
+    jobs:
+      - job: deploy_landing_zone_iac
+        displayName: Deploy landing zone IaC
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(productRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(productRgName) --location $(productRgLocation)
+
+          - task: AzureCLI@2
+            displayName: Deploy $(productRgName)
+            inputs:
+              azureSubscription: '${{ parameters.SubscriptionService }}'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group create --resource-group $(productRgName) --template-file $(productBicepTemplate) --parameters $(productBicepParameters)
