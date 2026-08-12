@@ -1,0 +1,227 @@
+trigger:
+  batch: false
+  branches:
+    include:
+    - 'main'
+  paths:
+    include:
+    - pipelines/COMPANY-PRODUCT-standalone-web.yml
+    - src/Core/**
+    - src/Presentation/Web/**
+    - tests/**
+
+pr:
+  branches:
+    include:
+    - 'main'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+parameters:
+  - name: ForceDeployDev
+    type: boolean
+    default: false
+  - name: ForceDeployProd
+    type: boolean
+    default: false
+
+stages:
+  - stage: build
+    variables:
+      - template: ../variables/ci-common.yml
+      - name: scriptsPath
+        value: '$(System.DefaultWorkingDirectory)/scripts/ci'
+      - name: versionMajor
+        value: '1'
+      - name: versionMinor
+        value: '1'
+      - name: webPath
+        value: 'Presentation.Web'
+      - name: webProject
+        value: 'Presentation.Web.csproj'
+    jobs:
+      - job: build_src
+        steps:
+          - task: PowerShell@2
+            displayName: 'Get-Version.ps1'
+            inputs:
+              targetType: 'inline'
+              script: |
+                $json = & "$(scriptsPath)/Get-Version.ps1" -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)
+                $versionObj = $json | ConvertFrom-Json
+
+                Write-Host "SemanticVersion: $($versionObj.SemanticVersion)"
+                Write-Host "FileVersion: $($versionObj.FileVersion)"
+                Write-Host "AssemblyVersion: $($versionObj.AssemblyVersion)"
+                Write-Host "InformationalVersion: $($versionObj.InformationalVersion)"
+
+                Write-Host "##vso[task.setvariable variable=semanticVersion]$($versionObj.SemanticVersion)"
+                Write-Host "##vso[task.setvariable variable=fileVersion]$($versionObj.FileVersion)"
+                Write-Host "##vso[task.setvariable variable=assemblyVersion]$($versionObj.AssemblyVersion)"
+                Write-Host "##vso[task.setvariable variable=informationalVersion]$($versionObj.InformationalVersion)"
+
+          - task: PowerShell@2
+            displayName: 'Set-Version.ps1'
+            inputs:
+              filePath: '$(scriptsPath)/Set-Version.ps1'
+              arguments: '-Path $(srcPath) -VersionToReplace 1.0.0 -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)'
+              workingDirectory: '$(scriptsPath)'
+
+          - task: UseDotNet@2
+            displayName: 'UseSDKVersion 8.x for DartSassBuilder'
+            inputs:
+              packageType: 'sdk'
+              version: '8.x'
+              includePreviewVersions: false
+
+          - task: UseDotNet@2
+            displayName: 'UseSDKVersion $(dotnetVersion)'
+            inputs:
+              packageType: 'sdk'
+              version: $(dotnetVersion)
+              includePreviewVersions: true
+
+          - task: DotNetCoreCLI@2
+            displayName: dotnetrestore
+            inputs:
+              command: 'restore'
+              projects: "$(srcSolution)"
+              feedsToUse: 'config'
+              nugetConfigPath: "$(nugetConfig)"
+
+          - task: DotNetCoreCLI@2
+            displayName: dotnet build
+            inputs:
+              command: 'build'
+              projects: "$(srcPath)/$(webPath)/$(webProject)"
+              arguments: "--configuration $(buildConfiguration) /p:Version=$(semanticVersion) /p:FileVersion=$(fileVersion) /p:AssemblyVersion=$(assemblyVersion) /p:InformationalVersion=$(informationalVersion)"
+
+      - job: test_src
+        dependsOn: build_src
+        steps:
+          - task: UseDotNet@2
+            displayName: 'UseSDKVersion $(dotnetVersion)'
+            inputs:
+              packageType: 'sdk'
+              version: $(dotnetVersion)
+              includePreviewVersions: true
+
+          - task: DotNetCoreCLI@2
+            displayName: dotnet test
+            inputs:
+              command: 'test'
+              projects: "$(testProject)"
+              arguments: "--configuration $(buildConfiguration)"
+              publishTestResults: true
+
+      - job: publish_src
+        dependsOn: test_src
+        steps:
+          - task: UseDotNet@2
+            displayName: 'UseSDKVersion 8.x for DartSassBuilder'
+            inputs:
+              packageType: 'sdk'
+              version: '8.x'
+              includePreviewVersions: false
+        
+          - task: UseDotNet@2
+            displayName: 'UseSDKVersion $(dotnetVersion)'
+            inputs:
+              packageType: 'sdk'
+              version: $(dotnetVersion)
+              includePreviewVersions: true
+
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet publish $(webProject)'
+            inputs:
+              command: 'publish'
+              publishWebProjects: false
+              projects: "$(srcPath)/$(webPath)/$(webProject)"
+              arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) /p:Version=$(semanticVersion) /p:FileVersion=$(fileVersion) /p:AssemblyVersion=$(assemblyVersion) /p:InformationalVersion=$(informationalVersion)"
+              zipAfterPublish: true
+
+          - task: PublishBuildArtifacts@1
+            displayName: Publishbuildartifacts
+            inputs:
+              PathtoPublish: "$(Build.ArtifactStagingDirectory)"
+              ArtifactName: 'drop'
+              publishLocation: "Container"
+
+  - stage: deploy_dev
+    dependsOn: build
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
+    variables:
+      - template: ../variables/cd-development.yml
+      
+    jobs:
+      - job: deploy_dev
+        timeoutInMinutes: 20160
+        steps:
+        - task: DownloadBuildArtifacts@0
+          displayName: 'Download build artifact'
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'drop'
+            downloadPath: '$(Pipeline.Workspace)'
+
+        - task: FileTransform@2
+          displayName: 'Variable transformation *.Blazor.zip'
+          inputs:
+            folderPath: '$(Pipeline.Workspace)/drop/**/*.Blazor.zip'
+            enableXmlTransform: false
+            jsonTargetFiles: 'appsettings.$(environmentApp).json'
+
+        - task: AzureWebApp@1
+          displayName: 'Deploy to $(webName)'
+          inputs:
+            azureSubscription: 'aacn-devtest-001'
+            appType: 'webApp'
+            appName: '$(webName)'
+            package: '$(Pipeline.Workspace)/drop/**/*.Blazor.zip'
+            deploymentMethod: 'zipDeploy'
+
+  - stage: deploy_prod
+    dependsOn: deploy_dev
+    condition: and(succeeded('deploy_dev'), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
+    variables:
+      - template: ../variables/cd-production.yml
+
+    jobs:
+      - job: deploy_approval
+        pool: server
+        timeoutInMinutes: 20160
+        steps:
+        - task: ManualValidation@0
+          inputs:
+           notifyUsers: $(deployApprovers)
+           instructions: "Team: $(System.TeamProject)\r\nRepo: $(Build.Repository.Name)\r\nRequested by: $(Build.RequestedFor)\r\nBuild: $(Build.BuildNumber)\r\nUrl: $(Build.BuildUri)\r\nA new deployment has been requested. Please approve or reject the deployment."
+           onTimeout: reject
+      
+      - job: deploy_prod
+        dependsOn: deploy_approval
+        steps:
+        - task: DownloadBuildArtifacts@0
+          displayName: 'Download build artifact'
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'drop'
+            downloadPath: '$(Pipeline.Workspace)'
+
+        - task: FileTransform@2
+          displayName: 'Variable transformation *.Blazor.zip'
+          inputs:
+            folderPath: '$(Pipeline.Workspace)/drop/**/*.Blazor.zip'
+            enableXmlTransform: false
+            jsonTargetFiles: 'appsettings.$(environmentApp).json'
+
+        - task: AzureWebApp@1
+          displayName: 'Deploy to $(webName)'
+          inputs:
+            azureSubscription: 'aacn-production-001'
+            appType: 'webApp'
+            appName: '$(webName)'
+            package: '$(Pipeline.Workspace)/drop/**/*.Blazor.zip'
+            deploymentMethod: 'zipDeploy'
