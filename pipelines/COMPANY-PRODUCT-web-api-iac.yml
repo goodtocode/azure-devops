@@ -1,0 +1,160 @@
+trigger:
+  batch: false
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - .azuredevops/pipelines/COMPANY-PRODUCT-web-api-iac.yml
+      - .azure/**/*.bicep
+      - .azure/**/*.bicepparam
+      - .azure/**/*.bicepparams
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - .azuredevops/pipelines/COMPANY-PRODUCT-web-api-iac.yml
+      - .azure/**/*.bicep
+      - .azure/**/*.bicepparam
+      - .azure/**/*.bicepparams
+
+pool:
+  vmImage: ubuntu-latest
+
+parameters:
+  - name: ForceDeployDev
+    displayName: Force deploy to Development (feature branch testing)
+    type: boolean
+    default: false
+  - name: ForceDeployProd
+    displayName: Force deploy to Production (feature branch testing)
+    type: boolean
+    default: false
+
+variables:
+  - name: DOTNET_SYSTEM_GLOBALIZATION_INVARIANT
+    value: 'true'
+  - name: productBicepTemplate
+    value: .azure/templates/landingzone-standalone-web.bicep
+
+stages:
+  - stage: ci
+    displayName: Validate landing zone IaC
+    condition: or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Reason'], 'Manual'), eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
+    variables:
+      - name: productRgName
+        value: rg-devtest-nti-assessments-dev-001
+      - name: productRgLocation
+        value: westus2
+      - name: productBicepParameters
+        value: .azure/variables/landingzone-standalone-web-dev.bicepparam
+    jobs:
+      - job: validate_landing_zone_iac
+        displayName: Validate landing zone IaC
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(productRgName)
+            inputs:
+              azureSubscription: 'COMPANY-devtest-001'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(productRgName) --location $(productRgLocation)
+
+          - task: AzureCLI@2
+            displayName: Validate $(productRgName)
+            inputs:
+              azureSubscription: 'COMPANY-devtest-001'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group what-if --resource-group $(productRgName) --template-file $(productBicepTemplate) --parameters $(productBicepParameters)
+
+  - stage: deploy_dev
+    displayName: Deploy landing zone IaC - Development
+    dependsOn: ci
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower('${{ parameters.ForceDeployDev }}'), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
+    variables:
+      - template: ../variables/cd-development.yml
+      - name: productRgName
+        value: rg-devtest-nti-assessments-dev-001
+      - name: productRgLocation
+        value: westus2
+      - name: productBicepParameters
+        value: .azure/variables/landingzone-standalone-web-dev.bicepparam
+    jobs:
+      - job: deploy_landing_zone_iac
+        displayName: Deploy landing zone IaC - Development
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(productRgName)
+            inputs:
+              azureSubscription: 'COMPANY-devtest-001'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(productRgName) --location $(productRgLocation)
+
+          - task: AzureCLI@2
+            displayName: Deploy $(productRgName)
+            inputs:
+              azureSubscription: 'COMPANY-devtest-001'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group create --resource-group $(productRgName) --template-file $(productBicepTemplate) --parameters $(productBicepParameters)
+
+  - stage: deploy_prod
+    displayName: Deploy landing zone IaC - Production
+    dependsOn: deploy_dev
+    condition: and(succeeded('deploy_dev'), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower('${{ parameters.ForceDeployProd }}'), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
+    variables:
+      - template: ../variables/cd-production.yml
+      - name: productRgName
+        value: rg-prod-nti-assessments-prod-001
+      - name: productRgLocation
+        value: westus2
+      - name: productBicepParameters
+        value: .azure/variables/landingzone-standalone-web-prod.bicepparam
+    jobs:
+      - job: deploy_approval
+        pool: server
+        timeoutInMinutes: 20160
+        steps:
+          - task: ManualValidation@0
+            inputs:
+              notifyUsers: $(deployApprovers)
+              instructions: "Team: $(System.TeamProject)\r\nRepo: $(Build.Repository.Name)\r\nRequested by: $(Build.RequestedFor)\r\nBuild: $(Build.BuildNumber)\r\nUrl: $(Build.BuildUri)\r\nA new deployment has been requested. Please approve or reject the deployment."
+              onTimeout: reject
+
+      - job: deploy_landing_zone_iac
+        displayName: Deploy landing zone IaC - Production
+        dependsOn: deploy_approval
+        steps:
+          - checkout: self
+
+          - task: AzureCLI@2
+            displayName: Create $(productRgName)
+            inputs:
+              azureSubscription: 'COMPANY-production-001'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create --name $(productRgName) --location $(productRgLocation)
+
+          - task: AzureCLI@2
+            displayName: Deploy $(productRgName)
+            inputs:
+              azureSubscription: 'COMPANY-production-001'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group create --resource-group $(productRgName) --template-file $(productBicepTemplate) --parameters $(productBicepParameters)
+

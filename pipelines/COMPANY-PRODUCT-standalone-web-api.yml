@@ -193,7 +193,7 @@ stages:
         - task: AzureWebApp@1
           displayName: 'Deploy to $(apiName)'
           inputs:
-            azureSubscription: 'aacn-devtest-001'
+            azureSubscription: 'COMPANY-devtest-001'
             appType: 'webApp'
             appName: '$(apiName)'
             package: '$(Pipeline.Workspace)/drop/**/*.Api.zip'
@@ -202,7 +202,7 @@ stages:
         - task: AzureWebApp@1
           displayName: 'Deploy to $(webName)'
           inputs:
-            azureSubscription: 'aacn-devtest-001'
+            azureSubscription: 'COMPANY-devtest-001'
             appType: 'webApp'
             appName: '$(webName)'
             package: '$(Pipeline.Workspace)/drop/**/*.Blazor.zip'
@@ -253,7 +253,7 @@ stages:
         - task: AzureWebApp@1
           displayName: 'Deploy to $(apiName)'
           inputs:
-            azureSubscription: 'aacn-production-001'
+            azureSubscription: 'COMPANY-production-001'
             appType: 'webApp'
             appName: '$(apiName)'
             package: '$(Pipeline.Workspace)/drop/**/*.Api.zip'
@@ -262,7 +262,7 @@ stages:
         - task: AzureWebApp@1
           displayName: 'Deploy to $(webName)'
           inputs:
-            azureSubscription: 'aacn-production-001'
+            azureSubscription: 'COMPANY-production-001'
             appType: 'webApp'
             appName: '$(webName)'
             package: '$(Pipeline.Workspace)/drop/**/*.Blazor.zip'
