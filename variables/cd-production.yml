@@ -1,15 +1,19 @@
 variables:
-  - group: aacn-PRODUCT-prod
+  - group: COMPANY-PRODUCT-prod
   - name: environmentApp
     value: 'Production'
+  - name: siteName
+    value: 'api.mycompany.com'
   - name: siteDns
-    value: 'FQDN'
+    value: 'api.mycompany.com'
   - name: thumbprint
     value: 'THUMBPRINT'
   - name: productName
     value: 'PRODUCT'
+  - name: webName
+    value: 'web-PRODUCT-prod-001'
     
-# Key Vault
-# sqlUser
-# sqlPassword
+# Key Vault (via COMPANY-PRODUCT-prod library group)
+# netforumSqlUser
+# netforumSqlPassword
 # sqlConnection

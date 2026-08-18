@@ -1,0 +1,417 @@
+trigger:
+  batch: false
+  branches:
+    include:
+    - 'main'
+  paths:
+    include:
+    - .azuredevops/pipelines/COMPANY-PRODUCT-web-api-ci-cd.yml
+    - .azuredevops/scripts/**
+    - src/Core/**
+    - src/Presentation/Presentation.Api/**
+    - src/Presentation/Presentation.Blazor/**
+    - tests/**
+
+pr:
+  branches:
+    include:
+    - 'main'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+parameters:
+  - name: ForceDeployDev
+    type: boolean
+    default: false
+  - name: ForceDeployProd
+    type: boolean
+    default: false
+
+stages:
+  - stage: build
+    variables:
+      - template: ../variables/ci-common.yml
+      - name: scriptsPath
+        value: '$(System.DefaultWorkingDirectory)/.azuredevops/scripts/ci'
+      - name: versionMajor
+        value: '1'
+      - name: versionMinor
+        value: '1'
+      - name: webPath
+        value: 'Presentation/Presentation.Blazor/Presentation.Blazor'
+      - name: webProject
+        value: 'Presentation.Blazor.csproj'
+      - name: apiPath
+        value: 'Presentation/Presentation.Api'
+      - name: apiProject
+        value: 'Presentation.Api.csproj'
+    jobs:
+      - job: build_src
+        steps:
+          - task: PowerShell@2
+            name: getVersion
+            displayName: 'Get-Version.ps1'
+            inputs:
+              targetType: 'inline'
+              script: |
+                $json = & "$(scriptsPath)/Get-Version.ps1" -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)
+                $versionObj = $json | ConvertFrom-Json
+
+                Write-Host "SemanticVersion: $($versionObj.SemanticVersion)"
+                Write-Host "FileVersion: $($versionObj.FileVersion)"
+                Write-Host "AssemblyVersion: $($versionObj.AssemblyVersion)"
+                Write-Host "InformationalVersion: $($versionObj.InformationalVersion)"
+
+                Write-Host "##vso[task.setvariable variable=semanticVersion;isOutput=true]$($versionObj.SemanticVersion)"
+                Write-Host "##vso[task.setvariable variable=fileVersion;isOutput=true]$($versionObj.FileVersion)"
+                Write-Host "##vso[task.setvariable variable=assemblyVersion;isOutput=true]$($versionObj.AssemblyVersion)"
+                Write-Host "##vso[task.setvariable variable=informationalVersion;isOutput=true]$($versionObj.InformationalVersion)"
+
+          - task: PowerShell@2
+            displayName: 'Set-Version.ps1'
+            inputs:
+              filePath: '$(scriptsPath)/Set-Version.ps1'
+              arguments: '-Path $(srcPath) -VersionToReplace 1.0.0 -Major $(versionMajor) -Minor $(versionMinor) -Patch $(Build.BuildId)'
+              workingDirectory: '$(scriptsPath)'
+
+          - task: UseDotNet@2
+            displayName: 'UseSDKVersion 9.x for DartSassBuilder'
+            inputs:
+              packageType: 'sdk'
+              version: '9.x'
+              includePreviewVersions: false
+
+          - task: UseDotNet@2
+            displayName: 'UseSDKVersion $(dotnetVersion)'
+            inputs:
+              packageType: 'sdk'
+              version: $(dotnetVersion)
+              includePreviewVersions: true
+
+          - task: DotNetCoreCLI@2
+            displayName: dotnetrestore
+            inputs:
+              command: 'restore'
+              projects: "$(srcSolution)"
+              feedsToUse: 'config'
+              nugetConfigPath: "$(nugetConfig)"
+
+          - task: DotNetCoreCLI@2
+            displayName: dotnet build
+            inputs:
+              command: 'build'
+              projects: "$(srcPath)/$(webPath)/$(webProject)"
+              arguments: "--configuration $(buildConfiguration) /p:Version=$(getVersion.semanticVersion) /p:FileVersion=$(getVersion.fileVersion) /p:AssemblyVersion=$(getVersion.assemblyVersion) /p:InformationalVersion=$(getVersion.informationalVersion)"
+
+          - task: DotNetCoreCLI@2
+            displayName: dotnet build API
+            inputs:
+              command: 'build'
+              projects: "$(srcPath)/$(apiPath)/$(apiProject)"
+              arguments: "--configuration $(buildConfiguration) /p:Version=$(getVersion.semanticVersion) /p:FileVersion=$(getVersion.fileVersion) /p:AssemblyVersion=$(getVersion.assemblyVersion) /p:InformationalVersion=$(getVersion.informationalVersion)"
+
+      - job: test_src
+        dependsOn: build_src
+        steps:
+          - task: UseDotNet@2
+            displayName: 'UseSDKVersion $(dotnetVersion)'
+            inputs:
+              packageType: 'sdk'
+              version: $(dotnetVersion)
+              includePreviewVersions: true
+
+          - task: DotNetCoreCLI@2
+            displayName: dotnet test
+            inputs:
+              command: 'test'
+              projects: "$(testProject)"
+              arguments: "--configuration $(buildConfiguration)"
+              publishTestResults: true
+
+      - job: publish_src
+        dependsOn:
+        - build_src
+        - test_src
+        variables:
+          semanticVersion: $[ dependencies.build_src.outputs['getVersion.semanticVersion'] ]
+          fileVersion: $[ dependencies.build_src.outputs['getVersion.fileVersion'] ]
+          assemblyVersion: $[ dependencies.build_src.outputs['getVersion.assemblyVersion'] ]
+          informationalVersion: $[ dependencies.build_src.outputs['getVersion.informationalVersion'] ]
+        steps:
+          - task: UseDotNet@2
+            displayName: 'UseSDKVersion 9.x for DartSassBuilder'
+            inputs:
+              packageType: 'sdk'
+              version: '9.x'
+              includePreviewVersions: false
+        
+          - task: UseDotNet@2
+            displayName: 'UseSDKVersion $(dotnetVersion)'
+            inputs:
+              packageType: 'sdk'
+              version: $(dotnetVersion)
+              includePreviewVersions: true
+
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet publish $(webProject)'
+            inputs:
+              command: 'publish'
+              publishWebProjects: false
+              projects: "$(srcPath)/$(webPath)/$(webProject)"
+              arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) /p:Version=$(semanticVersion) /p:FileVersion=$(fileVersion) /p:AssemblyVersion=$(assemblyVersion) /p:InformationalVersion=$(informationalVersion)"
+              zipAfterPublish: true
+
+          - task: DotNetCoreCLI@2
+            displayName: 'dotnet publish $(apiProject)'
+            inputs:
+              command: 'publish'
+              publishWebProjects: false
+              projects: "$(srcPath)/$(apiPath)/$(apiProject)"
+              arguments: "--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory) /p:Version=$(semanticVersion) /p:FileVersion=$(fileVersion) /p:AssemblyVersion=$(assemblyVersion) /p:InformationalVersion=$(informationalVersion)"
+              zipAfterPublish: true
+
+          - task: PublishBuildArtifacts@1
+            displayName: Publishbuildartifacts
+            inputs:
+              PathtoPublish: "$(Build.ArtifactStagingDirectory)"
+              ArtifactName: 'drop'
+              publishLocation: "Container"
+
+  - stage: deploy_dev
+    dependsOn: build
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower(${{ parameters.ForceDeployDev }}), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
+    variables:
+      - template: ../variables/cd-development.yml
+      
+    jobs:
+      - deployment: DeployWeb
+        displayName: Deploy Web to Azure App Service - Development
+        environment:
+          name: Development
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: DownloadBuildArtifacts@0
+                  displayName: 'Download build artifact'
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: 'drop'
+                    downloadPath: '$(Pipeline.Workspace)'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to $(webName)'
+                  inputs:
+                    azureSubscription: 'COMPANY-devtest-001'
+                    appType: 'webApp'
+                    appName: '$(webName)'
+                    package: '$(Pipeline.Workspace)/drop/**/*.Blazor.zip'
+                    deploymentMethod: 'zipDeploy'
+
+                - task: AzureAppServiceSettings@1
+                  displayName: 'Set Development App Service settings'
+                  inputs:
+                    azureSubscription: 'COMPANY-devtest-001'
+                    appName: '$(webName)'
+                    appSettings: |
+                      [
+                        {
+                          "name": "InternalApiAccessToken__ClientId",
+                          "value": "$(ntiassessmentsWebClientId)",
+                          "slotSetting": false
+                        },
+                        {
+                          "name": "InternalApiAccessToken__ClientSecret",
+                          "value": "$(ntiassessmentsWebClientSecret)",
+                          "slotSetting": false
+                        }
+                      ]
+
+      - deployment: DeployAPI
+        displayName: Deploy API to IIS - Development
+        environment:
+          name: Development
+          resourceName: APIDEV01-NTI
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: DownloadBuildArtifacts@0
+                  displayName: 'Download API build artifact'
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: 'drop'
+                    downloadPath: '$(Pipeline.Workspace)'
+
+                - task: IISWebAppManagementOnMachineGroup@0
+                  continueOnError: true
+                  inputs:
+                    IISDeploymentType: 'IISApplicationPool'
+                    ActionIISApplicationPool: 'StopAppPool'
+                    StartStopRecycleAppPoolName: '$(siteName)-$(productName)'
+
+                - task: IISWebAppManagementOnMachineGroup@0
+                  displayName: Create API virtual application - $(siteName)\$(productName)
+                  inputs:
+                    IISDeploymentType: 'IISWebApplication'
+                    ParentWebsiteNameForApplication: '$(siteName)'
+                    VirtualPathForApplication: '/$(productName)'
+                    PhysicalPathForApplication: '%SystemDrive%\sites\$(siteName)\$(productName)'
+                    CreateOrUpdateAppPoolForApplication: true
+                    AppPoolNameForApplication: '$(siteName)-$(productName)'
+                    DotNetVersionForApplication: 'v4.0'
+                    PipeLineModeForApplication: 'Integrated'
+                    AppPoolIdentityForApplication: 'SpecificUser'
+                    AppPoolUsernameForApplication: '$(netforumSqlUser)'
+                    AppPoolPasswordForApplication: '$(netforumSqlPassword)'
+
+                - task: IISWebAppManagementOnMachineGroup@0
+                  inputs:
+                    IISDeploymentType: 'IISApplicationPool'
+                    ActionIISApplicationPool: 'StartAppPool'
+                    StartStopRecycleAppPoolName: '$(siteName)-$(productName)'
+
+                - task: FileTransform@2
+                  displayName: 'Transform Development API appsettings'
+                  inputs:
+                    folderPath: '$(Pipeline.Workspace)/drop/**/*.Api.zip'
+                    fileType: 'json'
+                    targetFiles: 'appsettings.$(environmentApp).json'
+                  env:
+                    AzureAd.ClientId: $(ntiassessmentsApiClientId)
+
+                - task: IISWebAppDeploymentOnMachineGroup@0
+                  displayName: Deploy IIS API - $(siteName)\$(productName)
+                  inputs:
+                    WebSiteName: '$(siteName)'
+                    VirtualApplication: '$(productName)'
+                    Package: '$(Pipeline.Workspace)/drop/**/*.Api.zip'
+                    TakeAppOfflineFlag: true
+
+  - stage: deploy_prod
+    dependsOn: deploy_dev
+    condition: and(succeeded('deploy_dev'), ne(variables['Build.Reason'], 'PullRequest'), or(eq(lower(${{ parameters.ForceDeployProd }}), 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
+    variables:
+      - template: ../variables/cd-production.yml
+
+    jobs:
+      - job: deploy_approval
+        pool: server
+        timeoutInMinutes: 20160
+        steps:
+        - task: ManualValidation@0
+          inputs:
+           notifyUsers: $(deployApprovers)
+           instructions: "Team: $(System.TeamProject)\r\nRepo: $(Build.Repository.Name)\r\nRequested by: $(Build.RequestedFor)\r\nBuild: $(Build.BuildNumber)\r\nUrl: $(Build.BuildUri)\r\nA new deployment has been requested. Please approve or reject the deployment."
+           onTimeout: reject
+      
+      - deployment: DeployWeb
+        displayName: Deploy Web to Azure App Service - Production
+        dependsOn: deploy_approval
+        environment:
+          name: Production
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: DownloadBuildArtifacts@0
+                  displayName: 'Download build artifact'
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: 'drop'
+                    downloadPath: '$(Pipeline.Workspace)'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to $(webName)'
+                  inputs:
+                    azureSubscription: 'COMPANY-production-001'
+                    appType: 'webApp'
+                    appName: '$(webName)'
+                    package: '$(Pipeline.Workspace)/drop/**/*.Blazor.zip'
+                    deploymentMethod: 'zipDeploy'
+
+                - task: AzureAppServiceSettings@1
+                  displayName: 'Set Production App Service settings'
+                  inputs:
+                    azureSubscription: 'COMPANY-production-001'
+                    appName: '$(webName)'
+                    appSettings: |
+                      [
+                        {
+                          "name": "InternalApiAccessToken__ClientId",
+                          "value": "$(ntiassessmentsWebClientId)",
+                          "slotSetting": false
+                        },
+                        {
+                          "name": "InternalApiAccessToken__ClientSecret",
+                          "value": "$(ntiassessmentsWebClientSecret)",
+                          "slotSetting": false
+                        }
+                      ]
+
+      - deployment: DeployAPI
+        displayName: Deploy API to IIS - Production
+        dependsOn: deploy_approval
+        environment:
+          name: Production
+          resourceName: ILAPI01-NTI
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: DownloadBuildArtifacts@0
+                  displayName: 'Download API build artifact'
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: 'drop'
+                    downloadPath: '$(Pipeline.Workspace)'
+
+                - task: IISWebAppManagementOnMachineGroup@0
+                  continueOnError: true
+                  inputs:
+                    IISDeploymentType: 'IISApplicationPool'
+                    ActionIISApplicationPool: 'StopAppPool'
+                    StartStopRecycleAppPoolName: '$(siteName)-$(productName)'
+
+                - task: IISWebAppManagementOnMachineGroup@0
+                  displayName: Create API virtual application - $(siteName)\$(productName)
+                  inputs:
+                    IISDeploymentType: 'IISWebApplication'
+                    ParentWebsiteNameForApplication: '$(siteName)'
+                    VirtualPathForApplication: '/$(productName)'
+                    PhysicalPathForApplication: '%SystemDrive%\sites\$(siteName)\$(productName)'
+                    CreateOrUpdateAppPoolForApplication: true
+                    AppPoolNameForApplication: '$(siteName)-$(productName)'
+                    DotNetVersionForApplication: 'v4.0'
+                    PipeLineModeForApplication: 'Integrated'
+                    AppPoolIdentityForApplication: 'SpecificUser'
+                    AppPoolUsernameForApplication: '$(netforumSqlUser)'
+                    AppPoolPasswordForApplication: '$(netforumSqlPassword)'
+
+                - task: IISWebAppManagementOnMachineGroup@0
+                  inputs:
+                    IISDeploymentType: 'IISApplicationPool'
+                    ActionIISApplicationPool: 'StartAppPool'
+                    StartStopRecycleAppPoolName: '$(siteName)-$(productName)'
+
+                - task: FileTransform@2
+                  displayName: 'Transform Production API appsettings'
+                  inputs:
+                    folderPath: '$(Pipeline.Workspace)/drop/**/*.Api.zip'
+                    fileType: 'json'
+                    targetFiles: 'appsettings.$(environmentApp).json'
+                  env:
+                    AzureAd.ClientId: $(ntiassessmentsApiClientId)
+
+                - task: IISWebAppDeploymentOnMachineGroup@0
+                  displayName: Deploy IIS API - $(siteName)\$(productName)
+                  inputs:
+                    WebSiteName: '$(siteName)'
+                    VirtualApplication: '$(productName)'
+                    Package: '$(Pipeline.Workspace)/drop/**/*.Api.zip'
+                    TakeAppOfflineFlag: true

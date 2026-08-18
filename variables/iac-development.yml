@@ -6,7 +6,7 @@ variables:
   - name: rgLocation
     value: 'westus2'
   - name: rgSharedName
-    value: 'rg-SHARED-dev-001'
+    value: 'rg-PRODUCT-shared-dev-001'
   - name: rgSharedLocation
     value: 'westus2'
   - name: kvName
@@ -14,7 +14,7 @@ variables:
   - name: serviceConnectionIdentityObjectId
     value: ''
   - name: deployApprovers
-    value: 'approver.email@goodtocode.com;'
+    value: 'approver.email@mycompany.com;'
   - name: sharedTemplate
     value: '.azure/templates/landingzone-shared.bicep'
   - name: sharedParameters

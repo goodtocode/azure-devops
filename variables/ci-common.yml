@@ -6,12 +6,12 @@ variables:
   - name: srcPath
     value: '$(System.DefaultWorkingDirectory)/src'
   - name:  srcSolution
-    value: '**/HWeatTeams.sln'    
+    value: '**/PRODUCT.sln'
   - name:  srcProject
     value: '**/Presentation.WebApi.csproj'
   - name:  testProject
     value: '**/Application.Specs.Unit.csproj'
   - name:  nugetConfig
-    value: '.nuget/NuGet.config'
+    value: 'nuget.config'
   - name:  dotnetVersion
     value: '10.x'
